@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "../globals.css";
 import { Providers } from "../providers";
 import Header from "@/components/shared/Header";
+import Sidebar from "@/components/shared/Sidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,7 +24,13 @@ export default function RootLayout({
         <body className={inter.className}>
           <Providers>
             <Header />
-            {children}
+            <main className="flex flex-row">
+              <Sidebar />
+              <section className="main-container">
+                <div className="w-full">{children}</div>
+              </section>
+              
+            </main>
           </Providers>
         </body>
       </html>

@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 
 generator client {
   provider = "prisma-client-js"
@@ -8,4 +7,53 @@ generator client {
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
+}
+
+
+model Exam {
+  exam_id     String      @id @default(cuid()) @map("_id")
+  date        DateTime
+  start_time  String
+  end_time    String
+  exam_code   String      @unique
+  venue       String
+  sessions    ExamSession?
+  exam_name   ExamName    @relation(fields: [exam_name_id], references: [exam_name_id])
+  exam_name_id String
+}
+
+model ExamName{
+  exam_name_id String @id @default(cuid()) @map("_id")
+  exam_name    String @unique
+  exams        Exam[]
+}
+
+model Staff {
+  staff_id               String      @id @default(cuid()) @map("_id")
+  staff_name             String
+  staff_role             String
+  department             String
+  sessions               ExamSession[]
+  attendances            Attendance[]
+}
+
+
+model ExamSession {
+  exam_session_id        String      @id @default(cuid()) @map("_id")
+  exam_id                String     @unique
+  staff_id               String
+  createdAt              DateTime    @default(now())
+  exam                   Exam     @relation(fields: [exam_id], references: [exam_id])
+  staff                  Staff    @relation(fields: [staff_id], references: [staff_id])
+  attendances            Attendance[]
+}
+
+
+model Attendance {
+  attendance_id          String      @id @default(cuid()) @map("_id")
+  exam_session_id        String
+  staff_id               String
+  attendance_status      String
+  exam_session           ExamSession @relation(fields: [exam_session_id], references: [exam_session_id])
+  staff                  Staff       @relation(fields: [staff_id], references: [staff_id])
 }

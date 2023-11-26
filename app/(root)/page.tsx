@@ -1,6 +1,11 @@
-import { UserButton } from "@clerk/nextjs";
-import Image from "next/image";
 
-export default function Home() {
-  return <main className="flex min-h-screen px-7 py-2">Game of thrones</main>;
+import UploadForm from "@/components/forms/UploadForm";
+import { extractStaffInfo } from "@/lib/actions/staff.action";
+import { FieldValues } from "react-hook-form";
+
+export default  function Dashboard() {
+ 
+  return(
+    <main><UploadForm/></main>
+    ) 
 }
