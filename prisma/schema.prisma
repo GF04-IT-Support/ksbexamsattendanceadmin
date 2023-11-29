@@ -17,6 +17,7 @@ model Exam {
   end_time    String
   exam_code   String      @unique
   venue       String
+  year        String
   sessions    ExamSession?
   exam_name   ExamName    @relation(fields: [exam_name_id], references: [exam_name_id])
   exam_name_id String
@@ -43,6 +44,7 @@ model ExamSession {
   exam_id                String     @unique
   staff_id               String
   createdAt              DateTime    @default(now())
+  createdBy              String
   exam                   Exam     @relation(fields: [exam_id], references: [exam_id])
   staff                  Staff    @relation(fields: [staff_id], references: [staff_id])
   attendances            Attendance[]

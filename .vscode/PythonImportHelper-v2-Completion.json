@@ -70,11 +70,46 @@
         "documentation": {}
     },
     {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
         "label": "BytesIO",
         "importPath": "io",
         "description": "io",
         "isExtraImport": true,
         "detail": "io",
+        "documentation": {}
+    },
+    {
+        "label": "BytesIO",
+        "importPath": "io",
+        "description": "io",
+        "isExtraImport": true,
+        "detail": "io",
+        "documentation": {}
+    },
+    {
+        "label": "string",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "string",
+        "description": "string",
+        "detail": "string",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
         "documentation": {}
     },
     {
@@ -253,7 +288,7 @@
         "kind": 2,
         "importPath": "utils.scripts.exams_schedule_extractor",
         "description": "utils.scripts.exams_schedule_extractor",
-        "peekOfCode": "def extract_tables_from_pdf(base64_pdf_data):\n    pdf_file_path = BytesIO(base64.b64decode(base64_pdf_data))\n    pdf = pdfplumber.open(pdf_file_path)\n    tables = []\n    for page in pdf.pages:\n        table = page.extract_table()\n        if table:\n            tables.extend(table)\n    return tables\ndef create_dataframe(tables):",
+        "peekOfCode": "def extract_tables_from_pdf(base64_pdf_data):\n    pdf_file_path = BytesIO(base64.b64decode(base64_pdf_data))\n    pdf = pdfplumber.open(pdf_file_path)\n    tables = []\n    exam_name = None\n    exam_name_updated = False\n    degree = None\n    for page in pdf.pages:\n        all_text = page.extract_text()\n        lines = all_text.split('\\n')",
         "detail": "utils.scripts.exams_schedule_extractor",
         "documentation": {}
     },
@@ -262,7 +297,7 @@
         "kind": 2,
         "importPath": "utils.scripts.exams_schedule_extractor",
         "description": "utils.scripts.exams_schedule_extractor",
-        "peekOfCode": "def create_dataframe(tables):\n    df = pd.DataFrame(tables[1:], columns=tables[0])\n    df.drop(columns=['Examiner', 'Course Name'], inplace=True)\n    df = df.fillna(method='ffill')\n    df.columns = [col.replace('\\n', ' ') for col in df.columns]\n    return df\ndef clean_dataframe(df):\n    for col in df.columns:\n        if col not in ['Venue', 'Course Code']:\n            df[col] = df[col].replace('\\n', ' ', regex=True)",
+        "peekOfCode": "def create_dataframe(tables):\n    df = pd.DataFrame(tables[1:], columns=tables[0])\n    df.columns = ['Day/Date', 'Course Code', 'Course Name', 'No of Students', 'Time', 'Venue', 'Examiner', 'Year']\n    df.drop(columns=['Examiner', 'Course Name'], inplace=True)\n    df = df.fillna(method='ffill')\n    df.columns = [col.replace('\\n', ' ') for col in df.columns]\n    return df\ndef clean_dataframe(df):\n    for col in df.columns:\n        if col not in ['Venue', 'Course Code']:",
         "detail": "utils.scripts.exams_schedule_extractor",
         "documentation": {}
     },
@@ -271,7 +306,7 @@
         "kind": 2,
         "importPath": "utils.scripts.exams_schedule_extractor",
         "description": "utils.scripts.exams_schedule_extractor",
-        "peekOfCode": "def clean_dataframe(df):\n    for col in df.columns:\n        if col not in ['Venue', 'Course Code']:\n            df[col] = df[col].replace('\\n', ' ', regex=True)\n    df['Venue'] = df['Venue'].replace('\\n', ', ', regex=True)\n    df['Course Code'] = df['Course Code'].replace('\\n', ', ', regex=True)\n    df.replace(to_replace=r'\\n', value=' ', regex=True, inplace=True)\n    df = df[~(df == df.columns).sum(axis=1).gt(1)]\n    df['Day/Date'] = df['Day/Date'].str.split(' ', 1).str[1].str.strip().str.strip('/')\n    df.rename(columns={'Day/Date': 'Date'}, inplace=True)",
+        "peekOfCode": "def clean_dataframe(df):\n    for col in df.columns:\n        if col not in ['Venue', 'Course Code']:\n            df[col] = df[col].replace('\\n', ' ', regex=True)\n    df['Venue'] = df['Venue'].apply(lambda x: ', '.join([re.sub(r'.*?(?=PG|SMA|SAARAH MENSAH AUD|SAARAH MENSAH AUDITORIUM)', '', line) for line in x.split('\\n')]) if '\\n' in x else x)\n    df['Venue'] = df['Venue'].apply(lambda x: x.translate(str.maketrans('', '', string.punctuation.replace(',', ''))))  # Remove special characters except comma\n    df['Course Code'] = df['Course Code'].replace('\\n', ', ', regex=True)\n    df.replace(to_replace=r'\\n', value=' ', regex=True, inplace=True)\n    df = df[~(df == df.columns).sum(axis=1).gt(1)]\n    df['Day/Date'] = df['Day/Date'].str.split(' ', 1).str[1].str.strip().str.strip('/')",
         "detail": "utils.scripts.exams_schedule_extractor",
         "documentation": {}
     },
@@ -280,7 +315,16 @@
         "kind": 2,
         "importPath": "utils.scripts.exams_schedule_extractor",
         "description": "utils.scripts.exams_schedule_extractor",
-        "peekOfCode": "def split_time_column(df):\n    time_index = df.columns.get_loc('Time')\n    time_df = df['Time'].str.split('-', expand=True)\n    time_df.columns = ['Start Time', 'End Time']\n    df = df.drop('Time', axis=1)\n    df = pd.concat([df.iloc[:, :time_index], time_df, df.iloc[:, time_index:]], axis=1)\n    df['Start Time'] = df['Start Time'].str.strip()\n    df['End Time'] = df['End Time'].str.strip()\n    df['Start Time'] = df.apply(lambda row: row['Start Time'] + row['End Time'][-2:] if 'am' not in row['Start Time'] and 'pm' not in row['Start Time'] else row['Start Time'], axis=1)\n    return df",
+        "peekOfCode": "def split_time_column(df):\n    df['Time'] = df['Time'].str.replace('–', '-', regex=False)\n    df['Time'] = df['Time'].str.lower()\n    time_index = df.columns.get_loc('Time')\n    time_df = df['Time'].str.split('-', expand=True)\n    time_df.columns = ['Start Time', 'End Time']\n    df = df.drop('Time', axis=1)\n    df = pd.concat([df.iloc[:, :time_index], time_df, df.iloc[:, time_index:]], axis=1)\n    df['Start Time'] = df['Start Time'].str.strip()\n    df['End Time'] = df['End Time'].str.strip()",
+        "detail": "utils.scripts.exams_schedule_extractor",
+        "documentation": {}
+    },
+    {
+        "label": "correct_date_column",
+        "kind": 2,
+        "importPath": "utils.scripts.exams_schedule_extractor",
+        "description": "utils.scripts.exams_schedule_extractor",
+        "peekOfCode": "def correct_date_column(df):\n    df[['Day', 'Month', 'Years']] = df['Date'].str.split('/', expand=True)\n    df['Day'] = df['Day'].str.strip()  \n    df['Month'] = df['Month'].str.strip()  \n    df['Day'] = df['Day'].apply(lambda x: '0' + x if len(x) == 1 else x) \n    for i in range(1, len(df)):\n        if len(df.loc[i, 'Month']) == 1:\n            j = i - 1\n            while len(df.loc[j, 'Month']) == 1 and j > 0:\n                j -= 1",
         "detail": "utils.scripts.exams_schedule_extractor",
         "documentation": {}
     },
@@ -289,7 +333,7 @@
         "kind": 2,
         "importPath": "utils.scripts.exams_schedule_extractor",
         "description": "utils.scripts.exams_schedule_extractor",
-        "peekOfCode": "def main():\n    base64_pdf_data = sys.stdin.read()\n    tables = extract_tables_from_pdf(base64_pdf_data)\n    df = create_dataframe(tables)\n    df = clean_dataframe(df)\n    df = split_time_column(df)\n    exams_schedule = df.to_dict(orient='records')\n    print(json.dumps(exams_schedule))\nif __name__ == \"__main__\":\n    main()",
+        "peekOfCode": "def main():\n    base64_pdf_data = sys.stdin.read()\n    tables, exam_name = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = create_dataframe(tables)\n    df = clean_dataframe(df)\n    df = split_time_column(df)\n    df = correct_date_column(df)\n    exams_schedule = df.to_dict(orient='records')\n    print(json.dumps({\"exams_schedule\": exams_schedule, \"exam_name\": exam_name}))\nif __name__ == \"__main__\":",
         "detail": "utils.scripts.exams_schedule_extractor",
         "documentation": {}
     },
@@ -300,6 +344,69 @@
         "description": "utils.scripts.extract_staff_info",
         "peekOfCode": "def extract_staff_info(excel_path):\n    df = pd.read_excel(excel_path)\n    df.drop(\"Contact\", axis=1, inplace=True)\n    staff_info = df.to_dict(orient='records')\n    print(json.dumps(staff_info))\nif __name__ == \"__main__\":\n    script_dir = os.path.dirname(os.path.realpath(__file__))\n    file_path = os.path.join(script_dir, \"All Records Query1.xlsx\")\n    extract_staff_info(file_path)",
         "detail": "utils.scripts.extract_staff_info",
+        "documentation": {}
+    },
+    {
+        "label": "extract_tables_from_pdf",
+        "kind": 2,
+        "importPath": "utils.scripts.invigilators_extractor",
+        "description": "utils.scripts.invigilators_extractor",
+        "peekOfCode": "def extract_tables_from_pdf(base64_pdf_data):\n    pdf_file_path = BytesIO(base64.b64decode(base64_pdf_data))\n    pdf = pdfplumber.open(pdf_file_path)\n    tables = []\n    for page in pdf.pages:\n        table = page.extract_table()\n        if table:\n            tables.extend(table)\n    return tables\ndef clean_venue(venue):",
+        "detail": "utils.scripts.invigilators_extractor",
+        "documentation": {}
+    },
+    {
+        "label": "clean_venue",
+        "kind": 2,
+        "importPath": "utils.scripts.invigilators_extractor",
+        "description": "utils.scripts.invigilators_extractor",
+        "peekOfCode": "def clean_venue(venue):\n    venue = re.sub(r'.*?(?=PG|SMA|SAARAH MENSAH AUD|SAARAH MENSAH AUDITORIUM|BLOCK)', '', venue)\n    venue = re.sub(r'\\d', '', venue)\n    if venue.strip().startswith('BLOCK'):\n        venue = 'PG ' + venue\n    return venue.strip()\ndef clean_dataframe(df):\n    df.drop(columns=['Course Name'], inplace=True)\n    df.replace(\"\", np.nan, inplace=True)\n    df = df.fillna(method='ffill')",
+        "detail": "utils.scripts.invigilators_extractor",
+        "documentation": {}
+    },
+    {
+        "label": "clean_dataframe",
+        "kind": 2,
+        "importPath": "utils.scripts.invigilators_extractor",
+        "description": "utils.scripts.invigilators_extractor",
+        "peekOfCode": "def clean_dataframe(df):\n    df.drop(columns=['Course Name'], inplace=True)\n    df.replace(\"\", np.nan, inplace=True)\n    df = df.fillna(method='ffill')\n    df.columns = [col.replace('\\n', ' ') for col in df.columns]\n    for col in df.columns:\n        if col not in ['Venue', 'Course Code']:\n            df[col] = df[col].replace('\\n', ' ', regex=True)\n    df['Venue'] = df['Venue'].replace('\\n', ' - ', regex=True)\n    df['Venue'] = df['Venue'].apply(clean_venue)",
+        "detail": "utils.scripts.invigilators_extractor",
+        "documentation": {}
+    },
+    {
+        "label": "clean_time",
+        "kind": 2,
+        "importPath": "utils.scripts.invigilators_extractor",
+        "description": "utils.scripts.invigilators_extractor",
+        "peekOfCode": "def clean_time(df):\n    time_index = df.columns.get_loc('Time')\n    df['Time'] = df['Time'].str.replace('–', '-').str.replace(' ', '')\n    time_df = df['Time'].str.split('-', expand=True)\n    time_df.columns = ['Start Time', 'End Time']\n    df = df.drop('Time', axis=1)\n    df = pd.concat([df.iloc[:, :time_index], time_df, df.iloc[:, time_index:]], axis=1)\n    df['Start Time'] = df['Start Time'].str.strip().str.lower()\n    df['End Time'] = df['End Time'].str.strip().str.lower()\n    df['Start Time'] = df['Start Time'].apply(lambda x: x if ':' in x else x[:-2] + ':00' + x[-2:])",
+        "detail": "utils.scripts.invigilators_extractor",
+        "documentation": {}
+    },
+    {
+        "label": "clean_invigilators",
+        "kind": 2,
+        "importPath": "utils.scripts.invigilators_extractor",
+        "description": "utils.scripts.invigilators_extractor",
+        "peekOfCode": "def clean_invigilators(df):\n    df['Invigilators'] = df['Invigilators'].str.replace(r'(\\b\\w+\\b)(\\s[A-Z]\\.)', r'\\1, \\2', regex=True).str.title()\n    df['Invigilators'] = df['Invigilators'].str.replace(r'\\s*-\\s*', '-', regex=True)\n    df = df.assign(Invigilators=df['Invigilators'].str.split(pat=',\\s*', expand=False)).explode('Invigilators')\n    df['Invigilators'] = df['Invigilators'].str.replace(r'[^\\w\\s.-]', '', regex=True)\n    df['Invigilators_sorted'] = df['Invigilators'].apply(lambda x: ''.join(sorted(re.sub(r'[^a-zA-Z]', '', x))))\n    df = df.sort_values('Invigilators').drop_duplicates('Invigilators_sorted', keep='last')\n    merged_invigilators = []\n    for i, invigilator in enumerate(df['Invigilators_sorted']):\n        subset_found = False",
+        "detail": "utils.scripts.invigilators_extractor",
+        "documentation": {}
+    },
+    {
+        "label": "group_by_invigilator",
+        "kind": 2,
+        "importPath": "utils.scripts.invigilators_extractor",
+        "description": "utils.scripts.invigilators_extractor",
+        "peekOfCode": "def group_by_invigilator(df):\n    grouped_df = df.groupby('Invigilators').apply(lambda x: x.iloc[:, df.columns != 'Invigilators'].to_dict('records')).reset_index()\n    grouped_df.columns = ['Invigilator', 'Details']\n    return grouped_df\ndef main():\n    base64_pdf_data = sys.stdin.read()\n    tables = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = pd.DataFrame(tables[1:], columns=tables[0])\n    df = clean_dataframe(df)\n    df = clean_time(df)",
+        "detail": "utils.scripts.invigilators_extractor",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "utils.scripts.invigilators_extractor",
+        "description": "utils.scripts.invigilators_extractor",
+        "peekOfCode": "def main():\n    base64_pdf_data = sys.stdin.read()\n    tables = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = pd.DataFrame(tables[1:], columns=tables[0])\n    df = clean_dataframe(df)\n    df = clean_time(df)\n    df = clean_invigilators(df)\n    df = df[df['Invigilators'].str.strip() != '']\n    grouped_df = group_by_invigilator(df)\n    invigilators_schedule = grouped_df.to_dict(orient='records')",
+        "detail": "utils.scripts.invigilators_extractor",
         "documentation": {}
     }
 ]

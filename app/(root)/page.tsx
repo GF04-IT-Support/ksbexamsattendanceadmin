@@ -6,6 +6,6 @@ import { FieldValues } from "react-hook-form";
 export default  function Dashboard() {
  
   return(
-    <main><UploadForm/></main>
+    <main>Dashboard</main>
     ) 
 }

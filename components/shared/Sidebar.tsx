@@ -27,7 +27,7 @@ const Sidebar = () => {
             <Link
               key={link.label}
               href={link.route}
-              className={`relative flex justify-start gap-4 rounded-full p-4  ${
+              className={`relative flex justify-start gap-4 rounded-2xl p-4  ${
                 isActive && "bg-[#ffffff]"
               } ${!isActive && "hover:opacity-50"} `}
             >
@@ -36,7 +36,7 @@ const Sidebar = () => {
                   React.cloneElement(link.icon, {
                     style: { color: !isActive ? "#ffffff" : "#0A0A0A" },
                   })}
-                {/* <Image src={link.icon} alt={link.label} width={20} height={20} /> */}
+
 
                 <p
                   className={`${
