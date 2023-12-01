@@ -42,17 +42,21 @@ def clean_dataframe(df):
     df.rename(columns={'Day/Dat e': 'Date'}, inplace=True)
     return df
 
-def clean_time(df):
+def split_time_column(df):
+    df['Time'] = df['Time'].str.replace('–', '-', regex=False)
+    df['Time'] = df['Time'].str.lower()
     time_index = df.columns.get_loc('Time')
-    df['Time'] = df['Time'].str.replace('–', '-').str.replace(' ', '')
     time_df = df['Time'].str.split('-', expand=True)
     time_df.columns = ['Start Time', 'End Time']
     df = df.drop('Time', axis=1)
     df = pd.concat([df.iloc[:, :time_index], time_df, df.iloc[:, time_index:]], axis=1)
-    df['Start Time'] = df['Start Time'].str.strip().str.lower()
-    df['End Time'] = df['End Time'].str.strip().str.lower()
-    df['Start Time'] = df['Start Time'].apply(lambda x: x if ':' in x else x[:-2] + ':00' + x[-2:])
-    df['End Time'] = df['End Time'].apply(lambda x: x if ':' in x else x[:-2] + ':00' + x[-2:])
+    df['Start Time'] = df['Start Time'].str.strip()
+    df['End Time'] = df['End Time'].str.strip()
+    df['Start Time'] = df.apply(lambda row: row['Start Time'] + row['End Time'][-2:] if 'am' not in row['Start Time'] and 'pm' not in row['Start Time'] else row['Start Time'], axis=1)
+    df['Start Time'] = df['Start Time'].apply(lambda x: x if ':' in x else x.replace('am', ':00am').replace('pm', ':00pm'))
+    df['End Time'] = df['End Time'].apply(lambda x: x if ':' in x else x.replace('am', ':00am').replace('pm', ':00pm'))
+    df['Start Time'] = df['Start Time'].str.replace(' :', ':').str.replace(' am', 'am').str.replace(' pm', 'pm')
+    df['End Time'] = df['End Time'].str.replace(' :', ':').str.replace(' am', 'am').str.replace(' pm', 'pm')
     return df
 
 def clean_invigilators(df):
@@ -87,7 +91,7 @@ def main():
     tables = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)
     df = pd.DataFrame(tables[1:], columns=tables[0])
     df = clean_dataframe(df)
-    df = clean_time(df)
+    df = split_time_column(df)
     df = clean_invigilators(df)
     df = df[df['Invigilators'].str.strip() != '']
     grouped_df = group_by_invigilator(df)

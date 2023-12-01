@@ -1,10 +1,11 @@
-import UploadForm from '@/components/forms/UploadForm'
-import React from 'react'
+import StaffTabs from '@/components/tabs/StaffTabs'
+import React from 'react';
 
 export default function StaffManagement() {
+ 
   return (
-    <div>
-      <UploadForm uploadType='invigilators'/>
+    <div className='w-full'>
+      <StaffTabs/>
     </div>
   )
 }

@@ -374,11 +374,11 @@
         "documentation": {}
     },
     {
-        "label": "clean_time",
+        "label": "split_time_column",
         "kind": 2,
         "importPath": "utils.scripts.invigilators_extractor",
         "description": "utils.scripts.invigilators_extractor",
-        "peekOfCode": "def clean_time(df):\n    time_index = df.columns.get_loc('Time')\n    df['Time'] = df['Time'].str.replace('–', '-').str.replace(' ', '')\n    time_df = df['Time'].str.split('-', expand=True)\n    time_df.columns = ['Start Time', 'End Time']\n    df = df.drop('Time', axis=1)\n    df = pd.concat([df.iloc[:, :time_index], time_df, df.iloc[:, time_index:]], axis=1)\n    df['Start Time'] = df['Start Time'].str.strip().str.lower()\n    df['End Time'] = df['End Time'].str.strip().str.lower()\n    df['Start Time'] = df['Start Time'].apply(lambda x: x if ':' in x else x[:-2] + ':00' + x[-2:])",
+        "peekOfCode": "def split_time_column(df):\n    df['Time'] = df['Time'].str.replace('–', '-', regex=False)\n    df['Time'] = df['Time'].str.lower()\n    time_index = df.columns.get_loc('Time')\n    time_df = df['Time'].str.split('-', expand=True)\n    time_df.columns = ['Start Time', 'End Time']\n    df = df.drop('Time', axis=1)\n    df = pd.concat([df.iloc[:, :time_index], time_df, df.iloc[:, time_index:]], axis=1)\n    df['Start Time'] = df['Start Time'].str.strip()\n    df['End Time'] = df['End Time'].str.strip()",
         "detail": "utils.scripts.invigilators_extractor",
         "documentation": {}
     },
@@ -396,7 +396,7 @@
         "kind": 2,
         "importPath": "utils.scripts.invigilators_extractor",
         "description": "utils.scripts.invigilators_extractor",
-        "peekOfCode": "def group_by_invigilator(df):\n    grouped_df = df.groupby('Invigilators').apply(lambda x: x.iloc[:, df.columns != 'Invigilators'].to_dict('records')).reset_index()\n    grouped_df.columns = ['Invigilator', 'Details']\n    return grouped_df\ndef main():\n    base64_pdf_data = sys.stdin.read()\n    tables = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = pd.DataFrame(tables[1:], columns=tables[0])\n    df = clean_dataframe(df)\n    df = clean_time(df)",
+        "peekOfCode": "def group_by_invigilator(df):\n    grouped_df = df.groupby('Invigilators').apply(lambda x: x.iloc[:, df.columns != 'Invigilators'].to_dict('records')).reset_index()\n    grouped_df.columns = ['Invigilator', 'Details']\n    return grouped_df\ndef main():\n    base64_pdf_data = sys.stdin.read()\n    tables = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = pd.DataFrame(tables[1:], columns=tables[0])\n    df = clean_dataframe(df)\n    df = split_time_column(df)",
         "detail": "utils.scripts.invigilators_extractor",
         "documentation": {}
     },
@@ -405,7 +405,7 @@
         "kind": 2,
         "importPath": "utils.scripts.invigilators_extractor",
         "description": "utils.scripts.invigilators_extractor",
-        "peekOfCode": "def main():\n    base64_pdf_data = sys.stdin.read()\n    tables = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = pd.DataFrame(tables[1:], columns=tables[0])\n    df = clean_dataframe(df)\n    df = clean_time(df)\n    df = clean_invigilators(df)\n    df = df[df['Invigilators'].str.strip() != '']\n    grouped_df = group_by_invigilator(df)\n    invigilators_schedule = grouped_df.to_dict(orient='records')",
+        "peekOfCode": "def main():\n    base64_pdf_data = sys.stdin.read()\n    tables = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = pd.DataFrame(tables[1:], columns=tables[0])\n    df = clean_dataframe(df)\n    df = split_time_column(df)\n    df = clean_invigilators(df)\n    df = df[df['Invigilators'].str.strip() != '']\n    grouped_df = group_by_invigilator(df)\n    invigilators_schedule = grouped_df.to_dict(orient='records')",
         "detail": "utils.scripts.invigilators_extractor",
         "documentation": {}
     }

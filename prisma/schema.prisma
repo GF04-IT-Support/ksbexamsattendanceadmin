@@ -45,6 +45,7 @@ model ExamSession {
   staff_id               String
   createdAt              DateTime    @default(now())
   createdBy              String
+  venue                  String
   exam                   Exam     @relation(fields: [exam_id], references: [exam_id])
   staff                  Staff    @relation(fields: [staff_id], references: [staff_id])
   attendances            Attendance[]
