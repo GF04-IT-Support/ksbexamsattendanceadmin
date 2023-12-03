@@ -1,4 +1,8 @@
-import UploadForm from "@/components/forms/UploadForm";
+import Administrative from "@/components/Staffs/Administrative";
+import ITSupport from "@/components/Staffs/ITSupport";
+import Invigilators from "@/components/Staffs/Invigilators";
+import Nurses from "@/components/Staffs/Nurses";
+import Security from "@/components/Staffs/Security";
 import {
   FaHome,
   FaCalendarAlt,
@@ -44,27 +48,27 @@ export const StaffTabsLinks = [
         {
             id: "invigilators",
             label: "Invigilators",
-            content: <UploadForm uploadType="invigilators"/>
+            content: (id:string, label:string) => <Invigilators id={id} label={label} />
         },
         {
             id: "security",
             label: "Security",
-            content: "Content for Security"
+            content: (id:string, label:string) => <Security id={id} label={label} />
         },
         {
             id: "nurses",
             label: "Nurses",
-            content: "Content for Nurses"
+            content: (id:string, label:string) => <Nurses id={id} label={label} />
         },
         {
             id: "itSupport",
             label: "IT Support",
-            content: "Content for IT Support"
+            content: (id:string, label:string) => <ITSupport id={id} label={label} />
         },
         {
             id: "administrative",
             label: "Administrative",
-            content: "Content for Administrative"
+            content: (id:string, label:string) => <Administrative id={id} label={label} />
         }
     ];
 

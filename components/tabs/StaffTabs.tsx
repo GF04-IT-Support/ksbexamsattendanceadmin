@@ -10,7 +10,7 @@ export default function StaffTabs() {
             <Tabs aria-label="Dynamic tabs" items={StaffTabsLinks} fullWidth >
                 {(item) => (
                     <Tab key={item.id} title={item.label} >
-                        {item.content}
+                        {item.content(item.id, item.label)}
                     </Tab>
                 )}
             </Tabs>

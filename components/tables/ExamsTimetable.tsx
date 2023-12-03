@@ -11,7 +11,6 @@ import {
   Pagination,
   Select,
   SelectItem,
-  Input,
   Spinner,
   Tooltip,
 } from '@nextui-org/react';
@@ -21,9 +20,9 @@ import ReactHtmlParser from 'react-html-parser';
 import TableDatePicker from '../pickers/TableDatePicker';
 import { FiFilter, FiRefreshCw, FiEye  } from 'react-icons/fi';
 import { useDateStore } from '@/zustand/store';
-import { searchTypes } from '@/lib/constants';
 import SearchInput from '../inputs/SearchInput';
 import ViewNEditModal from '../modals/ViewNEditExamsModal';
+import { Toaster } from 'react-hot-toast';
 
 
 type ExamName = {
@@ -146,11 +145,12 @@ const handleView = (items:any) =>{
 
 
   const loadingState = isLoading ? 'loading' : 'idle';
-   const isEmpty = (searchResults || filteredExamsData).length === 0 && !isLoading;
+  const isEmpty = (searchResults || filteredExamsData).length === 0 && !isLoading;
 
   return (
     <div className='my-4 w-full'>
       <div className='flex justify-center items-center'>
+      <Toaster position="top-center" />    
         <Select
           label='Exam Name'
           items={examNames}
@@ -191,7 +191,7 @@ const handleView = (items:any) =>{
         isStriped
         aria-label='Exams timetable'
         bottomContent={
-          pages > 0 ? (
+          pages > 1 && (
             <div className='flex w-full justify-center'>
               <Pagination
                 isCompact
@@ -203,17 +203,18 @@ const handleView = (items:any) =>{
                 onChange={(page) => setPage(page)}
               />
             </div>
-          ) : null
+          ) 
         }
-        fullWidth
-    
+        classNames={{
+            table: isLoading ? "min-h-[400px]" : "",
+        }}
       >
         <TableHeader>
           <TableColumn key='date'>Date</TableColumn>
-          <TableColumn key='exam_code'>Exam Code</TableColumn>
+          <TableColumn key='exam_code'>Exam Code(s)</TableColumn>
           <TableColumn key='start_time'>Start Time</TableColumn>
           <TableColumn key='end_time'>End Time</TableColumn>
-          <TableColumn key='venue'>Venue</TableColumn>
+          <TableColumn key='venue'>Venue(s)</TableColumn>
           <TableColumn key='year'>Year</TableColumn>
           <TableColumn key='action'>Action</TableColumn>
         </TableHeader>
@@ -247,12 +248,14 @@ const handleView = (items:any) =>{
                         )
                         : item[columnKey]
                       : columnKey === 'action' ? (
+                        <Tooltip content="View">
                           <FiEye
                             size={20}
                             className="cursor-pointer hover:opacity-60"
                             style={{ cursor: 'pointer' }}
                             onClick={() => handleView(item)} 
                           />
+                          </Tooltip>
                         ) : item[columnKey]}
                   </TableCell>
                 )}
@@ -261,7 +264,9 @@ const handleView = (items:any) =>{
         </TableBody>
             )}
           </Table>
-          <ViewNEditModal isOpen={modalOpen} onClose={() => setModalOpen(false)} selectedExam={selectedExam}/>
-        </div>
+          {modalOpen && 
+          <ViewNEditModal isOpen={modalOpen} onClose={() => setModalOpen(false)} selectedExam={selectedExam}mutate={mutate}/>
+        }
+          </div>
       );
       }

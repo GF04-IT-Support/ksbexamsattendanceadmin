@@ -1,12 +1,12 @@
 "use server"
 
-import { exec as execCb, spawn } from 'child_process';
+import { exec as execCb } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import prisma from '@/utils/prisma';
 import { revalidatePath } from 'next/cache';
 
-const exec = promisify(execCb);
+const exec = promisify(execCb); 
 
 type StaffInfo = {
   Name: string;
@@ -43,3 +43,35 @@ export async function extractStaffInfo() {
   }
 }
 
+export async function fetchStaffDetails(id: string) {
+  let staffRoles;
+  switch (id) {
+    case 'invigilators':
+      staffRoles = ['Lecturer', 'Part-Time Lecturer', 'PhD Student', 'Other'];
+      break;
+    case 'security':
+      staffRoles = ['Security'];
+      break;
+    case 'nurses':
+      staffRoles = ['Nurse'];
+      break;
+    case 'itSupport':
+      staffRoles = ['IT Support'];
+      break;
+    case 'administrative':
+      staffRoles = ['Administrative', 'Other'];
+      break;
+    default:
+      throw new Error(`Invalid id: ${id}`);
+  }
+
+  try {
+    const staffDetails = await prisma.staff.findMany({
+    where: { staff_role: { in: staffRoles } },
+  });
+
+  return staffDetails;
+  } catch (error: any) {
+    throw new Error(error);
+  }
+}

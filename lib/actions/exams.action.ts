@@ -149,3 +149,17 @@ export async function extractInvigilatorsSchedule(base64PdfData: string) {
     }
   });
 }
+
+export async function editExamsSchedule(exam_id:string, data:any) {
+    try {
+        await prisma.exam.update({
+            where: {
+                exam_id: exam_id
+            },
+            data: data
+        });
+        return {message: "The exam schedule has been updated successfully!"}
+    } catch (error:any) {
+        return {message: "An error occurred while updating the exam schedule."}
+    }
+}
