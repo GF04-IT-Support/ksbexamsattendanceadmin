@@ -1,19 +1,19 @@
 // ConfirmationModal.tsx
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Spinner } from "@nextui-org/react";
 
 type ConfirmationModalProps = {
     isOpen: boolean;
     onConfirm: () => void;
     onClose: () => void;
+    isDeleting: boolean;
 };
 
-export default function UploadConfirmationModal({ isOpen, onConfirm, onClose }: ConfirmationModalProps) {
+export default function DeleteConfirmationModal({ isOpen, onConfirm, onClose, isDeleting }: ConfirmationModalProps) {
     return (
         <Modal 
             backdrop="opaque" 
             isOpen={isOpen} 
             onOpenChange={onClose}
-            // isDismissable={false}
             motionProps={{
                 variants: {
                     enter: {
@@ -36,16 +36,23 @@ export default function UploadConfirmationModal({ isOpen, onConfirm, onClose }: 
             }}
         >
             <ModalContent>
-                <ModalHeader className="flex flex-col gap-1 items-center justify-center">Confirm Upload</ModalHeader>
+                <ModalHeader className="flex flex-col gap-1 items-center justify-center">Confirm Delete</ModalHeader>
                 <ModalBody>
-                    <p>Are you sure you want to upload this schedule?</p>
+                    <p>Are you sure you want to delete this staff details?</p>
                 </ModalBody>
                 <ModalFooter>
-                    <Button color="danger" onPress={onClose}>
+                    <Button color="default" onPress={onClose}>
                         Cancel
                     </Button>
-                    <Button color="primary" onPress={onConfirm}>
-                        Confirm
+                    <Button color="danger" onPress={onConfirm}>
+                        {isDeleting ? (
+                            <>
+                            <Spinner size="sm" color='default'/>
+                            Deleting...
+                            </>
+                        ) : (
+                            'Delete'
+                        )}
                     </Button>
                 </ModalFooter>
             </ModalContent>

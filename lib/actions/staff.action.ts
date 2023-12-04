@@ -5,6 +5,7 @@ import { promisify } from 'util';
 import path from 'path';
 import prisma from '@/utils/prisma';
 import { revalidatePath } from 'next/cache';
+import { getStaffRoles } from '../helpers/staff.helpers';
 
 const exec = promisify(execCb); 
 
@@ -44,26 +45,7 @@ export async function extractStaffInfo() {
 }
 
 export async function fetchStaffDetails(id: string) {
-  let staffRoles;
-  switch (id) {
-    case 'invigilators':
-      staffRoles = ['Lecturer', 'Part-Time Lecturer', 'PhD Student', 'Other'];
-      break;
-    case 'security':
-      staffRoles = ['Security'];
-      break;
-    case 'nurses':
-      staffRoles = ['Nurse'];
-      break;
-    case 'itSupport':
-      staffRoles = ['IT Support'];
-      break;
-    case 'administrative':
-      staffRoles = ['Administrative', 'Other'];
-      break;
-    default:
-      throw new Error(`Invalid id: ${id}`);
-  }
+  let staffRoles = getStaffRoles(id);
 
   try {
     const staffDetails = await prisma.staff.findMany({
@@ -73,5 +55,35 @@ export async function fetchStaffDetails(id: string) {
   return staffDetails;
   } catch (error: any) {
     throw new Error(error);
+  }
+}
+
+export async function deleteStaffDetails(id: string) {
+  try {
+    await prisma.staff.delete({ where: { staff_id: id } });
+    return {message: 'Staff deleted successfully'};
+  } catch (error: any) {
+    return {message: 'An error occurred while deleting the staff.'};
+  }
+}
+
+export async function updateStaffDetails(id: string, data: any) {
+  try {
+    await prisma.staff.update({
+      where: { staff_id: id },
+      data,
+    });
+    return {message: 'Staff details updated successfully'};
+  } catch (error: any) {
+    return {message: 'An error occurred while updating the staff details.'};
+  }
+}
+
+export async function createNewStaff(data: any) {
+  try {
+    await prisma.staff.create({ data });
+    return {message: 'Staff created successfully'};
+  } catch (error: any) {
+    return {message: 'An error occurred while creating the staff.'};
   }
 }

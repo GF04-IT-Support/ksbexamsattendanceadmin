@@ -17,14 +17,11 @@ import {
 } from '@nextui-org/react';
 import useSWR from 'swr';
 import { FiEdit, FiPlus, FiTrash2  } from 'react-icons/fi';
-import { Toaster } from 'react-hot-toast';
-import { fetchStaffDetails } from '@/lib/actions/staff.action';
-
-const statusColorMap = {
-  active: "success",
-  paused: "danger",
-  vacation: "warning",
-};
+import toast, { Toaster } from 'react-hot-toast';
+import { deleteStaffDetails, fetchStaffDetails } from '@/lib/actions/staff.action';
+import DeleteConfirmationModal from '../modals/DeleteConfirmationModal';
+import EditStaffDetailsModal from '../modals/EditStaffDetailsModal';
+import CreateNewStaffModal from '../modals/CreateNewStaffModal';
 
 type StaffProps = {
   id: string;
@@ -32,6 +29,11 @@ type StaffProps = {
 };
 
 export default function StaffDetailsTable({id, label}: StaffProps) {
+    const [selectedDetails, setselectedDetails] = useState<any>([] || "")
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false);
     const [page, setPage] = useState(1);
     const rowsPerPage = 10;
 
@@ -53,12 +55,44 @@ export default function StaffDetailsTable({id, label}: StaffProps) {
   const loadingState = isLoading ? 'loading' : 'idle';
   const isEmpty = staffDetails.length === 0 && !isLoading;
 
-  
+  const onDelete = (id:string) => {
+    setselectedDetails(id)
+    setShowDeleteModal(true);
+  }
+
+  const onEdit = (details: any) => {
+    setselectedDetails(details)
+    setShowEditModal(true);
+  }
+
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    try {
+      const response = await deleteStaffDetails(selectedDetails);
+
+      if(response?.message === 'Staff deleted successfully') {
+        toast.success(response?.message);
+        mutate();
+      } else if(response?.message === 'An error occurred while deleting the staff.') {
+        toast.error(response?.message);
+      }
+    } catch (error) {
+      console.error(error);
+    }finally{
+      setShowDeleteModal(false);
+      setIsDeleting(false);
+    }
+  }
+
+  const uniqueRoles = Array.from(new Set(staffDetails.map((staff: any) => staff.staff_role)));
+
+    
 
   return (
     <div className='my-2 pb-6 w-full'>
+      <Toaster position='top-center' />
       <div className='flex justify-end mb-2'>
-        <Button color='primary' className='flex gap-2'>
+        <Button color='primary' className='flex gap-2' onClick={() => setShowCreateModal(true)}>
           <FiPlus size={22}/>
           Add New {label.endsWith('s') ? label.slice(0, -1) : label}
         </Button>
@@ -108,12 +142,12 @@ export default function StaffDetailsTable({id, label}: StaffProps) {
                     {columnKey === 'actions' ? (
                           <div className="relative flex items-center gap-2">
                             <Tooltip content="Edit">
-                            <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
+                            <span className="text-lg text-default-400 cursor-pointer active:opacity-50" onClick={() => onEdit(item)}>
                                 <FiEdit />
                             </span>
                             </Tooltip>
                             <Tooltip color="danger" content="Delete">
-                            <span className="text-lg text-danger cursor-pointer active:opacity-50">
+                            <span className="text-lg text-danger cursor-pointer active:opacity-50" onClick={() => onDelete(item.staff_id)}>
                                 <FiTrash2 />
                             </span>
                             </Tooltip>
@@ -126,6 +160,16 @@ export default function StaffDetailsTable({id, label}: StaffProps) {
         </TableBody>
             )}
           </Table>
+
+          <DeleteConfirmationModal isOpen={showDeleteModal} onConfirm={handleDelete} onClose={() => setShowDeleteModal(false)} isDeleting={isDeleting}/>
+
+           {showEditModal && 
+          <EditStaffDetailsModal isOpen={showEditModal} staffDetails={selectedDetails} onClose={() => setShowEditModal(false)} mutate={mutate} uniqueRoles={uniqueRoles}/>
+        }
+
+        {showCreateModal &&(
+          <CreateNewStaffModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} mutate={mutate} uniqueRoles={uniqueRoles}/>
+        )}
     </div>
   )
 }

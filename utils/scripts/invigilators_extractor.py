@@ -20,9 +20,13 @@ def extract_tables_from_pdf(base64_pdf_data):
 
 def clean_venue(venue):
     venue = re.sub(r'.*?(?=PG|SMA|SAARAH MENSAH AUD|SAARAH MENSAH AUDITORIUM|BLOCK)', '', venue)
-    venue = re.sub(r'\d', '', venue)
     if venue.strip().startswith('BLOCK'):
         venue = 'PG ' + venue
+    venue = re.sub(r'\bSAARAH MENSAH AUD\b', 'SMA', venue)
+    venue = re.sub(r'\bSAARAH MENSAH AUDITORIUM\b', 'SMA', venue)
+    venue = re.sub(r'\bBLK\b', 'BLOCK', venue)
+    venue = re.sub(r'\d', '', venue)
+    venue = re.sub(r'-.*', '', venue) 
     return venue.strip()
 
 def clean_dataframe(df):
@@ -86,12 +90,30 @@ def group_by_invigilator(df):
     grouped_df.columns = ['Invigilator', 'Details']
     return grouped_df
 
+def correct_date_column(df):
+    df[['Day', 'Month', 'Years']] = df['Date'].str.split('/', expand=True)
+    df['Day'] = df['Day'].str.strip()  
+    df['Month'] = df['Month'].str.strip()  
+    df['Day'] = df['Day'].apply(lambda x: '0' + x if len(x) == 1 else x) 
+    df['Month'] = df['Month'].apply(lambda x: x[:2] if len(x) > 2 else x)
+    for i in range(1, len(df)):
+        if len(df.loc[i, 'Month']) == 1:
+            j = i - 1
+            while len(df.loc[j, 'Month']) == 1 and j > 0:
+                j -= 1
+            df.loc[i, 'Month'] = df.loc[j, 'Month']
+
+    df['Date'] = df['Day'] + '/' + df['Month'] + '/' + df['Years']
+    df = df.drop(['Day', 'Month', 'Years'], axis=1)
+    return df
+
 def main():
     base64_pdf_data = sys.stdin.read()
     tables = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)
     df = pd.DataFrame(tables[1:], columns=tables[0])
     df = clean_dataframe(df)
     df = split_time_column(df)
+    df = correct_date_column(df)
     df = clean_invigilators(df)
     df = df[df['Invigilators'].str.strip() != '']
     grouped_df = group_by_invigilator(df)

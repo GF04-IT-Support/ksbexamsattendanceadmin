@@ -1,7 +1,7 @@
 "use client"
 
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure, Input, Spinner } from "@nextui-org/react";
-import {  Card, CardContent, Typography, Grid, TextField } from '@material-ui/core';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Spinner } from "@nextui-org/react";
+import {  Card, CardContent, Typography, Grid } from '@material-ui/core';
 import { useEffect, useState } from "react";
 import { FiEdit2} from 'react-icons/fi';
 import { AiOutlineClose, AiOutlineCheck } from 'react-icons/ai';
@@ -11,7 +11,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import moment from 'moment';
 import { editExamsSchedule } from "@/lib/actions/exams.action";
-import { toast, Toaster } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
+import TextField from '@mui/material/TextField';
 
 interface Exam {
   date: any;
@@ -98,7 +99,7 @@ const ViewNEditModal  = ({ isOpen, onClose, selectedExam, mutate }: ViewNEditMod
             <div className="flex flex-col gap-3">
             {isEditing ? (
                 value.split(',').map((val, index) => (
-                <Input
+                <TextField
                     key={index}
                     value={val.trim()}
                     onChange={(e) => {
@@ -106,9 +107,7 @@ const ViewNEditModal  = ({ isOpen, onClose, selectedExam, mutate }: ViewNEditMod
                     newValues[index] = e.target.value;
                     onEdit(newValues.join(','));
                     }}
-                    classNames={{
-                        // inputWrapper:'border-none bg-white hover:bg-transparent',
-                    }}
+                    variant="standard"
                 />
                 ))
             ) : (
@@ -164,12 +163,13 @@ const ViewNEditModal  = ({ isOpen, onClose, selectedExam, mutate }: ViewNEditMod
         return (
             <Grid item xs={6} className="flex gap-4">
             {isEditing ? (
-                <Input
+                <TextField
                 value={value}
                 onChange={(e) => {
                     onEdit(e.target.value);
                 }}
                 className="w-[100px]"
+                variant="standard"
                 />
             ) : (
                 <Typography color="textPrimary">{value}</Typography>

@@ -77,12 +77,14 @@ def clean_dataframe(df):
         if col not in ['Venue', 'Course Code']:
             df[col] = df[col].replace('\n', ' ', regex=True)
     df['Venue'] = df['Venue'].apply(lambda x: ', '.join([re.sub(r'.*?(?=PG|SMA|SAARAH MENSAH AUD|SAARAH MENSAH AUDITORIUM)', '', line) for line in x.split('\n')]) if '\n' in x else x)
-    df['Venue'] = df['Venue'].apply(lambda x: x.translate(str.maketrans('', '', string.punctuation.replace(',', ''))))  # Remove special characters except comma
+    df['Venue'] = df['Venue'].apply(lambda x: x.translate(str.maketrans('', '', string.punctuation.replace(',', ''))))  
     df['Course Code'] = df['Course Code'].replace('\n', ', ', regex=True)
     df.replace(to_replace=r'\n', value=' ', regex=True, inplace=True)
     df = df[~(df == df.columns).sum(axis=1).gt(1)]
     df['Day/Date'] = df['Day/Date'].str.split(' ', 1).str[1].str.strip().str.strip('/')
     df.rename(columns={'Day/Date': 'Date'}, inplace=True)
+    df['Course Code'] = df['Course Code'].apply(lambda x: ', '.join(word.strip() for word in x.split(',')))
+    df['Venue'] = df['Venue'].replace({'SAARAH MENSAH AUD': 'SMA', 'SAARAH MENSAH AUDITORIUM': 'SMA', 'BLK': 'BLOCK'}, regex=True)
     return df
 
 def split_time_column(df):
@@ -125,6 +127,7 @@ def main():
     df = clean_dataframe(df)
     df = split_time_column(df)
     df = correct_date_column(df)
+    df = df.drop_duplicates(subset=['Date', 'Course Code', 'Venue', 'Start Time', 'End Time'])
     exams_schedule = df.to_dict(orient='records')
     print(json.dumps({"exams_schedule": exams_schedule, "exam_name": exam_name}))
 

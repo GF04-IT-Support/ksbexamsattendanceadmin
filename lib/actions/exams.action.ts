@@ -70,6 +70,7 @@ export async function extractExamsSchedule(base64PdfData: string) {
           }
           resolve({ message: `The exam schedule has been uploaded successfully!` });
         }
+        revalidatePath('/exams-schedule');
       });
 
     } catch (err) {
@@ -140,7 +141,8 @@ export async function extractInvigilatorsSchedule(base64PdfData: string) {
          for (const invigilators of correlation) {
              await correlateInvigilatorsWithExams(invigilators.full_name, invigilators.details, invigilators.staff_id);
           }
-
+          
+          revalidatePath('/staff-management')
           resolve({ message: `The invigilator's schedule has been uploaded successfully!` });
         }
       });
@@ -163,3 +165,4 @@ export async function editExamsSchedule(exam_id:string, data:any) {
         return {message: "An error occurred while updating the exam schedule."}
     }
 }
+

@@ -13,9 +13,10 @@ import UploadConfirmationModal from '../modals/UploadConfirmationModal';
 
 type UploadFormProps = {
   uploadType: 'exams' | 'invigilators';
+  onClose: () => void;
 }
 
-const UploadForm = ({uploadType}: UploadFormProps) => {
+const UploadForm = ({uploadType, onClose}: UploadFormProps) => {
     const { handleSubmit } = useForm();
     const [isLoading, setIsLoading] = useState(false);
     const [showError, setShowError] = useState(false);
@@ -71,6 +72,7 @@ const UploadForm = ({uploadType}: UploadFormProps) => {
                     return;
                 }
             });
+            onClose();
         }else{
           await extractInvigilatorsSchedule(base64String)
           .then((response: any) => {
@@ -83,7 +85,8 @@ const UploadForm = ({uploadType}: UploadFormProps) => {
                     toast.error(response?.message);
                     return;
                 }
-            });
+            }); 
+            onClose();
         }
       } catch (error) {
         console.error(error);
