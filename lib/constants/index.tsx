@@ -48,41 +48,27 @@ export const StaffTabsLinks = [
         {
             id: "invigilators",
             label: "Invigilators",
-            content: (id:string, label:string) => <Invigilators id={id} label={label} />
+            content: (id:string, label:string, examsNames:any) => <Invigilators id={id} label={label} examsNames={examsNames}/>
         },
         {
             id: "security",
             label: "Security",
-            content: (id:string, label:string) => <Security id={id} label={label} />
+            content: (id:string, label:string, examsNames:any) => <Security id={id} label={label} examsNames={examsNames}/>
         },
         {
             id: "nurses",
             label: "Nurses",
-            content: (id:string, label:string) => <Nurses id={id} label={label} />
+            content: (id:string, label:string, examsNames:any) => <Nurses id={id} label={label} examsNames={examsNames}/>
         },
         {
             id: "itSupport",
             label: "IT Support",
-            content: (id:string, label:string) => <ITSupport id={id} label={label} />
+            content: (id:string, label:string, examsNames:any) => <ITSupport id={id} label={label} examsNames={examsNames}/>
         },
         {
             id: "administrative",
             label: "Administrative",
-            content: (id:string, label:string) => <Administrative id={id} label={label} />
+            content: (id:string, label:string, examsNames:any) => <Administrative id={id} label={label} examsNames={examsNames}/>
         }
     ];
 
-export const searchTypes = [
-  {
-    id: "date",
-    label: "Date",
-  },
-  {
-    id: "examCode",
-    label: "Exam Code",
-  },
-  {
-    id: "venue",
-    label: "Venue",
-  }
-]

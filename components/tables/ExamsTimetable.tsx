@@ -73,7 +73,6 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
   const { data: examsData = [], mutate, isLoading } = useSWR(
     `examsSchedule/${selectedId}`,
     () => getExamsSchedule(selectedId),
-    // { revalidateOnMount: false, revalidateOnFocus: false }
   );
 
   
@@ -82,7 +81,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
     if(!isLoading && !startDate && !endDate){
       setFilteredExamsData(examsData);
     }
-  }, [ isLoading, mutate(), startDate, endDate]);
+  }, [ isLoading, examsData, startDate, endDate]);
 
  
   const handleFilter = () => {
@@ -179,11 +178,11 @@ const handleView = (items:any) =>{
 
       <div className='flex gap-2 items-center justify-start my-6'>
         <TableDatePicker />
-        <div className='flex p-2 border border-gray-500 rounded cursor-pointer hover:opacity-60' onClick={resetDates}>
-          <FiRefreshCw />
+        <div className='flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2  border-gray-500 rounded cursor-pointer hover:opacity-60' onClick={resetDates}>
+          <FiRefreshCw size={20} color={`gray`}/>
         </div>
-        <div className='flex p-2 border border-gray-500 rounded cursor-pointer hover:opacity-60' onClick={handleFilter}>
-          <FiFilter />
+        <div className='flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2 border-gray-500 rounded cursor-pointer hover:opacity-60' onClick={handleFilter}>
+          <FiFilter size={20} color={`gray`}/>
         </div>
     </div>
 

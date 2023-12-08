@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
   Table,
   TableHeader,
@@ -14,9 +14,10 @@ import {
   Spinner,
   Tooltip,
   Button,
+  Input,
 } from '@nextui-org/react';
 import useSWR from 'swr';
-import { FiEdit, FiPlus, FiTrash2  } from 'react-icons/fi';
+import { FiEdit, FiPlus, FiSearch, FiTrash2  } from 'react-icons/fi';
 import toast, { Toaster } from 'react-hot-toast';
 import { deleteStaffDetails, fetchStaffDetails } from '@/lib/actions/staff.action';
 import DeleteConfirmationModal from '../modals/DeleteConfirmationModal';
@@ -29,13 +30,15 @@ type StaffProps = {
 };
 
 export default function StaffDetailsTable({id, label}: StaffProps) {
+  const rowsPerPage = 10;
     const [selectedDetails, setselectedDetails] = useState<any>([] || "")
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false);
     const [page, setPage] = useState(1);
-    const rowsPerPage = 10;
+    const [searchQuery, setSearchQuery] = useState('');
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const { data: staffDetails = [], mutate, isLoading } = useSWR(
     `examsSchedule/${id}`,
@@ -43,17 +46,43 @@ export default function StaffDetailsTable({id, label}: StaffProps) {
     // { revalidateOnMount: false, revalidateOnFocus: false }
   );
 
-    const pages = Math.ceil(staffDetails.length / rowsPerPage);
+
+
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuery = e.target.value;
+
+    setSearchQuery(newQuery);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      setPage(1);
+      setSearchQuery(newQuery);
+    }, 300);
+  };
+
+  const filteredStaffDetails = useMemo(() => {
+    if (!searchQuery) return staffDetails;
+
+    return staffDetails.filter((staff: any) =>
+      staff.staff_name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery, staffDetails]);
+
+  const pages = Math.ceil(filteredStaffDetails.length / rowsPerPage);
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
 
-    return staffDetails.slice(start, end);
-  }, [page, staffDetails]);
+    return filteredStaffDetails.slice(start, end);
+  }, [page, filteredStaffDetails]);
 
   const loadingState = isLoading ? 'loading' : 'idle';
-  const isEmpty = staffDetails.length === 0 && !isLoading;
+  const isEmpty = filteredStaffDetails.length === 0 && !isLoading;
 
   const onDelete = (id:string) => {
     setselectedDetails(id)
@@ -91,8 +120,19 @@ export default function StaffDetailsTable({id, label}: StaffProps) {
   return (
     <div className='my-2 pb-6 w-full'>
       <Toaster position='top-center' />
-      <div className='flex justify-end mb-2'>
-        <Button color='primary' className='flex gap-2' onClick={() => setShowCreateModal(true)}>
+      <div className='flex justify-between mb-4'>
+        <Input
+            id='searchInput'
+            label='Search name'
+            isClearable
+            startContent={<FiSearch size={26} className='pr-2 pt-1 text-default-400 pointer-events-none flex-shrink-0'/>}
+            value={searchQuery}
+            onChange={handleSearch}
+            onClear={()=>setSearchQuery('')}
+            placeholder='Search...'
+            className='w-[400px]'
+            />
+        <Button color='primary' className='flex gap-2 justify-center mt-4' onClick={() => setShowCreateModal(true)}>
           <FiPlus size={22}/>
           Add New {label.endsWith('s') ? label.slice(0, -1) : label}
         </Button>

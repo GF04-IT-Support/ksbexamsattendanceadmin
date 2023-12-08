@@ -7,6 +7,8 @@ import json
 import base64
 from io import BytesIO
 import sys
+from fuzzywuzzy import fuzz
+from itertools import combinations
 
 def extract_tables_from_pdf(base64_pdf_data):
     pdf_file_path = BytesIO(base64.b64decode(base64_pdf_data))
@@ -19,14 +21,15 @@ def extract_tables_from_pdf(base64_pdf_data):
     return tables
 
 def clean_venue(venue):
+    venue = re.sub(r'[-.]', '', venue).strip()
+    venue = re.sub(r'\s+', ' ', venue)
     venue = re.sub(r'.*?(?=PG|SMA|SAARAH MENSAH AUD|SAARAH MENSAH AUDITORIUM|BLOCK)', '', venue)
+    venue = re.sub(r'\d', '', venue)
     if venue.strip().startswith('BLOCK'):
         venue = 'PG ' + venue
     venue = re.sub(r'\bSAARAH MENSAH AUD\b', 'SMA', venue)
     venue = re.sub(r'\bSAARAH MENSAH AUDITORIUM\b', 'SMA', venue)
     venue = re.sub(r'\bBLK\b', 'BLOCK', venue)
-    venue = re.sub(r'\d', '', venue)
-    venue = re.sub(r'-.*', '', venue) 
     return venue.strip()
 
 def clean_dataframe(df):
@@ -37,7 +40,8 @@ def clean_dataframe(df):
     for col in df.columns:
         if col not in ['Venue', 'Course Code']:
             df[col] = df[col].replace('\n', ' ', regex=True)
-    df['Venue'] = df['Venue'].replace('\n', ' - ', regex=True)
+    df['Venue'] = df['Venue'].replace('(?!\nACCRA)\n', ' - ', regex=True)
+    df = df.assign(Venue=df['Venue'].str.split('\n')).explode('Venue')
     df['Venue'] = df['Venue'].apply(clean_venue)
     df['Course Code'] = df['Course Code'].replace('\n', ', ', regex=True)
     df.replace(to_replace=r'\n', value=' ', regex=True, inplace=True)
@@ -64,31 +68,50 @@ def split_time_column(df):
     return df
 
 def clean_invigilators(df):
+    df['Invigilators'] = df['Invigilators'].str.replace(r'([a-z])([A-Z]\.)', r'\1 \2', regex=True)
+    df['Invigilators'] = df['Invigilators'].str.replace(r'\b([A-Z])\b(?!\.)', r'\1.', regex=True)
     df['Invigilators'] = df['Invigilators'].str.replace(r'(\b\w+\b)(\s[A-Z]\.)', r'\1, \2', regex=True).str.title()
     df['Invigilators'] = df['Invigilators'].str.replace(r'\s*-\s*', '-', regex=True)
+    df['Invigilators'] = df['Invigilators'].str.replace(r'[/;]', ', ', regex=True)
+    df['Invigilators'] = df['Invigilators'].str.replace(r',\s*,', ',', regex=True)
     df = df.assign(Invigilators=df['Invigilators'].str.split(pat=',\s*', expand=False)).explode('Invigilators')
     df['Invigilators'] = df['Invigilators'].str.replace(r'[^\w\s.-]', '', regex=True)
-    df['Invigilators_sorted'] = df['Invigilators'].apply(lambda x: ''.join(sorted(re.sub(r'[^a-zA-Z]', '', x))))
-    df = df.sort_values('Invigilators').drop_duplicates('Invigilators_sorted', keep='last')
-    merged_invigilators = []
-    for i, invigilator in enumerate(df['Invigilators_sorted']):
-        subset_found = False
+    df['Invigilators_sorted'] = df['Invigilators'].apply(lambda x: re.sub(r'[^a-zA-Z]', '', x))
+    
+    replaced_invigilators = df['Invigilators'].tolist()
+    for i, invigilator in enumerate(df['Invigilators']):
         for j, other_invigilator in enumerate(df['Invigilators_sorted']):
-            if i != j and set(invigilator).issubset(set(other_invigilator)):
-                merged_invigilators.append(df['Invigilators'].iloc[j])
-                subset_found = True
-                break
-        if not subset_found:
-            merged_invigilators.append(df['Invigilators'].iloc[i])
+            if invigilator and other_invigilator and i != j and abs(len(invigilator) - len(other_invigilator)) <= 2:
+                if fuzz.ratio(invigilator, other_invigilator) > 92:
+                    replaced_invigilators[i] = df['Invigilators'].iloc[j]
 
-    df['Invigilators'] = merged_invigilators
+    df['Invigilators'] = replaced_invigilators
     df = df.drop(columns='Invigilators_sorted')
     return df
 
 def group_by_invigilator(df):
-    grouped_df = df.groupby('Invigilators').apply(lambda x: x.iloc[:, df.columns != 'Invigilators'].to_dict('records')).reset_index()
-    grouped_df.columns = ['Invigilator', 'Details']
-    return grouped_df
+    df = df.drop(columns='No. of Students')
+    df['NormalizedInvigilator'] = df['Invigilators'].apply(lambda x: re.sub(r'[^a-zA-Z]', '', x))
+    df['Details'] = df.apply(lambda row: {col: row[col] for col in df.columns if col not in ['Invigilators', 'NormalizedInvigilator']}, axis=1)
+
+    invigilators = df['NormalizedInvigilator'].unique()
+    similar_invigilators = {}
+    for invig1, invig2 in combinations(invigilators, 2):
+        if abs(len(invig1) - len(invig2)) <= 4:
+            if fuzz.token_sort_ratio(invig1, invig2) > 92:  
+                similar_invigilators[invig2] = invig1
+
+    df['NormalizedInvigilator'] = df['NormalizedInvigilator'].replace(similar_invigilators)
+
+    invigilators = df['NormalizedInvigilator'].unique()
+    for invig1, invig2 in combinations(invigilators, 2):
+        if sorted(invig1) == sorted(invig2):  
+            similar_invigilators[invig2] = invig1
+
+    df['NormalizedInvigilator'] = df['NormalizedInvigilator'].replace(similar_invigilators)
+    grouped_df = df.groupby('NormalizedInvigilator').agg({'Details': list, 'Invigilators': 'first'}).reset_index()
+    return grouped_df[['Invigilators', 'Details']]
+
 
 def correct_date_column(df):
     df[['Day', 'Month', 'Years']] = df['Date'].str.split('/', expand=True)
@@ -96,6 +119,7 @@ def correct_date_column(df):
     df['Month'] = df['Month'].str.strip()  
     df['Day'] = df['Day'].apply(lambda x: '0' + x if len(x) == 1 else x) 
     df['Month'] = df['Month'].apply(lambda x: x[:2] if len(x) > 2 else x)
+    df.reset_index(drop=True, inplace=True)  # Reset the DataFrame's index
     for i in range(1, len(df)):
         if len(df.loc[i, 'Month']) == 1:
             j = i - 1
@@ -117,6 +141,7 @@ def main():
     df = clean_invigilators(df)
     df = df[df['Invigilators'].str.strip() != '']
     grouped_df = group_by_invigilator(df)
+    grouped_df = grouped_df.rename(columns={"Invigilators": "Invigilator"})
     invigilators_schedule = grouped_df.to_dict(orient='records')
     print(json.dumps(invigilators_schedule))
 

@@ -8,7 +8,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import moment from 'moment';
 import { FiSearch } from 'react-icons/fi';
-import { searchTypes } from '@/lib/constants';
+import { useStyles } from '@/lib/helpers/styles.helpers';
 
 type SearchInputProps = {
     searchQuery: string;
@@ -17,10 +17,27 @@ type SearchInputProps = {
     setSearchType: (type: string) => void;
     setSearchResults: (results: any) => void;
     handleSearch: (query: string, type: string) => void;
+    isStaffSearch?: boolean;
 };
 
-export default function SearchInput({ searchQuery, setSearchQuery, searchType, setSearchType, handleSearch, setSearchResults }: SearchInputProps) {
+export default function SearchInput({ isStaffSearch ,searchQuery, setSearchQuery, searchType, setSearchType, handleSearch, setSearchResults }: SearchInputProps) {
     const [typingTimeout, setTypingTimeout] = useState(0);
+    const classes = useStyles();
+
+  const searchTypes = [
+    {
+      id: "date",
+      label: "Date",
+    },
+    {
+      id: isStaffSearch ? "staffName" : "examCode",
+      label: isStaffSearch ? "Staff Name" : "Exam Code",
+    },
+    {
+      id: "venue",
+      label: "Venue",
+    }
+  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuery = e.target.value;
@@ -54,35 +71,40 @@ export default function SearchInput({ searchQuery, setSearchQuery, searchType, s
     setSearchResults(null)
     setSearchQuery('')
     }, [searchType]);  
+
+    
   
     return (
         <div className='flex gap-2 items-center justify-start my-6'>
             {searchType === 'date' ? (
                <LocalizationProvider dateAdapter={AdapterMoment}>
                 <DemoContainer components={['DatePicker']} >
+                    <div className='overflow-hidden py-2'>
                     <DatePicker 
                         value={searchQuery.length > 0 ? moment(new Date(searchQuery)) : null}  
                         label='Search' 
                         onChange={handleDateChange}
+                        className={`${classes.datePicker} w-[200px]`}
                     />
+                    </div>
                 </DemoContainer>
                 </LocalizationProvider>
             ) : (
                 <Input
                     id='searchInput'
-                    label='Search'
+                    // label='Search'
                     isClearable
                     startContent={<FiSearch size={26} className='pr-2 pt-1 text-default-400 pointer-events-none flex-shrink-0'/>}
                     value={searchQuery}
                     onChange={handleInputChange}
                     onClear={clearSearch}
                     placeholder='Search...'
-                    className='w-[500px]'
+                    className='w-[200px]'
                 />
             )}
 
             <Select
-                label='Search Type'
+                label='Search By'
                 items={searchTypes}
                 placeholder='Select Search Type'
                 defaultSelectedKeys={[searchTypes[0].id]}

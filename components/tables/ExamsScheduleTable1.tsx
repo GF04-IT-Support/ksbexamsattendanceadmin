@@ -2,24 +2,26 @@
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
   Pagination,
   Select,
   SelectItem,
   Spinner,
-  // Tooltip,
+  Tooltip,
   Chip,
   Modal,
   ModalContent,
   useDisclosure,
 } from "@nextui-org/react";
-import Tooltip from "@mui/material/Tooltip";
-import { TableCell as TableC } from "@mui/material";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TableFooter,
+} from "@mui/material";
 import useSWR from "swr";
 import { getExamsSchedule } from "@/lib/actions/exams.action";
 import TableDatePicker from "../pickers/TableDatePicker";
@@ -310,105 +312,121 @@ export default function ExamsScheduleTable({
           </div>
         </div>
 
-        <Table
-          isStriped
-          aria-label="Exams timetable"
-          bottomContent={
-            pages > 1 && (
-              <div className="flex w-full justify-center">
-                <Pagination
-                  isCompact
-                  showControls
-                  showShadow
-                  color="primary"
-                  page={page}
-                  total={pages}
-                  onChange={(page) => setPage(page)}
-                />
-              </div>
-            )
-          }
-          classNames={{
-            table: isLoading ? "min-h-[400px]" : "",
-          }}
-        >
-          <TableHeader>
-            <TableColumn key="date">Date/Time</TableColumn>
-            <TableColumn key="venue">Venue</TableColumn>
-            <TableColumn key={role}>{label}</TableColumn>
-            <TableColumn key="action">Action</TableColumn>
-          </TableHeader>
+        <TableContainer component={Paper}>
+          <Table aria-label="Exams timetable">
+            <TableHead style={{ backgroundColor: "#4D4DFF33" }}>
+              <TableRow>
+                <TableCell>Date/Time</TableCell>
+                <TableCell>Venue</TableCell>
+                <TableCell className="capitalize">{role}</TableCell>
+                <TableCell>Action</TableCell>
+              </TableRow>
+            </TableHead>
 
-          {isEmpty ? (
-            <TableBody emptyContent={"No schedule for this exams."}>
-              {[]}
-            </TableBody>
-          ) : (
-            <TableBody
-              loadingContent={<Spinner />}
-              loadingState={loadingState}
-              items={items}
-              aria-colspan={3}
-            >
-              {(item: any) => (
-                <TableRow key={item.exam_id}>
-                  <TableCell className="w-[120px]">
-                    <div>{new Date(item.date).toLocaleDateString("en-GB")}</div>
-                    <div className="text-[10px]">{`${item.start_time} - ${item.end_time}`}</div>
-                  </TableCell>
-
-                  <TableCell className="w-[170px]">
-                    <Select
-                      aria-label="Venue"
-                      value={item.venue}
-                      className="w-[150px]"
-                      onChange={(event) =>
-                        handleVenueChange(event, item.exam_id)
-                      }
-                      disallowEmptySelection
-                      defaultSelectedKeys={
-                        (item.venue.length > 0 && [item.venue.split(",")[0]]) ||
-                        []
-                      }
-                    >
-                      {item.venue.split(",").map((venue: string) => (
-                        <SelectItem key={venue} value={venue}>
-                          {venue}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                  </TableCell>
-
-                  <TableCell>
-                    {Object.values(assignments[item.exam_id] || {}).flatMap(
-                      (staffs: any[]) => staffs
-                    ).length > 0
-                      ? Object.values(assignments[item.exam_id] || {})
-                          .flatMap((staffs: any[]) => staffs)
-                          .map(
-                            (staff, index, arr) =>
-                              `${staff.staff_name}${
-                                index < arr.length - 1 ? ", " : ""
-                              }`
-                          )
-                          .join("")
-                      : "No staff assigned"}
-                  </TableCell>
-
-                  <TableCell className="w-[40px]">
-                    {/* <Tooltip title="Assign"> */}
-                    <FiUserPlus
-                      size={20}
-                      className="cursor-pointer hover:opacity-60"
-                      onClick={() => handleAssign(item.exam_id)}
-                    />
-                    {/* </Tooltip> */}
+            {isLoading ? (
+              <TableBody>
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className=" h-[400px]"
+                    style={{
+                      verticalAlign: "middle",
+                      justifyContent: "center",
+                      flexDirection: "row",
+                      flex: 1,
+                    }}
+                  >
+                    <Spinner />
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          )}
-        </Table>
+              </TableBody>
+            ) : (
+              <>
+                <TableBody>
+                  {items.map((item: any) => (
+                    <TableRow key={item.exam_id}>
+                      <TableCell className="w-[140px]">
+                        <div className="text-center">
+                          {new Date(item.date).toLocaleDateString("en-GB")}
+                        </div>
+                        <div className="text-[12px] text-center text-gray-500">{`${item.start_time} - ${item.end_time}`}</div>
+                      </TableCell>
+
+                      <TableCell className="w-[170px]">
+                        <Select
+                          aria-label="Venue"
+                          value={item.venue}
+                          className="w-[150px]"
+                          onChange={(event) =>
+                            handleVenueChange(event, item.exam_id)
+                          }
+                          disallowEmptySelection
+                          defaultSelectedKeys={
+                            (item.venue.length > 0 && [
+                              item.venue.split(",")[0],
+                            ]) ||
+                            []
+                          }
+                        >
+                          {item.venue.split(",").map((venue: string) => (
+                            <SelectItem key={venue} value={venue}>
+                              {venue}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </TableCell>
+
+                      <TableCell>
+                        {Object.values(assignments[item.exam_id] || {}).flatMap(
+                          (staffs: any[]) => staffs
+                        ).length > 0
+                          ? Object.values(assignments[item.exam_id] || {})
+                              .flatMap((staffs: any[]) => staffs)
+                              .map(
+                                (staff, index, arr) =>
+                                  `${staff.staff_name}${
+                                    index < arr.length - 1 ? ", " : ""
+                                  }`
+                              )
+                              .join("")
+                          : "No staff assigned"}
+                      </TableCell>
+
+                      <TableCell className="w-[40px]">
+                        {/* <Tooltip title="Assign"> */}
+                        <FiUserPlus
+                          size={20}
+                          className="cursor-pointer hover:opacity-60"
+                          onClick={() => handleAssign(item.exam_id)}
+                        />
+                        {/* </Tooltip> */}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                <TableFooter>
+                  {pages > 1 && (
+                    <TableRow>
+                      <TableCell style={{ padding: "20px 0" }} colSpan={4}>
+                        <div className="flex justify-center">
+                          <Pagination
+                            isCompact
+                            showControls
+                            showShadow
+                            color="primary"
+                            page={page}
+                            total={pages}
+                            onChange={(page) => setPage(page)}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableFooter>
+              </>
+            )}
+          </Table>
+        </TableContainer>
 
         {modalOpen && (
           <StaffAssignModal
