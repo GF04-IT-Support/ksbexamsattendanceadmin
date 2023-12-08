@@ -113,6 +113,22 @@
         "documentation": {}
     },
     {
+        "label": "fuzz",
+        "importPath": "fuzzywuzzy",
+        "description": "fuzzywuzzy",
+        "isExtraImport": true,
+        "detail": "fuzzywuzzy",
+        "documentation": {}
+    },
+    {
+        "label": "combinations",
+        "importPath": "itertools",
+        "description": "itertools",
+        "isExtraImport": true,
+        "detail": "itertools",
+        "documentation": {}
+    },
+    {
         "label": "_Known",
         "kind": 6,
         "importPath": "node_modules.flatted.python.flatted",
@@ -306,7 +322,7 @@
         "kind": 2,
         "importPath": "utils.scripts.exams_schedule_extractor",
         "description": "utils.scripts.exams_schedule_extractor",
-        "peekOfCode": "def clean_dataframe(df):\n    for col in df.columns:\n        if col not in ['Venue', 'Course Code']:\n            df[col] = df[col].replace('\\n', ' ', regex=True)\n    df['Venue'] = df['Venue'].apply(lambda x: ', '.join([re.sub(r'.*?(?=PG|SMA|SAARAH MENSAH AUD|SAARAH MENSAH AUDITORIUM)', '', line) for line in x.split('\\n')]) if '\\n' in x else x)\n    df['Venue'] = df['Venue'].apply(lambda x: x.translate(str.maketrans('', '', string.punctuation.replace(',', ''))))  # Remove special characters except comma\n    df['Course Code'] = df['Course Code'].replace('\\n', ', ', regex=True)\n    df.replace(to_replace=r'\\n', value=' ', regex=True, inplace=True)\n    df = df[~(df == df.columns).sum(axis=1).gt(1)]\n    df['Day/Date'] = df['Day/Date'].str.split(' ', 1).str[1].str.strip().str.strip('/')",
+        "peekOfCode": "def clean_dataframe(df):\n    for col in df.columns:\n        if col not in ['Venue', 'Course Code']:\n            df[col] = df[col].replace('\\n', ' ', regex=True)\n    df['Venue'] = df['Venue'].apply(lambda x: ', '.join([re.sub(r'.*?(?=PG|SMA|SAARAH MENSAH AUD|SAARAH MENSAH AUDITORIUM)', '', line) for line in x.split('\\n')]) if '\\n' in x else x)\n    df['Venue'] = df['Venue'].apply(lambda x: x.translate(str.maketrans('', '', string.punctuation.replace(',', ''))))  \n    df['Course Code'] = df['Course Code'].replace('\\n', ', ', regex=True)\n    df.replace(to_replace=r'\\n', value=' ', regex=True, inplace=True)\n    df = df[~(df == df.columns).sum(axis=1).gt(1)]\n    df['Day/Date'] = df['Day/Date'].str.split(' ', 1).str[1].str.strip().str.strip('/')",
         "detail": "utils.scripts.exams_schedule_extractor",
         "documentation": {}
     },
@@ -333,7 +349,7 @@
         "kind": 2,
         "importPath": "utils.scripts.exams_schedule_extractor",
         "description": "utils.scripts.exams_schedule_extractor",
-        "peekOfCode": "def main():\n    base64_pdf_data = sys.stdin.read()\n    tables, exam_name = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = create_dataframe(tables)\n    df = clean_dataframe(df)\n    df = split_time_column(df)\n    df = correct_date_column(df)\n    exams_schedule = df.to_dict(orient='records')\n    print(json.dumps({\"exams_schedule\": exams_schedule, \"exam_name\": exam_name}))\nif __name__ == \"__main__\":",
+        "peekOfCode": "def main():\n    base64_pdf_data = sys.stdin.read()\n    tables, exam_name = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = create_dataframe(tables)\n    df = clean_dataframe(df)\n    df = split_time_column(df)\n    df = correct_date_column(df)\n    df = df.drop_duplicates(subset=['Date', 'Course Code', 'Venue', 'Start Time', 'End Time'])\n    exams_schedule = df.to_dict(orient='records')\n    print(json.dumps({\"exams_schedule\": exams_schedule, \"exam_name\": exam_name}))",
         "detail": "utils.scripts.exams_schedule_extractor",
         "documentation": {}
     },
@@ -360,7 +376,7 @@
         "kind": 2,
         "importPath": "utils.scripts.invigilators_extractor",
         "description": "utils.scripts.invigilators_extractor",
-        "peekOfCode": "def clean_venue(venue):\n    venue = re.sub(r'.*?(?=PG|SMA|SAARAH MENSAH AUD|SAARAH MENSAH AUDITORIUM|BLOCK)', '', venue)\n    venue = re.sub(r'\\d', '', venue)\n    if venue.strip().startswith('BLOCK'):\n        venue = 'PG ' + venue\n    return venue.strip()\ndef clean_dataframe(df):\n    df.drop(columns=['Course Name'], inplace=True)\n    df.replace(\"\", np.nan, inplace=True)\n    df = df.fillna(method='ffill')",
+        "peekOfCode": "def clean_venue(venue):\n    venue = re.sub(r'[-.]', '', venue).strip()\n    venue = re.sub(r'\\s+', ' ', venue)\n    venue = re.sub(r'.*?(?=PG|SMA|SAARAH MENSAH AUD|SAARAH MENSAH AUDITORIUM|BLOCK)', '', venue)\n    venue = re.sub(r'\\d', '', venue)\n    if venue.strip().startswith('BLOCK'):\n        venue = 'PG ' + venue\n    venue = re.sub(r'\\bSAARAH MENSAH AUD\\b', 'SMA', venue)\n    venue = re.sub(r'\\bSAARAH MENSAH AUDITORIUM\\b', 'SMA', venue)\n    venue = re.sub(r'\\bBLK\\b', 'BLOCK', venue)",
         "detail": "utils.scripts.invigilators_extractor",
         "documentation": {}
     },
@@ -369,7 +385,7 @@
         "kind": 2,
         "importPath": "utils.scripts.invigilators_extractor",
         "description": "utils.scripts.invigilators_extractor",
-        "peekOfCode": "def clean_dataframe(df):\n    df.drop(columns=['Course Name'], inplace=True)\n    df.replace(\"\", np.nan, inplace=True)\n    df = df.fillna(method='ffill')\n    df.columns = [col.replace('\\n', ' ') for col in df.columns]\n    for col in df.columns:\n        if col not in ['Venue', 'Course Code']:\n            df[col] = df[col].replace('\\n', ' ', regex=True)\n    df['Venue'] = df['Venue'].replace('\\n', ' - ', regex=True)\n    df['Venue'] = df['Venue'].apply(clean_venue)",
+        "peekOfCode": "def clean_dataframe(df):\n    df.drop(columns=['Course Name'], inplace=True)\n    df.replace(\"\", np.nan, inplace=True)\n    df = df.fillna(method='ffill')\n    df.columns = [col.replace('\\n', ' ') for col in df.columns]\n    for col in df.columns:\n        if col not in ['Venue', 'Course Code']:\n            df[col] = df[col].replace('\\n', ' ', regex=True)\n    df['Venue'] = df['Venue'].replace('(?!\\nACCRA)\\n', ' - ', regex=True)\n    df = df.assign(Venue=df['Venue'].str.split('\\n')).explode('Venue')",
         "detail": "utils.scripts.invigilators_extractor",
         "documentation": {}
     },
@@ -387,7 +403,7 @@
         "kind": 2,
         "importPath": "utils.scripts.invigilators_extractor",
         "description": "utils.scripts.invigilators_extractor",
-        "peekOfCode": "def clean_invigilators(df):\n    df['Invigilators'] = df['Invigilators'].str.replace(r'(\\b\\w+\\b)(\\s[A-Z]\\.)', r'\\1, \\2', regex=True).str.title()\n    df['Invigilators'] = df['Invigilators'].str.replace(r'\\s*-\\s*', '-', regex=True)\n    df = df.assign(Invigilators=df['Invigilators'].str.split(pat=',\\s*', expand=False)).explode('Invigilators')\n    df['Invigilators'] = df['Invigilators'].str.replace(r'[^\\w\\s.-]', '', regex=True)\n    df['Invigilators_sorted'] = df['Invigilators'].apply(lambda x: ''.join(sorted(re.sub(r'[^a-zA-Z]', '', x))))\n    df = df.sort_values('Invigilators').drop_duplicates('Invigilators_sorted', keep='last')\n    merged_invigilators = []\n    for i, invigilator in enumerate(df['Invigilators_sorted']):\n        subset_found = False",
+        "peekOfCode": "def clean_invigilators(df):\n    df['Invigilators'] = df['Invigilators'].str.replace(r'([a-z])([A-Z]\\.)', r'\\1 \\2', regex=True)\n    df['Invigilators'] = df['Invigilators'].str.replace(r'\\b([A-Z])\\b(?!\\.)', r'\\1.', regex=True)\n    df['Invigilators'] = df['Invigilators'].str.replace(r'(\\b\\w+\\b)(\\s[A-Z]\\.)', r'\\1, \\2', regex=True).str.title()\n    df['Invigilators'] = df['Invigilators'].str.replace(r'\\s*-\\s*', '-', regex=True)\n    df['Invigilators'] = df['Invigilators'].str.replace(r'[/;]', ', ', regex=True)\n    df['Invigilators'] = df['Invigilators'].str.replace(r',\\s*,', ',', regex=True)\n    df = df.assign(Invigilators=df['Invigilators'].str.split(pat=',\\s*', expand=False)).explode('Invigilators')\n    df['Invigilators'] = df['Invigilators'].str.replace(r'[^\\w\\s.-]', '', regex=True)\n    df['Invigilators_sorted'] = df['Invigilators'].apply(lambda x: re.sub(r'[^a-zA-Z]', '', x))",
         "detail": "utils.scripts.invigilators_extractor",
         "documentation": {}
     },
@@ -396,7 +412,16 @@
         "kind": 2,
         "importPath": "utils.scripts.invigilators_extractor",
         "description": "utils.scripts.invigilators_extractor",
-        "peekOfCode": "def group_by_invigilator(df):\n    grouped_df = df.groupby('Invigilators').apply(lambda x: x.iloc[:, df.columns != 'Invigilators'].to_dict('records')).reset_index()\n    grouped_df.columns = ['Invigilator', 'Details']\n    return grouped_df\ndef main():\n    base64_pdf_data = sys.stdin.read()\n    tables = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = pd.DataFrame(tables[1:], columns=tables[0])\n    df = clean_dataframe(df)\n    df = split_time_column(df)",
+        "peekOfCode": "def group_by_invigilator(df):\n    df = df.drop(columns='No. of Students')\n    df['NormalizedInvigilator'] = df['Invigilators'].apply(lambda x: re.sub(r'[^a-zA-Z]', '', x))\n    df['Details'] = df.apply(lambda row: {col: row[col] for col in df.columns if col not in ['Invigilators', 'NormalizedInvigilator']}, axis=1)\n    invigilators = df['NormalizedInvigilator'].unique()\n    similar_invigilators = {}\n    for invig1, invig2 in combinations(invigilators, 2):\n        if abs(len(invig1) - len(invig2)) <= 4:\n            if fuzz.token_sort_ratio(invig1, invig2) > 92:  \n                similar_invigilators[invig2] = invig1",
+        "detail": "utils.scripts.invigilators_extractor",
+        "documentation": {}
+    },
+    {
+        "label": "correct_date_column",
+        "kind": 2,
+        "importPath": "utils.scripts.invigilators_extractor",
+        "description": "utils.scripts.invigilators_extractor",
+        "peekOfCode": "def correct_date_column(df):\n    df[['Day', 'Month', 'Years']] = df['Date'].str.split('/', expand=True)\n    df['Day'] = df['Day'].str.strip()  \n    df['Month'] = df['Month'].str.strip()  \n    df['Day'] = df['Day'].apply(lambda x: '0' + x if len(x) == 1 else x) \n    df['Month'] = df['Month'].apply(lambda x: x[:2] if len(x) > 2 else x)\n    df.reset_index(drop=True, inplace=True)  # Reset the DataFrame's index\n    for i in range(1, len(df)):\n        if len(df.loc[i, 'Month']) == 1:\n            j = i - 1",
         "detail": "utils.scripts.invigilators_extractor",
         "documentation": {}
     },
@@ -405,7 +430,7 @@
         "kind": 2,
         "importPath": "utils.scripts.invigilators_extractor",
         "description": "utils.scripts.invigilators_extractor",
-        "peekOfCode": "def main():\n    base64_pdf_data = sys.stdin.read()\n    tables = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = pd.DataFrame(tables[1:], columns=tables[0])\n    df = clean_dataframe(df)\n    df = split_time_column(df)\n    df = clean_invigilators(df)\n    df = df[df['Invigilators'].str.strip() != '']\n    grouped_df = group_by_invigilator(df)\n    invigilators_schedule = grouped_df.to_dict(orient='records')",
+        "peekOfCode": "def main():\n    base64_pdf_data = sys.stdin.read()\n    tables = extract_tables_from_pdf(base64_pdf_data=base64_pdf_data)\n    df = pd.DataFrame(tables[1:], columns=tables[0])\n    df = clean_dataframe(df)\n    df = split_time_column(df)\n    df = correct_date_column(df)\n    df = clean_invigilators(df)\n    df = df[df['Invigilators'].str.strip() != '']\n    grouped_df = group_by_invigilator(df)",
         "detail": "utils.scripts.invigilators_extractor",
         "documentation": {}
     }

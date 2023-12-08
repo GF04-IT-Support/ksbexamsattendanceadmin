@@ -4,6 +4,7 @@ import { Button, Input } from "@nextui-org/react";
 import { set, useForm } from "react-hook-form";
 import { FaFileUpload } from "react-icons/fa";
 import {
+  addConfirmedInvigilatorsToExams,
   extractExamsSchedule,
   extractInvigilatorsSchedule,
 } from "@/lib/actions/exams.action";
@@ -13,19 +14,28 @@ import React, { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { IoIosDocument } from "react-icons/io";
 import UploadConfirmationModal from "../modals/UploadConfirmationModal";
+import ScheduleConfirmationModal from "../modals/ScheduleConfirmationModal";
 
 type UploadFormProps = {
   uploadType: "exams" | "invigilators";
   onClose: () => void;
   mutate?: () => void;
+  staffDetails?: any[];
 };
 
-const UploadForm = ({ uploadType, onClose, mutate }: UploadFormProps) => {
+const UploadForm = ({
+  uploadType,
+  onClose,
+  mutate,
+  staffDetails,
+}: UploadFormProps) => {
   const { handleSubmit } = useForm();
   const [isLoading, setIsLoading] = useState(false);
   const [showError, setShowError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [acceptedFiles, setAcceptedFiles] = useState<File[]>([]);
+  const [scheduleData, setScheduleData] = useState<any>([]);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const { getRootProps, getInputProps, fileRejections } = useDropzone({
     accept: { "application/pdf": [".pdf"] },
     onDrop: (acceptedFiles) => {
@@ -49,7 +59,7 @@ const UploadForm = ({ uploadType, onClose, mutate }: UploadFormProps) => {
 
   const handleUpload = async () => {
     setShowModal(false);
-    // setIsLoading(true);
+    setIsLoading(true);
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
       const reader = new FileReader();
@@ -82,26 +92,21 @@ const UploadForm = ({ uploadType, onClose, mutate }: UploadFormProps) => {
           });
           onClose();
         } else {
-          await extractInvigilatorsSchedule(base64String).then(
-            (response: any) => {
-              setAcceptedFiles([]);
-              setIsLoading(false);
-              if (
-                response?.message ===
-                "The invigilators schedule has been uploaded successfully"
-              ) {
-                toast.success(response?.message);
-                return;
-              } else {
-                toast.error(response?.message);
-                return;
-              }
+          try {
+            const response: any = await extractInvigilatorsSchedule(
+              base64String
+            );
+
+            if (response.data) {
+              const { matchedData, unmatchedData } = response.data;
+              setScheduleData({ matchedData, unmatchedData });
+              setShowConfirmationModal(true);
+            } else {
+              toast.error(response?.message);
             }
-          );
-          onClose();
-          if (mutate) {
-            mutate();
-          }
+
+            setIsLoading(false);
+          } catch (error) {}
         }
       } catch (error) {
         console.error(error);
@@ -138,6 +143,20 @@ const UploadForm = ({ uploadType, onClose, mutate }: UploadFormProps) => {
     }
   }, [fileRejections]);
 
+  const handleConfirm = async () => {
+    try {
+      // setIsLoading(true);
+      const response = await addConfirmedInvigilatorsToExams(
+        scheduleData.matchedData
+      );
+    } catch (error: any) {
+      throw new Error(error);
+    } finally {
+      // setIsLoading(false)
+      // setAcceptedFiles([])
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center mb-12">
       <Toaster position="top-center" />
@@ -146,6 +165,7 @@ const UploadForm = ({ uploadType, onClose, mutate }: UploadFormProps) => {
         onConfirm={handleUpload}
         onClose={() => setShowModal(false)}
       />
+
       <div className="p-4 w-[550px] bg-white shadow-md rounded-md">
         <div className="flex items-center justify-center">
           <FaFileUpload className="w-8 h-8 text-gray-500" />
@@ -201,6 +221,16 @@ const UploadForm = ({ uploadType, onClose, mutate }: UploadFormProps) => {
           </Button>
         </form>
       </div>
+      {showConfirmationModal && (
+        <ScheduleConfirmationModal
+          onClose={() => setShowConfirmationModal(false)}
+          isOpen={showConfirmationModal}
+          onConfirm={handleConfirm}
+          scheduleData={scheduleData}
+          setScheduleData={setScheduleData}
+          defaultStaffDetails={staffDetails}
+        />
+      )}
     </div>
   );
 };

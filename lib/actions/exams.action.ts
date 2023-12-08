@@ -178,12 +178,16 @@ export async function extractInvigilatorsSchedule(base64PdfData: string) {
         } else {
           const result = JSON.parse(outputData);
 
-          let invigilators = await fetchInvigilators();
+          const invigilators = await fetchInvigilators();
 
-          let { correlation, unmatchedAbbreviatedNames } =
+          const { matchedData, unmatchedData } =
             await matchInvigilatorsWithAbbreviatedNames(invigilators, result);
-          console.log(correlation);
-          console.log(unmatchedAbbreviatedNames);
+          // console.log(matchedData);
+
+          resolve({
+            data: { matchedData, unmatchedData },
+            message: `The invigilators schedule has been extracted successfully`,
+          });
 
           //   if (unmatchedAbbreviatedNames.length) {
           //     await addUnmatchedNamesToStaff(unmatchedAbbreviatedNames);
@@ -203,10 +207,28 @@ export async function extractInvigilatorsSchedule(base64PdfData: string) {
       });
     } catch (err) {
       resolve({
-        message: `An error occurred while uploading the invigilator's schedule.`,
+        message: `An error occurred while extracting the invigilator's schedule.`,
       });
     }
   });
+}
+
+export async function addConfirmedInvigilatorsToExams(confirmedData: any) {
+  const user = await currentUser();
+
+  if (!user) return null;
+
+  try {
+    await correlateInvigilatorsWithExams(confirmedData);
+
+    return {
+      message: "The invigilator's schedule has been uploaded successfully!",
+    };
+  } catch (error) {
+    return {
+      message: "An error occurred while uploading the invigilator's schedule.",
+    };
+  }
 }
 
 export async function editExamsSchedule(exam_id: string, data: any) {

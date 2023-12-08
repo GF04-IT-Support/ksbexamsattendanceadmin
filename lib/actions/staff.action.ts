@@ -1,13 +1,13 @@
-"use server"
+"use server";
 
-import { exec as execCb } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
-import prisma from '@/utils/prisma';
-import { revalidatePath } from 'next/cache';
-import { getStaffRoles } from '../helpers/staff.helpers';
+import { exec as execCb } from "child_process";
+import { promisify } from "util";
+import path from "path";
+import prisma from "@/utils/prisma";
+import { revalidatePath } from "next/cache";
+import { getStaffRoles } from "../helpers/staff.helpers";
 
-const exec = promisify(execCb); 
+const exec = promisify(execCb);
 
 type StaffInfo = {
   Name: string;
@@ -17,7 +17,10 @@ type StaffInfo = {
 
 export async function extractStaffInfo() {
   try {
-    const scriptPath = path.join(process.cwd(), 'utils/scripts/extract_staff_info.py');
+    const scriptPath = path.join(
+      process.cwd(),
+      "utils/scripts/extract_staff_info.py"
+    );
     const { stdout } = await exec(`python -u "${scriptPath}"`);
 
     const data: StaffInfo[] = JSON.parse(stdout);
@@ -34,11 +37,14 @@ export async function extractStaffInfo() {
         });
       } else {
         await prisma.staff.create({
-          data: { staff_name: Name, staff_role: Position, department: Department },
+          data: {
+            staff_name: Name,
+            staff_role: Position,
+            department: Department,
+          },
         });
       }
     }
-    
   } catch (error) {
     console.error(`exec error: ${error}`);
   }
@@ -49,10 +55,10 @@ export async function fetchStaffDetails(id: string) {
 
   try {
     const staffDetails = await prisma.staff.findMany({
-    where: { staff_role: { in: staffRoles } },
-  });
+      where: { staff_role: { in: staffRoles } },
+    });
 
-  return staffDetails;
+    return staffDetails;
   } catch (error: any) {
     throw new Error(error);
   }
@@ -61,9 +67,9 @@ export async function fetchStaffDetails(id: string) {
 export async function deleteStaffDetails(id: string) {
   try {
     await prisma.staff.delete({ where: { staff_id: id } });
-    return {message: 'Staff deleted successfully'};
+    return { message: "Staff deleted successfully" };
   } catch (error: any) {
-    return {message: 'An error occurred while deleting the staff.'};
+    return { message: "An error occurred while deleting the staff." };
   }
 }
 
@@ -73,17 +79,17 @@ export async function updateStaffDetails(id: string, data: any) {
       where: { staff_id: id },
       data,
     });
-    return {message: 'Staff details updated successfully'};
+    return { message: "Staff details updated successfully" };
   } catch (error: any) {
-    return {message: 'An error occurred while updating the staff details.'};
+    return { message: "An error occurred while updating the staff details." };
   }
 }
 
 export async function createNewStaff(data: any) {
   try {
-    await prisma.staff.create({ data });
-    return {message: 'Staff created successfully'};
+    const staffDetails = await prisma.staff.create({ data });
+    return { message: "Staff created successfully", data: staffDetails };
   } catch (error: any) {
-    return {message: 'An error occurred while creating the staff.'};
+    return { message: "An error occurred while creating the staff." };
   }
 }

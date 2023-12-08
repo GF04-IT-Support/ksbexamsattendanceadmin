@@ -454,6 +454,7 @@ export default function ExamsScheduleTable({
                 uploadType="invigilators"
                 onClose={onClose}
                 mutate={mutate}
+                staffDetails={staffDetails}
               />
             </>
           )}
