@@ -78,7 +78,9 @@ def clean_dataframe(df):
             df[col] = df[col].replace('\n', ' ', regex=True)
     df['Venue'] = df['Venue'].apply(lambda x: ', '.join([re.sub(r'.*?(?=PG|SMA|SAARAH MENSAH AUD|SAARAH MENSAH AUDITORIUM)', '', line) for line in x.split('\n')]) if '\n' in x else x)
     df['Venue'] = df['Venue'].apply(lambda x: x.translate(str.maketrans('', '', string.punctuation.replace(',', ''))))  
+     df['Course Code'] = df['Course Code'].replace('\n(?=\d)', ' ', regex=True)
     df['Course Code'] = df['Course Code'].replace('\n', ', ', regex=True)
+    df['Course Code'] = df['Course Code'].replace('(?<=[a-zA-Z])(?=\d)', ' ', regex=True)
     df.replace(to_replace=r'\n', value=' ', regex=True, inplace=True)
     df = df[~(df == df.columns).sum(axis=1).gt(1)]
     df['Day/Date'] = df['Day/Date'].str.split(' ', 1).str[1].str.strip().str.strip('/')

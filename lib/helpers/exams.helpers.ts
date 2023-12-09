@@ -1,20 +1,25 @@
 import prisma from "@/utils/prisma";
 import { currentUser } from "@clerk/nextjs";
+import { assignStaffToExamSession } from "../actions/exams.action";
 
 const fuzz = require("fuzzball");
 
-export async function addUnmatchedNamesToStaff(unmatchedAbbreviatedNames: any) {
-  for (const name of unmatchedAbbreviatedNames) {
-    await prisma.staff.create({
-      data: {
-        staff_name: name,
-        staff_role: "Other",
-        department: "Other",
-      },
-    });
-  }
+export async function fetchInvigilators() {
+  return await prisma.staff.findMany({
+    where: {
+      OR: [
+        { staff_role: "Lecturer" },
+        { staff_role: "Part-Time Lecturer" },
+        { staff_role: "PhD Student" },
+        { staff_role: "Other" },
+      ],
+    },
+    select: {
+      staff_id: true,
+      staff_name: true,
+    },
+  });
 }
-
 export async function matchInvigilatorsWithAbbreviatedNames(
   invigilators: any,
   result: any
@@ -165,104 +170,200 @@ export async function matchInvigilatorsWithAbbreviatedNames(
   return { matchedData, unmatchedData };
 }
 
-export async function fetchInvigilators() {
-  return await prisma.staff.findMany({
-    where: {
-      OR: [
-        { staff_role: "Lecturer" },
-        { staff_role: "Part-Time Lecturer" },
-        { staff_role: "PhD Student" },
-        { staff_role: "Other" },
-      ],
-    },
-    select: {
-      staff_id: true,
-      staff_name: true,
-    },
-  });
-}
-
 export async function correlateInvigilatorsWithExams(details: any) {
   const user = await currentUser();
 
   if (!user) return null;
 
-  for (const staff of details.slice(0, 2)) {
-    for (const detail of staff.details) {
-      const dateParts = detail.Date.split("/");
-      const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-      const date = new Date(isoDate);
+  try {
+    const unmatchedDetails = [];
+    const staffGroups: { [key: string]: string[] } = {};
 
-      // console.log(detail);
+    for (const staff of details) {
+      const matchedDetails = [];
 
-      const exams = await prisma.exam.findMany({
-        where: {
-          AND: [
-            { date: date },
-            { start_time: detail["Start Time"] },
-            { end_time: detail["End Time"] },
-          ],
-        },
-      });
+      for (const detail of staff.details) {
+        const dateParts = detail.Date.split("/");
+        const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+        const date = new Date(isoDate);
 
-      const examCodes = detail["Course Code"].split(",");
+        const exams = await prisma.exam.findMany({
+          where: {
+            AND: [
+              { date: date },
+              { start_time: detail["Start Time"] },
+              { end_time: detail["End Time"] },
+            ],
+          },
+        });
 
-      const exam = exams.find((e) => {
-        const examCodesInDb = e.exam_code.split(",");
-        return examCodes.some((code: any) =>
-          examCodesInDb.includes(code.trim())
-        );
-      });
+        const examCodes = detail["Course Code"].split(",");
 
-      if (exams) {
-        console.log("Details", detail, "Exams", exams);
+        const exam = exams.find((e) => {
+          const examCodesInDb = e.exam_code
+            .split(",")
+            .flatMap((code) => code.split("/").map((part) => part.trim()));
+          return examCodes.some((code: any) =>
+            code
+              .split("/")
+              .map((part: any) => part.trim())
+              .some((part: any) => examCodesInDb.includes(part))
+          );
+        });
+
+        if (exam) {
+          const key = `${exam.exam_id}|${detail.Venue}`;
+          if (!staffGroups[key]) {
+            staffGroups[key] = [];
+          }
+          staffGroups[key].push(staff.staff_id);
+        } else {
+          unmatchedDetails.push({
+            ...detail,
+            staff_name: staff.full_name,
+          });
+        }
+      }
+    }
+
+    // for (const key in staffGroups) {
+    //   const [exam_id, venue] = key.split("|");
+    //   const staff_ids = staffGroups[key];
+
+    //   const result = await assignStaffToExamSession(
+    //     exam_id,
+    //     venue,
+    //     staff_ids,
+    //     "invigilators",
+    //     true
+    //   );
+
+    //   if (
+    //     result &&
+    //     result?.message ===
+    //       "An error occurred while uploading the invigilator's schedule."
+    //   ) {
+    //     throw new Error(result?.message);
+    //   }
+    // }
+
+    const examGroups: any = {};
+
+    for (const key in staffGroups) {
+      const [exam_id, venue] = key.split("|");
+      const staff_ids = staffGroups[key];
+
+      if (!examGroups[exam_id]) {
+        examGroups[exam_id] = [];
       }
 
-      // if (exam) {
-      //   let venue = await prisma.venue.findFirst({
-      //     where: { name: detail.Venue },
-      //   });
-
-      //   if (!venue) {
-      //     venue = await prisma.venue.create({
-      //       data: { name: detail.Venue },
-      //     });
-      //   }
-
-      //   let examSession = await prisma.examSession.upsert({
-      //     where: {
-      //       exam_id: exam.exam_id,
-      //       venue_id: venue.venue_id,
-      //     },
-      //     update: {},
-      //     create: {
-      //       exam_id: exam.exam_id,
-      //       venue_id: venue.venue_id,
-      //       createdBy: user.id,
-      //     },
-      //   });
-
-      //   const existingAssignment = await prisma.staffAssignment.findFirst({
-      //     where: {
-      //       staff_id: staff_id,
-      //       exam_session_id: examSession.exam_session_id,
-      //     },
-      //   });
-
-      //   if (!existingAssignment) {
-      //     await prisma.staffAssignment.create({
-      //       data: {
-      //         staff_id: staff_id,
-      //         exam_session_id: examSession.exam_session_id,
-      //         role: "invigilators",
-      //       },
-      //     });
-      //   }
-      // }
+      examGroups[exam_id].push({ venue, staff_ids });
     }
+
+    for (const exam_id in examGroups) {
+      for (const group of examGroups[exam_id]) {
+        const result = await assignStaffToExamSession(
+          exam_id,
+          group.venue,
+          group.staff_ids,
+          "invigilators",
+          true
+        );
+
+        if (
+          result &&
+          result?.message ===
+            "An error occurred while uploading the invigilator's schedule."
+        ) {
+          throw new Error(result?.message);
+        }
+      }
+    }
+
+    return {
+      unmatchedDetails,
+      message: "success",
+    };
+  } catch (error: any) {
+    throw new Error(error);
   }
-  return { message: "success" };
 }
+
+// export async function correlateInvigilatorsWithExams(details: any) {
+//   const user = await currentUser();
+
+//   if (!user) return null;
+
+//   try {
+//     const unmatchedDetails = [];
+
+//     for (const staff of details) {
+//       const matchedDetails = [];
+
+//       for (const detail of staff.details) {
+//         const dateParts = detail.Date.split("/");
+//         const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+//         const date = new Date(isoDate);
+
+//         const exams = await prisma.exam.findMany({
+//           where: {
+//             AND: [
+//               { date: date },
+//               { start_time: detail["Start Time"] },
+//               { end_time: detail["End Time"] },
+//             ],
+//           },
+//         });
+
+//         const examCodes = detail["Course Code"].split(",");
+
+//         const exam = exams.find((e) => {
+//           const examCodesInDb = e.exam_code
+//             .split(",")
+//             .flatMap((code) => code.split("/").map((part) => part.trim()));
+//           return examCodes.some((code: any) =>
+//             code
+//               .split("/")
+//               .map((part: any) => part.trim())
+//               .some((part: any) => examCodesInDb.includes(part))
+//           );
+//         });
+
+//         if (exam) {
+//           matchedDetails.push(detail);
+
+//           const result = await assignStaffToExamSession(
+//             exam.exam_id,
+//             detail.Venue,
+//             [staff.staff_id],
+//             "invigilators",
+//             true
+//           );
+
+//           if (
+//             result &&
+//             result?.message ===
+//               "An error occurred while uploading the invigilator's schedule."
+//           ) {
+//             throw new Error(result?.message);
+//           }
+//         } else {
+//           unmatchedDetails.push({
+//             ...detail,
+//             staff_name: staff.full_name,
+//           });
+//         }
+//       }
+//     }
+
+//     return {
+//       unmatchedDetails,
+//       message: "success",
+//     };
+//   } catch (error: any) {
+//     throw new Error(error);
+//   }
+// }
 
 // invigilators = invigilators.map((invigilator) => {
 //             let cleanedName = invigilator.staff_name

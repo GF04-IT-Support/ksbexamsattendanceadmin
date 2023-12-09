@@ -5,13 +5,11 @@ import path from "path";
 import prisma from "@/utils/prisma";
 import { revalidatePath } from "next/cache";
 import {
-  addUnmatchedNamesToStaff,
   correlateInvigilatorsWithExams,
   fetchInvigilators,
   matchInvigilatorsWithAbbreviatedNames,
 } from "../helpers/exams.helpers";
 import { currentUser } from "@clerk/nextjs";
-import { getStaffRoles } from "../helpers/staff.helpers";
 
 export async function extractExamsSchedule(base64PdfData: string) {
   return new Promise(async (resolve, reject) => {
@@ -182,27 +180,11 @@ export async function extractInvigilatorsSchedule(base64PdfData: string) {
 
           const { matchedData, unmatchedData } =
             await matchInvigilatorsWithAbbreviatedNames(invigilators, result);
-          // console.log(matchedData);
 
           resolve({
             data: { matchedData, unmatchedData },
             message: `The invigilators schedule has been extracted successfully`,
           });
-
-          //   if (unmatchedAbbreviatedNames.length) {
-          //     await addUnmatchedNamesToStaff(unmatchedAbbreviatedNames);
-
-          //     invigilators = await fetchInvigilators();
-
-          //       ({ correlation, unmatchedAbbreviatedNames } = await matchInvigilatorsWithAbbreviatedNames(invigilators, result));
-          //   }
-
-          //  for (const invigilators of correlation) {
-          //      await correlateInvigilatorsWithExams(invigilators.full_name, invigilators.details, invigilators.staff_id);
-          //   }
-
-          //   revalidatePath('/staff-management')
-          //   resolve({ message: `The invigilators schedule has been uploaded successfully!` });
         }
       });
     } catch (err) {
@@ -219,10 +201,16 @@ export async function addConfirmedInvigilatorsToExams(confirmedData: any) {
   if (!user) return null;
 
   try {
-    await correlateInvigilatorsWithExams(confirmedData);
+    let unmatchedDetails;
+    const result = await correlateInvigilatorsWithExams(confirmedData);
+
+    if (result) {
+      unmatchedDetails = result.unmatchedDetails;
+    }
 
     return {
-      message: "The invigilator's schedule has been uploaded successfully!",
+      message: "The invigilators schedule has been uploaded successfully",
+      unmatchedDetails,
     };
   } catch (error) {
     return {
@@ -232,6 +220,9 @@ export async function addConfirmedInvigilatorsToExams(confirmedData: any) {
 }
 
 export async function editExamsSchedule(exam_id: string, data: any) {
+  if (data.date) {
+    data.date = new Date(data.date);
+  }
   try {
     await prisma.exam.update({
       where: {
@@ -249,72 +240,83 @@ export async function assignStaffToExamSession(
   exam_id: string,
   venue_name: string,
   staff_ids: string[],
-  role: string
+  role: string,
+  keepExisting: boolean = false
 ) {
   const user = await currentUser();
 
   if (!user) return null;
 
   try {
-    let venue = await prisma.venue.findFirst({
-      where: { name: venue_name },
+    const venues = await prisma.venue.findMany();
+    const venueMap = new Map(venues.map((venue) => [venue.name, venue]));
+
+    if (!venueMap.has(venue_name)) {
+      const newVenue = await prisma.venue.create({
+        data: { name: venue_name },
+      });
+      venueMap.set(venue_name, newVenue);
+    }
+
+    const venue: any = venueMap.get(venue_name);
+
+    const examSessions = await prisma.examSession.findMany({
+      where: {
+        exam_id: exam_id,
+        venue_id: venue.venue_id,
+      },
     });
 
-    if (!venue) {
-      venue = await prisma.venue.create({
-        data: { name: venue_name },
+    const examSessionMap = new Map(
+      examSessions.map((examSession) => [examSession.exam_id, examSession])
+    );
+
+    if (!examSessionMap.has(exam_id)) {
+      const newExamSession = await prisma.examSession.create({
+        data: {
+          exam_id: exam_id,
+          venue_id: venue.venue_id,
+          createdBy: user.id,
+        },
+      });
+      examSessionMap.set(exam_id, newExamSession);
+    }
+
+    const examSession: any = examSessionMap.get(exam_id);
+
+    if (!keepExisting) {
+      await prisma.staffAssignment.deleteMany({
+        where: {
+          exam_session_id: examSession.exam_session_id,
+          role: role,
+        },
       });
     }
 
-    let examSession = await prisma.examSession.upsert({
-      where: {
-        exam_id: exam_id,
-        venue_id: venue.venue_id,
-      },
-      update: {},
-      create: {
-        exam_id: exam_id,
-        venue_id: venue.venue_id,
-        createdBy: user.id,
-      },
-    });
-
     const existingAssignments = await prisma.staffAssignment.findMany({
       where: {
+        staff_id: {
+          in: staff_ids,
+        },
         exam_session_id: examSession.exam_session_id,
         role: role,
       },
     });
 
-    for (let assignment of existingAssignments) {
-      if (!staff_ids.includes(assignment.staff_id)) {
-        await prisma.staffAssignment.delete({
-          where: {
-            id: assignment.id,
-          },
-        });
-      }
-    }
+    const assignmentsToCreate = staff_ids.filter(
+      (staff_id) =>
+        !existingAssignments.some(
+          (assignment) => assignment.staff_id === staff_id
+        )
+    );
 
-    for (let staff_id of staff_ids) {
-      const existingAssignment = await prisma.staffAssignment.findFirst({
-        where: {
-          staff_id: staff_id,
-          exam_session_id: examSession.exam_session_id,
-          role: role,
-        },
-      });
-
-      if (!existingAssignment) {
-        await prisma.staffAssignment.create({
-          data: {
-            staff_id: staff_id,
-            exam_session_id: examSession.exam_session_id,
-            role: role,
-          },
-        });
-      }
-    }
+    await prisma.staffAssignment.createMany({
+      data: assignmentsToCreate.map((staff_id) => ({
+        staff_id: staff_id,
+        exam_session_id: examSession.exam_session_id,
+        role: role,
+      })),
+    });
 
     return {
       message:
@@ -327,3 +329,89 @@ export async function assignStaffToExamSession(
     };
   }
 }
+
+// export async function assignStaffToExamSession(
+//   exam_id: string,
+//   venue_name: string,
+//   staff_ids: string[],
+//   role: string,
+//   keepExisting: boolean = false
+// ) {
+//   const user = await currentUser();
+
+//   if (!user) return null;
+
+//   try {
+//     let venue = await prisma.venue.findFirst({
+//       where: { name: venue_name },
+//     });
+
+//     if (!venue) {
+//       venue = await prisma.venue.create({
+//         data: { name: venue_name },
+//       });
+//     }
+
+//     let examSession = await prisma.examSession.upsert({
+//       where: {
+//         exam_id: exam_id,
+//         venue_id: venue.venue_id,
+//       },
+//       update: {},
+//       create: {
+//         exam_id: exam_id,
+//         venue_id: venue.venue_id,
+//         createdBy: user.id,
+//       },
+//     });
+
+//     if (!keepExisting) {
+//       const existingAssignments = await prisma.staffAssignment.findMany({
+//         where: {
+//           exam_session_id: examSession.exam_session_id,
+//           role: role,
+//         },
+//       });
+
+//       for (let assignment of existingAssignments) {
+//         if (!staff_ids.includes(assignment.staff_id)) {
+//           await prisma.staffAssignment.delete({
+//             where: {
+//               id: assignment.id,
+//             },
+//           });
+//         }
+//       }
+//     }
+
+//     for (let staff_id of staff_ids) {
+//       const existingAssignment = await prisma.staffAssignment.findFirst({
+//         where: {
+//           staff_id: staff_id,
+//           exam_session_id: examSession.exam_session_id,
+//           role: role,
+//         },
+//       });
+
+//       if (!existingAssignment) {
+//         await prisma.staffAssignment.create({
+//           data: {
+//             staff_id: staff_id,
+//             exam_session_id: examSession.exam_session_id,
+//             role: role,
+//           },
+//         });
+//       }
+//     }
+
+//     return {
+//       message:
+//         "Staff member(s) have been assigned to the exam session successfully",
+//     };
+//   } catch (error: any) {
+//     return {
+//       message:
+//         "An error occurred while assigning staff members to the exam session.",
+//     };
+//   }
+// }

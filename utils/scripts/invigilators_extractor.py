@@ -43,7 +43,9 @@ def clean_dataframe(df):
     df['Venue'] = df['Venue'].replace('(?!\nACCRA)\n', ' - ', regex=True)
     df = df.assign(Venue=df['Venue'].str.split('\n')).explode('Venue')
     df['Venue'] = df['Venue'].apply(clean_venue)
+    df['Course Code'] = df['Course Code'].replace('\n(?=\d)', ' ', regex=True)
     df['Course Code'] = df['Course Code'].replace('\n', ', ', regex=True)
+    df['Course Code'] = df['Course Code'].replace('(?<=[a-zA-Z])(?=\d)', ' ', regex=True)
     df.replace(to_replace=r'\n', value=' ', regex=True, inplace=True)
     df = df[~(df == df.columns).sum(axis=1).gt(1)]
     df['Day/Dat e'] = df['Day/Dat e'].str.split(' ', 1).str[1].str.strip().str.strip('/')

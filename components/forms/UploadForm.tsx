@@ -15,6 +15,7 @@ import { useDropzone } from "react-dropzone";
 import { IoIosDocument } from "react-icons/io";
 import UploadConfirmationModal from "../modals/UploadConfirmationModal";
 import ScheduleConfirmationModal from "../modals/ScheduleConfirmationModal";
+import UnMatchedDetailsTable from "../tables/UnMatchedDetailsTable";
 
 type UploadFormProps = {
   uploadType: "exams" | "invigilators";
@@ -36,6 +37,8 @@ const UploadForm = ({
   const [acceptedFiles, setAcceptedFiles] = useState<File[]>([]);
   const [scheduleData, setScheduleData] = useState<any>([]);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showUnmatchedModal, setShowUnmatchedModal] = useState(false);
+  const [unmatchedDetails, setUnmatchedDetails] = useState([]);
   const { getRootProps, getInputProps, fileRejections } = useDropzone({
     accept: { "application/pdf": [".pdf"] },
     onDrop: (acceptedFiles) => {
@@ -145,15 +148,29 @@ const UploadForm = ({
 
   const handleConfirm = async () => {
     try {
-      // setIsLoading(true);
-      const response = await addConfirmedInvigilatorsToExams(
+      setIsLoading(true);
+      const response: any = await addConfirmedInvigilatorsToExams(
         scheduleData.matchedData
       );
+
+      // console.log(response);
+
+      if (
+        response.unmatchedDetails.length === 0 &&
+        response.message ===
+          "The invigilators schedule has been uploaded successfully"
+      ) {
+        toast.success(response.message);
+        onClose();
+      } else if (response.unmatchedDetails.length > 0) {
+        setUnmatchedDetails(response.unmatchedDetails);
+        setShowUnmatchedModal(true);
+      }
     } catch (error: any) {
       throw new Error(error);
     } finally {
-      // setIsLoading(false)
-      // setAcceptedFiles([])
+      setIsLoading(false);
+      setAcceptedFiles([]);
     }
   };
 
@@ -229,6 +246,14 @@ const UploadForm = ({
           scheduleData={scheduleData}
           setScheduleData={setScheduleData}
           defaultStaffDetails={staffDetails}
+        />
+      )}
+
+      {showUnmatchedModal && (
+        <UnMatchedDetailsTable
+          unMatchedDetails={unmatchedDetails}
+          isOpen={showUnmatchedModal}
+          onClose={onClose}
         />
       )}
     </div>

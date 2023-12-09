@@ -65,6 +65,8 @@ model StaffAssignment {
   updatedAt       DateTime @updatedAt
   staff           Staff @relation(fields: [staff_id], references: [staff_id])
   examSession     ExamSession @relation(fields: [exam_session_id], references: [exam_session_id])
+
+  @@unique([staff_id, exam_session_id])
 }
 
 

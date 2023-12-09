@@ -81,9 +81,13 @@ export default function ExamsScheduleTable({
     data: examsData = [],
     mutate,
     isLoading,
-  } = useSWR(`examsSchedule/${selectedId}/${role}`, () =>
-    getExamsSchedule(selectedId, role)
-  );
+  } = useSWR(`examsSchedule/${selectedId}/${role}`, async () => {
+    const unsortedExamsData = await getExamsSchedule(selectedId, role);
+    return [...unsortedExamsData].sort(
+      (a: any, b: any) =>
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+  });
 
   const { data: staffDetails = [] } = useSWR(`staffDetails`, () =>
     fetchStaffDetails(role)
@@ -119,7 +123,7 @@ export default function ExamsScheduleTable({
       setAssignments(initialAssignments);
       selectedVenuesSet.current = false;
     }
-  }, [examsData]);
+  }, [examsData, page]);
 
   useEffect(() => {
     if (!isLoading && !startDate && !endDate) {
@@ -203,7 +207,7 @@ export default function ExamsScheduleTable({
   };
 
   const handleVenueChange = (event: any, examId: string) => {
-    const selectedVenue = event.target.value;
+    const selectedVenue = event.target.value.trim();
     setSelectedVenues((prev) => {
       const newSelectedVenues = { ...prev, [examId]: selectedVenue };
       return newSelectedVenues;
@@ -227,6 +231,8 @@ export default function ExamsScheduleTable({
       return acc;
     }, {});
 
+    console.log(newAssignments);
+
     setAssignments((prev) => {
       return { ...prev, ...newAssignments };
     });
@@ -240,9 +246,7 @@ export default function ExamsScheduleTable({
     setModalOpen(true);
   };
 
-  const loadingState = isLoading ? "loading" : "idle";
-  const isEmpty =
-    (searchResults || filteredExamsData).length === 0 && !isLoading;
+  // console.log(filteredExamsData);
 
   return (
     <>
@@ -312,14 +316,44 @@ export default function ExamsScheduleTable({
           </div>
         </div>
 
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} style={{ padding: "1rem" }}>
           <Table aria-label="Exams timetable">
-            <TableHead style={{ backgroundColor: "#4D4DFF33" }}>
+            <TableHead
+              style={{
+                backgroundColor: "#F4F4F5",
+                borderBottom: 0,
+              }}
+            >
               <TableRow>
-                <TableCell>Date/Time</TableCell>
-                <TableCell>Venue</TableCell>
-                <TableCell className="capitalize">{role}</TableCell>
-                <TableCell>Action</TableCell>
+                <TableCell
+                  style={{
+                    borderTopLeftRadius: "0.5rem",
+                    borderBottomLeftRadius: "0.5rem",
+                    color: "#71717A",
+                    fontWeight: 600,
+                  }}
+                >
+                  Date/Time
+                </TableCell>
+                <TableCell style={{ color: "#71717A", fontWeight: 600 }}>
+                  Venue
+                </TableCell>
+                <TableCell
+                  style={{ color: "#71717A", fontWeight: 600 }}
+                  className="capitalize"
+                >
+                  {role}
+                </TableCell>
+                <TableCell
+                  style={{
+                    borderTopRightRadius: "0.5rem",
+                    borderBottomRightRadius: "0.5rem",
+                    color: "#71717A",
+                    fontWeight: 600,
+                  }}
+                >
+                  Action
+                </TableCell>
               </TableRow>
             </TableHead>
 
@@ -379,17 +413,21 @@ export default function ExamsScheduleTable({
                       <TableCell>
                         {Object.values(assignments[item.exam_id] || {}).flatMap(
                           (staffs: any[]) => staffs
-                        ).length > 0
-                          ? Object.values(assignments[item.exam_id] || {})
-                              .flatMap((staffs: any[]) => staffs)
-                              .map(
-                                (staff, index, arr) =>
-                                  `${staff.staff_name}${
-                                    index < arr.length - 1 ? ", " : ""
-                                  }`
-                              )
-                              .join("")
-                          : "No staff assigned"}
+                        ).length > 0 ? (
+                          Object.values(assignments[item.exam_id] || {})
+                            .flatMap((staffs: any[]) => staffs)
+                            .map(
+                              (staff, index, arr) =>
+                                `${staff.staff_name}${
+                                  index < arr.length - 1 ? ", " : ""
+                                }`
+                            )
+                            .join("")
+                        ) : (
+                          <p className="text-gray-500 text-center">
+                            No staff assigned
+                          </p>
+                        )}
                       </TableCell>
 
                       <TableCell className="w-[40px]">
@@ -446,6 +484,7 @@ export default function ExamsScheduleTable({
         className="p-4"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
+        isDismissable={false}
       >
         <ModalContent>
           {(onClose) => (

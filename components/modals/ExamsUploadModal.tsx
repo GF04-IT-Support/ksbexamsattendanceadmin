@@ -26,6 +26,7 @@ export default function ExamsUploadModal() {
         className="p-4"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
+        isDismissable={false}
       >
         <ModalContent>
           {(onClose) => (
