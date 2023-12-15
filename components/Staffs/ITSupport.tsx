@@ -16,7 +16,7 @@ type StaffProps = {
 
 export default function ITSupport({ id, label, examsNames }: StaffProps) {
   return (
-    <Accordion defaultExpandedKeys={["1"]} selectionMode="multiple">
+    <Accordion defaultExpandedKeys={["2"]} selectionMode="multiple">
       <AccordionItem
         key="1"
         aria-label="Staff Details"

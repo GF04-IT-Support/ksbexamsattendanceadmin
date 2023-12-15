@@ -266,6 +266,7 @@ const ViewNEditModal = ({
         size="5xl"
         isOpen={isOpen}
         onOpenChange={onClose}
+        // scrollBehavior="inside"
         motionProps={{
           variants: {
             enter: {
@@ -292,7 +293,15 @@ const ViewNEditModal = ({
             Exams Details
           </ModalHeader>
           <ModalBody>
-            <Card style={{ margin: "1rem", padding: "1rem" }}>
+            <Card
+              style={{
+                margin: "1rem",
+                padding: "1rem",
+                maxHeight: "500px",
+                overflow: "auto",
+              }}
+              className="custom-scrollbar"
+            >
               <CardContent>
                 <Grid container spacing={3}>
                   <Grid item xs={6}>

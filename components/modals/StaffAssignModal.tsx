@@ -41,7 +41,7 @@ export default function StaffAssignModal({
   staffDetails,
   mutate,
 }: StaffAssignModalProps) {
-  const { examId, venue, assignments } = selectedExam;
+  const { examId, venue, assignments, dateTime } = selectedExam;
   const sortedStaffDetails = [...staffDetails].sort((a, b) =>
     a.staff_role.localeCompare(b.staff_role)
   );
@@ -130,7 +130,15 @@ export default function StaffAssignModal({
           <ModalHeader className="flex flex-col gap-1">
             {label} Assignment
           </ModalHeader>
-          <ModalHeader className="flex flex-col gap-1">{venue}</ModalHeader>
+          <ModalHeader className="flex flex-row gap-1">
+            <div className="flex flex-col">
+              <div className="text-center text-gray-700">
+                {new Date(dateTime.date).toLocaleDateString("en-GB")}
+              </div>
+              <div className="text-[12px] text-center text-gray-500">{`${dateTime.startTime} - ${dateTime.endTime}`}</div>
+            </div>
+            - {venue}
+          </ModalHeader>
           <ModalBody>
             <Card className="p-4 m-4 min-h-[250px]">
               <CardContent className="flex items-center justify-start">

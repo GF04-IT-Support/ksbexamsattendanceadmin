@@ -72,6 +72,7 @@ export default function ExamsScheduleTable({
     examId: string;
     venue: string;
     assignments: [];
+    dateTime: any;
   } | null>(null);
   const [assignments, setAssignments] = useState<{ [key: string]: [] }>({});
   const selectedVenuesRef = useRef(selectedVenues);
@@ -231,22 +232,24 @@ export default function ExamsScheduleTable({
       return acc;
     }, {});
 
-    console.log(newAssignments);
-
     setAssignments((prev) => {
       return { ...prev, ...newAssignments };
     });
   };
 
-  const handleAssign = (examId: string) => {
+  const handleAssign = (item: any) => {
+    const examId = item.exam_id;
     const venue = selectedVenuesRef.current[examId];
     const assignments: any = Object.values(assignmentsRef.current[examId]);
+    const dateTime: any = {
+      date: new Date(item.date).toLocaleDateString("en-GB"),
+      startTime: item.start_time,
+      endTime: item.end_time,
+    };
 
-    setSelectedExam({ examId, venue, assignments });
+    setSelectedExam({ examId, venue, assignments, dateTime });
     setModalOpen(true);
   };
-
-  // console.log(filteredExamsData);
 
   return (
     <>
@@ -342,7 +345,7 @@ export default function ExamsScheduleTable({
                   style={{ color: "#71717A", fontWeight: 600 }}
                   className="capitalize"
                 >
-                  {role}
+                  {label}
                 </TableCell>
                 <TableCell
                   style={{
@@ -360,17 +363,10 @@ export default function ExamsScheduleTable({
             {isLoading ? (
               <TableBody>
                 <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className=" h-[400px]"
-                    style={{
-                      verticalAlign: "middle",
-                      justifyContent: "center",
-                      flexDirection: "row",
-                      flex: 1,
-                    }}
-                  >
-                    <Spinner />
+                  <TableCell colSpan={4}>
+                    <div className="h-[400px] flex items-center justify-center">
+                      <Spinner />
+                    </div>
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -435,7 +431,7 @@ export default function ExamsScheduleTable({
                         <FiUserPlus
                           size={20}
                           className="cursor-pointer hover:opacity-60"
-                          onClick={() => handleAssign(item.exam_id)}
+                          onClick={() => handleAssign(item)}
                         />
                         {/* </Tooltip> */}
                       </TableCell>

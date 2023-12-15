@@ -99,17 +99,6 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
     }
   };
 
-  // useEffect(() => {
-  //   const sortedData = [...filteredExamsData].sort((a, b) => {
-  //     const aValue = Number(a.year);
-  //     const bValue = Number(b.year);
-  //     return sortDescriptor.direction === "asc"
-  //       ? aValue - bValue
-  //       : bValue - aValue;
-  //   });
-  //   setFilteredExamsData(sortedData);
-  // }, []);
-
   const pages = Math.ceil(
     (searchResults || filteredExamsData)?.length / rowsPerPage
   );
@@ -259,7 +248,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
           )
         }
         classNames={{
-          table: isLoading ? "min-h-[400px]" : "",
+          table: isLoading || isEmpty ? "min-h-[400px]" : "",
         }}
       >
         <TableHeader>

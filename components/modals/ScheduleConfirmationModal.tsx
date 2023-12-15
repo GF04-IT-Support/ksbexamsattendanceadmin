@@ -163,6 +163,7 @@ export default function ScheduleConfirmationModal({
               maxHeight: "500px",
               overflow: "auto",
             }}
+            className="custom-scrollbar"
           >
             <CardContent>
               <div className="text-xl font-bold mb-3 flex justify-center items-center">

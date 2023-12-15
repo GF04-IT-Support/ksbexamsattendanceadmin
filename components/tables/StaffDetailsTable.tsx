@@ -177,7 +177,7 @@ export default function StaffDetailsTable({ id, label }: StaffProps) {
           )
         }
         classNames={{
-          table: isLoading ? "min-h-[400px]" : "",
+          table: isLoading || isEmpty ? "min-h-[400px]" : "",
         }}
       >
         <TableHeader>

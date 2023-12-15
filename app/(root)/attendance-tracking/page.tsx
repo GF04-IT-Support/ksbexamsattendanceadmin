@@ -1,11 +1,10 @@
-import React from 'react'
+import React from "react";
+import AttendanceReportTable from "@/components/tables/AttendanceReportTable";
 
-function AttendanceTracking() {
+export default async function AttendanceReport() {
   return (
     <div>
-      
+      <AttendanceReportTable />
     </div>
-  )
+  );
 }
-
-export default AttendanceTracking;

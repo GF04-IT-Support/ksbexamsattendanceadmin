@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
 import React from "react";
-import { Tabs, Tab} from "@nextui-org/react";
+import { Tabs, Tab } from "@nextui-org/react";
 import { StaffTabsLinks } from "@/lib/constants";
 
 type ExamName = {
@@ -13,16 +13,29 @@ type ExamsTimetableProps = {
   examsNames: ExamName[];
 };
 
-export default function StaffTabs({examsNames}: ExamsTimetableProps) {
-    return (
-        <div className="flex w-full flex-col">
-            <Tabs aria-label="Dynamic tabs" items={StaffTabsLinks} fullWidth >
-                {(item) => (
-                    <Tab key={item.id} title={item.label} >
-                        {item.content(item.id, item.label, examsNames)}
-                    </Tab>
-                )}
-            </Tabs>
-        </div>  
-    );
+export default function StaffTabs({ examsNames }: ExamsTimetableProps) {
+  return (
+    <div className="flex w-full flex-col">
+      <Tabs
+        color="primary"
+        aria-label="Dynamic tabs"
+        items={StaffTabsLinks}
+        fullWidth
+      >
+        {(item) => (
+          <Tab
+            key={item.id}
+            title={
+              <div className="flex items-center space-x-2">
+                {item.icon}
+                <span>{item.label}</span>
+              </div>
+            }
+          >
+            {item.content(item.id, item.label, examsNames)}
+          </Tab>
+        )}
+      </Tabs>
+    </div>
+  );
 }

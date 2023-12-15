@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react';
-import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
-import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import moment from 'moment';
-import { useDateStore } from '@/zustand/store';
-import { useStyles } from '@/lib/helpers/styles.helpers';
+import React from "react";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import moment from "moment";
+import { useDateStore } from "@/zustand/store";
+import { useStyles } from "@/lib/helpers/styles.helpers";
 
 export default function TableDatePicker() {
   const setStartDate = useDateStore((state) => state.setStartDate);
@@ -15,7 +15,6 @@ export default function TableDatePicker() {
   const startDate = useDateStore((state) => state.startDate);
   const endDate = useDateStore((state) => state.endDate);
   const classes = useStyles();
-  
 
   const handleStartDateChange = (date: moment.Moment | null) => {
     const newDate = date ? date.toDate() : null;
@@ -27,14 +26,23 @@ export default function TableDatePicker() {
     setEndDate(newDate);
   };
 
-
   return (
     <LocalizationProvider dateAdapter={AdapterMoment}>
-      <DemoContainer components={['DatePicker']} >
-        <div className='flex gap-5 items-center overflow-hidden py-2'>
-        <DatePicker label='From'  value={startDate && moment(startDate)} onChange={handleStartDateChange} className={`${classes.datePicker} w-[200px]`}/>
-        <p> - </p>
-        <DatePicker label='To' value={endDate && moment(endDate)} onChange={handleEndDateChange} className={`${classes.datePicker} w-[200px]`}/>
+      <DemoContainer components={["DatePicker"]}>
+        <div className="flex gap-5 items-center overflow-hidden py-2">
+          <DatePicker
+            label="From"
+            value={startDate && moment(startDate)}
+            onChange={handleStartDateChange}
+            className={`${classes.datePicker} w-[200px]`}
+          />
+          <p> - </p>
+          <DatePicker
+            label="To"
+            value={endDate && moment(endDate)}
+            onChange={handleEndDateChange}
+            className={`${classes.datePicker} w-[200px]`}
+          />
         </div>
       </DemoContainer>
     </LocalizationProvider>

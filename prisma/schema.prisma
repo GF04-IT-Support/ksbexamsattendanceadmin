@@ -21,12 +21,14 @@ model Exam {
   sessions    ExamSession[]
   exam_name   ExamName    @relation(fields: [exam_name_id], references: [exam_name_id])
   exam_name_id String
+  archived    Boolean     @default(false)
 }
 
 model ExamName{
   exam_name_id String @id @default(cuid()) @map("_id")
   exam_name    String @unique
   exams        Exam[]
+  archived     Boolean     @default(false)
 }
 
 model Staff {
@@ -36,12 +38,14 @@ model Staff {
   department             String
   assignments            StaffAssignment[]
   attendances            Attendance[]
+  archived               Boolean     @default(false)
 }
 
 model Venue {
   venue_id   String   @id @default(cuid()) @map("_id")
   name       String   @unique
   examSessions ExamSession[]
+  archived   Boolean     @default(false)
 }
 
 model ExamSession {
@@ -54,6 +58,7 @@ model ExamSession {
   venue           Venue @relation(fields: [venue_id], references: [venue_id])
   assignments     StaffAssignment[]
   attendances     Attendance[]
+  archived        Boolean     @default(false)
 }
 
 model StaffAssignment {
@@ -65,10 +70,10 @@ model StaffAssignment {
   updatedAt       DateTime @updatedAt
   staff           Staff @relation(fields: [staff_id], references: [staff_id])
   examSession     ExamSession @relation(fields: [exam_session_id], references: [exam_session_id])
+  archived        Boolean     @default(false)
 
   @@unique([staff_id, exam_session_id])
 }
-
 
 model Attendance {
   attendance_id          String      @id @default(cuid()) @map("_id")
@@ -77,4 +82,5 @@ model Attendance {
   attendance_status      String
   exam_session           ExamSession @relation(fields: [exam_session_id], references: [exam_session_id])
   staff                  Staff       @relation(fields: [staff_id], references: [staff_id])
+  archived               Boolean     @default(false)
 }
