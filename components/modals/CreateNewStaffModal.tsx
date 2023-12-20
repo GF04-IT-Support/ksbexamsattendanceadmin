@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import {
   Modal,
@@ -100,7 +102,7 @@ export default function CreateNewStaffModal({
       <Modal
         backdrop="blur"
         isDismissable={false}
-        size="5xl"
+        size="2xl"
         isOpen={isOpen}
         onOpenChange={onClose}
         motionProps={{

@@ -5,6 +5,7 @@ import "../globals.css";
 import { Providers } from "../providers";
 import Header from "@/components/shared/Header";
 import Sidebar from "@/components/shared/Sidebar";
+import AuthProvider from "@/hooks/AuthProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,21 +20,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>     
-      <html lang="en">
-        <body className={inter.className}>
-          <Providers>
-            <Header />
-            <main className="flex flex-row">
-              <Sidebar />
-              <section className="main-container">
-                <div className="w-full">{children}</div>
-              </section>
-              
-            </main>
-          </Providers>
-        </body>
-      </html>
-    </ClerkProvider>
+    <AuthProvider>
+      <ClerkProvider>
+        <html lang="en">
+          <body className={inter.className}>
+            <Providers>
+              <Header />
+              <main className="flex flex-row">
+                <Sidebar />
+                <section className="main-container">
+                  <div className="w-full">{children}</div>
+                </section>
+              </main>
+            </Providers>
+          </body>
+        </html>
+      </ClerkProvider>
+    </AuthProvider>
   );
 }

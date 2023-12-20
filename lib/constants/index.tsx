@@ -9,6 +9,7 @@ import {
   FaUsers,
   FaClipboardList,
   FaCog,
+  FaUserCog,
 } from "react-icons/fa";
 import InvigilatorsIcon from "@mui/icons-material/People";
 import SecurityIcon from "@mui/icons-material/Security";
@@ -37,16 +38,16 @@ export const sidebarLinks = [
     route: "/attendance-tracking",
     label: "Attendance Tracking",
   },
+  {
+    icon: <FaUserCog />,
+    route: "/user-management",
+    label: "User Management",
+  },
   // {
   //   icon: <FaCog />,
-  //   route: "/user-management",
-  //   label: "User Management",
+  //   route: "/settings",
+  //   label: "Settings",
   // },
-  {
-    icon: <FaCog />,
-    route: "/settings",
-    label: "Settings",
-  },
 ];
 
 export const StaffTabsLinks = [
@@ -91,3 +92,15 @@ export const StaffTabsLinks = [
     ),
   },
 ];
+
+// export const UserTabsLinks = [
+//   {
+//     id: "checker",
+//     label: "Checkers",
+//     icon: <FaUsers />,
+//   },
+//   {
+//     id: "admin",
+//     label: "Admins",
+//   },
+// ];

@@ -40,9 +40,11 @@ import {
 import ReactHtmlParser from "react-html-parser";
 import SearchInput from "../inputs/SearchInput";
 import { FaEllipsisV, FaFileAlt, FaRegChartBar } from "react-icons/fa";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { utils, writeFile } from "xlsx";
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
+
+pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 const initialSelectedColumns = {
   date: true,
@@ -295,13 +297,29 @@ export default function DateAndSessionSelector() {
       excelRows.push(excelData);
     });
 
+    const columnWidths = Object.keys(columnNames).map((key) =>
+      key === "staff_name" ? "*" : "auto"
+    );
+
     if (format === "pdf") {
-      const doc = new jsPDF({ orientation: "landscape" });
-      autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-      });
-      doc.save("report.pdf");
+      const docDefinition = {
+        pageSize: {
+          width: 841.89,
+          height: 595.28,
+        },
+        pageOrientation: "landscape" as const,
+        content: [
+          {
+            table: {
+              widths: columnWidths,
+              headerRows: 1,
+              body: [tableColumn, ...tableRows],
+            },
+          },
+        ],
+      };
+
+      pdfMake.createPdf(docDefinition).download("report.pdf");
     } else if (format === "excel") {
       const worksheet = utils.json_to_sheet(excelRows);
       const workbook = utils.book_new();
@@ -343,12 +361,19 @@ export default function DateAndSessionSelector() {
     }));
 
     if (format === "pdf") {
-      const doc = new jsPDF({ orientation: "landscape" });
-      autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-      });
-      doc.save("summary.pdf");
+      const docDefinition = {
+        content: [
+          {
+            table: {
+              widths: ["*", "*", "*"],
+              headerRows: 1,
+              body: [tableColumn, ...tableRows],
+            },
+          },
+        ],
+      };
+
+      pdfMake.createPdf(docDefinition).download("summary.pdf");
     } else if (format === "excel") {
       const worksheet = utils.json_to_sheet(excelRows);
       const workbook = utils.book_new();
