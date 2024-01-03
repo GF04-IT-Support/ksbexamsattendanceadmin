@@ -1,26 +1,32 @@
+// ConfirmationModal.jsx
 import {
   Modal,
-  ModalContent,
   ModalHeader,
-  ModalBody,
+  ModalContent,
   ModalFooter,
   Button,
+  ModalBody,
   Spinner,
 } from "@nextui-org/react";
+import React from "react";
 
 type ConfirmationModalProps = {
   isOpen: boolean;
-  onConfirm: () => void;
   onClose: () => void;
-  isDeleting: boolean;
+  onConfirm: () => void;
+  isDeleting?: boolean;
+  confirmLabel: string;
+  message: string;
 };
 
-export default function DeleteConfirmationModal({
+const ExamsDeleteConfirmationModal = ({
   isOpen,
-  onConfirm,
   onClose,
+  onConfirm,
   isDeleting,
-}: ConfirmationModalProps) {
+  confirmLabel,
+  message,
+}: ConfirmationModalProps) => {
   return (
     <Modal
       backdrop="opaque"
@@ -49,27 +55,29 @@ export default function DeleteConfirmationModal({
     >
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1 items-center justify-center">
-          Confirm Delete
+          Confirmation
         </ModalHeader>
         <ModalBody>
-          <p>Are you sure you want to delete this staff/user?</p>
+          <p>{message}</p>
         </ModalBody>
         <ModalFooter>
-          <Button color="default" onPress={onClose}>
+          <Button onClick={onClose} color="default">
             Cancel
           </Button>
-          <Button color="danger" onPress={onConfirm}>
+          <Button onClick={onConfirm} color="danger">
             {isDeleting ? (
               <>
                 <Spinner size="sm" color="default" />
                 Deleting...
               </>
             ) : (
-              "Delete"
+              confirmLabel
             )}
           </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
   );
-}
+};
+
+export default ExamsDeleteConfirmationModal;

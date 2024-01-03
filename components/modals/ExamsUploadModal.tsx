@@ -1,11 +1,23 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Chip, Modal, ModalContent, useDisclosure } from "@nextui-org/react";
 import UploadForm from "../forms/UploadForm";
 
-export default function ExamsUploadModal() {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+export default function ExamsUploadModal({ details, setDetails }: any) {
+  const { isOpen, onOpen, onClose, onOpenChange } = useDisclosure();
+  const openModal = details?.openModal;
+
+  useEffect(() => {
+    if (openModal) {
+      onOpen();
+    }
+  }, [openModal]);
+
+  const handleCancel = () => {
+    setDetails({});
+    onClose();
+  };
   return (
     <div>
       <div className="flex justify-center items-center mb-6">
@@ -25,13 +37,17 @@ export default function ExamsUploadModal() {
         size="xl"
         className="p-4"
         isOpen={isOpen}
-        onOpenChange={onOpenChange}
+        onClose={handleCancel}
         isDismissable={false}
       >
         <ModalContent>
-          {(onClose) => (
+          {() => (
             <>
-              <UploadForm uploadType="exams" onClose={onClose} />
+              <UploadForm
+                uploadType="exams"
+                onClose={handleCancel}
+                selectedExams={details?.selectedExams}
+              />
             </>
           )}
         </ModalContent>

@@ -16,11 +16,13 @@ import { IoIosDocument } from "react-icons/io";
 import UploadConfirmationModal from "../modals/UploadConfirmationModal";
 import ScheduleConfirmationModal from "../modals/ScheduleConfirmationModal";
 import UnMatchedDetailsTable from "../tables/UnMatchedDetailsTable";
+import { setDefaultAutoSelectFamily } from "net";
 
 type UploadFormProps = {
   uploadType: "exams" | "invigilators";
   onClose: () => void;
   mutate?: () => void;
+  selectedExams?: any;
   staffDetails?: any[];
 };
 
@@ -28,6 +30,7 @@ const UploadForm = ({
   uploadType,
   onClose,
   mutate,
+  selectedExams,
   staffDetails,
 }: UploadFormProps) => {
   const { handleSubmit } = useForm();
@@ -80,7 +83,10 @@ const UploadForm = ({
 
       try {
         if (uploadType === "exams") {
-          await extractExamsSchedule(base64String).then((response: any) => {
+          await extractExamsSchedule(
+            base64String,
+            selectedExams?.selectedId
+          ).then((response: any) => {
             setIsLoading(false);
             setAcceptedFiles([]);
             if (
@@ -153,8 +159,6 @@ const UploadForm = ({
         scheduleData.matchedData
       );
 
-      // console.log(response);
-
       if (
         response.unmatchedDetails.length === 0 &&
         response.message ===
@@ -184,12 +188,18 @@ const UploadForm = ({
       />
 
       <div className="p-4 w-[550px] bg-white shadow-md rounded-md">
-        <div className="flex items-center justify-center">
-          <FaFileUpload className="w-8 h-8 text-gray-500" />
-          <h2 className="pl-2 text-2xl font-semibold text-gray-700">
-            Upload {uploadType === "invigilators" ? "Invigilators" : "Exams"}{" "}
-            Schedule
-          </h2>
+        <div className="flex flex-col">
+          <div className="flex items-center justify-center">
+            <FaFileUpload className="w-8 h-8 text-gray-500" />
+            <h2 className="pl-2 text-2xl font-semibold text-gray-700">
+              {selectedExams && "Re"}Upload{" "}
+              {uploadType === "invigilators" ? "Invigilators" : "Exams"}{" "}
+              Schedule
+            </h2>
+          </div>
+          {selectedExams && (
+            <div className="py-4 text-center font-semibold text-gray-700">{`${selectedExams?.examName}`}</div>
+          )}
         </div>
         <form
           className="flex flex-col items-center p-4"

@@ -15,6 +15,7 @@ import TextField from "@mui/material/TextField";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import toast, { Toaster } from "react-hot-toast";
+import { addNewUser } from "@/lib/actions/users.action";
 
 type CreateNewUserModalProps = {
   isOpen: boolean;
@@ -25,6 +26,7 @@ type CreateNewUserModalProps = {
 function CreateNewUserModal({ isOpen, onClose, tab }: CreateNewUserModalProps) {
   const [role, setRole] = useState("0");
   const [email, setEmail] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const [emailError, setEmailError] = useState("");
 
@@ -39,6 +41,41 @@ function CreateNewUserModal({ isOpen, onClose, tab }: CreateNewUserModalProps) {
       setEmailError("");
     }
   };
+
+  const handleCreateUser = async () => {
+    if (emailError) {
+      return;
+    }
+
+    const data = {
+      email: email,
+      role: tab,
+      ...(!role && { subRole: role }),
+    };
+
+    try {
+      setIsCreating(true);
+      const response = await addNewUser(data);
+      if (response?.message === "User created successfully") {
+        toast.success(response?.message);
+        onClose();
+      } else {
+        toast.error(response?.message);
+      }
+    } catch (error: any) {
+      throw new Error(error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const isDisabled = () => {
+    if (emailError) return true;
+    if (email === "") return true;
+    if (role === "0") return true;
+    return false;
+  };
+
   return (
     <>
       <Modal
@@ -122,22 +159,22 @@ function CreateNewUserModal({ isOpen, onClose, tab }: CreateNewUserModalProps) {
           </ModalBody>
 
           <ModalFooter>
-            {/* <Button color="danger" onClick={onClose}>
-          Cancel
-        </Button> */}
-            {/* <Button
-          color={!isFormValid() ? "default" : "primary"}
-          disabled={!isFormValid() || isSaving}
-          onClick={handleSubmit}
-        >
-          {isSaving ? (
-            <>
-              <Spinner size="sm" color="default" /> Saving...
-            </>
-          ) : (
-            "Save"
-          )}
-        </Button> */}
+            <Button color="danger" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              color={isDisabled() ? "default" : "primary"}
+              disabled={isDisabled() || isCreating}
+              onClick={handleCreateUser}
+            >
+              {isCreating ? (
+                <>
+                  <Spinner size="sm" color="default" /> Saving...
+                </>
+              ) : (
+                "Save"
+              )}
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

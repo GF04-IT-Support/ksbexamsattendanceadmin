@@ -1,4 +1,3 @@
-import os
 import pdfplumber
 import pandas as pd
 import numpy as np
@@ -32,6 +31,13 @@ def clean_venue(venue):
     venue = re.sub(r'\bBLK\b', 'BLOCK', venue)
     return venue.strip()
 
+def clean_date(date_str):
+    split_result = date_str.split(' ', 1)
+    if len(split_result) > 1:
+        return split_result[1].strip('/').strip()
+    else:
+        return date_str.strip('/').strip()
+
 def clean_dataframe(df):
     df.drop(columns=['Course Name'], inplace=True)
     df.replace("", np.nan, inplace=True)
@@ -48,7 +54,7 @@ def clean_dataframe(df):
     df['Course Code'] = df['Course Code'].replace('(?<=[a-zA-Z])(?=\d)', ' ', regex=True)
     df.replace(to_replace=r'\n', value=' ', regex=True, inplace=True)
     df = df[~(df == df.columns).sum(axis=1).gt(1)]
-    df['Day/Dat e'] = df['Day/Dat e'].str.split(' ', 1).str[1].str.strip().str.strip('/')
+    df['Day/Dat e'] = df['Day/Dat e'].apply(clean_date)
     df.rename(columns={'Day/Dat e': 'Date'}, inplace=True)
     return df
 

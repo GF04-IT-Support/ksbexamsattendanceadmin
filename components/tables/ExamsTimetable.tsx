@@ -15,14 +15,20 @@ import {
   Tooltip,
 } from "@nextui-org/react";
 import useSWR from "swr";
-import { getExamsSchedule } from "@/lib/actions/exams.action";
+import {
+  deleteExamsSchedule,
+  getExamsSchedule,
+} from "@/lib/actions/exams.action";
 import ReactHtmlParser from "react-html-parser";
 import TableDatePicker from "../pickers/TableDatePicker";
-import { FiFilter, FiRefreshCw, FiEye } from "react-icons/fi";
+import { FiFilter, FiRefreshCw, FiEye, FiTrash2 } from "react-icons/fi";
 import { useDateStore } from "@/zustand/store";
 import SearchInput from "../inputs/SearchInput";
 import ViewNEditModal from "../modals/ViewNEditExamsModal";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
+import { FaUpload } from "react-icons/fa";
+import ExamsDeleteConfirmationModal from "../modals/ExamsDeleteConfirmationMoodal";
+import ExamsUploadModal from "../modals/ExamsUploadModal";
 
 type ExamName = {
   exam_name_id: string;
@@ -58,6 +64,14 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [deleteConfirmationModal1, setDeleteConfirmationModal1] =
+    useState(false);
+  const [deleteConfirmationModal2, setDeleteConfirmationModal2] =
+    useState(false);
+  const [reUploadConfirmationModal, setReUploadConfirmationModal] =
+    useState(false);
+  const [details, setDetails] = useState<any>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [sortDescriptor, setSortDescriptor] = React.useState({
     column: "year",
     direction: "asc",
@@ -173,157 +187,244 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
     setSortDescriptor({ column: descriptor.column, direction });
   };
 
+  const handleDelete = () => {
+    setDeleteConfirmationModal1(true);
+  };
+
+  const handleConfirmDelete1 = () => {
+    setDeleteConfirmationModal1(false);
+    setDeleteConfirmationModal2(true);
+  };
+
+  const handleConfirmDelete2 = async () => {
+    setIsDeleting(true);
+    try {
+      const response: any = await deleteExamsSchedule(selectedId);
+      if (response?.message === "Exam deleted successfully") {
+        toast.success(response?.message);
+      } else {
+        toast.error(response?.message);
+      }
+    } catch (error) {
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmationModal2(false);
+    }
+  };
+
+  const handleReupload = async () => {
+    setReUploadConfirmationModal(false);
+    setDetails({
+      openModal: true,
+      selectedExams: {
+        selectedId: selectedId,
+        examName: examNames.filter(
+          (exam: any) => exam.exam_name_id === selectedId
+        )[0].exam_name,
+      },
+    });
+  };
+
   const loadingState = isLoading ? "loading" : "idle";
   const isEmpty =
     (searchResults || filteredExamsData).length === 0 && !isLoading;
 
   return (
-    <div className="my-4 w-full">
-      <div className="flex justify-center items-center">
-        <Toaster position="top-center" />
-        <Select
-          label="Exam Name"
-          items={examNames}
-          onChange={onExamNameChange}
-          defaultSelectedKeys={
-            (examNames.length > 0 && [examNames[0].exam_name_id]) || []
-          }
-          placeholder="Select Exam Name"
-          className="my-2"
-          disallowEmptySelection
-        >
-          {(examName) => (
-            <SelectItem
-              key={examName.exam_name_id}
-              value={examName.exam_name_id}
-            >
-              {examName.exam_name}
-            </SelectItem>
-          )}
-        </Select>
-      </div>
-
-      <SearchInput
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        searchType={searchType}
-        setSearchType={setSearchType}
-        handleSearch={handleSearch}
-        setSearchResults={setSearchResults}
-      />
-
-      <div className="flex gap-2 items-center justify-start my-6">
-        <TableDatePicker />
-        <div
-          className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2  border-gray-500 rounded cursor-pointer hover:opacity-60"
-          onClick={resetDates}
-        >
-          <FiRefreshCw size={20} color={`gray`} />
-        </div>
-        <div
-          className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2 border-gray-500 rounded cursor-pointer hover:opacity-60"
-          onClick={handleFilter}
-        >
-          <FiFilter size={20} color={`gray`} />
-        </div>
-      </div>
-
-      <Table
-        // isStriped
-        aria-label="Exams timetable"
-        onSortChange={handleSortChange}
-        bottomContent={
-          pages > 1 && (
-            <div className="flex w-full justify-center">
-              <Pagination
-                isCompact
-                showControls
-                showShadow
-                color="primary"
-                page={page}
-                total={pages}
-                onChange={(page) => setPage(page)}
-              />
-            </div>
-          )
-        }
-        classNames={{
-          table: isLoading || isEmpty ? "min-h-[400px]" : "",
-        }}
-      >
-        <TableHeader>
-          <TableColumn key="date" allowsSorting>
-            Date
-          </TableColumn>
-          <TableColumn key="exam_code">Exam Code(s)</TableColumn>
-          <TableColumn key="start_time">Start Time</TableColumn>
-          <TableColumn key="end_time">End Time</TableColumn>
-          <TableColumn key="venue">Venue(s)</TableColumn>
-          <TableColumn key="year" allowsSorting>
-            Year
-          </TableColumn>
-          <TableColumn key="action">Action</TableColumn>
-        </TableHeader>
-
-        {isEmpty ? (
-          <TableBody emptyContent={"No schedule for this exams."}>
-            {[]}
-          </TableBody>
-        ) : (
-          <TableBody
-            loadingContent={<Spinner />}
-            loadingState={loadingState}
-            items={items}
-            aria-colspan={3}
+    <>
+      <ExamsUploadModal details={details} setDetails={setDetails} />
+      <div className="my-4 w-full">
+        <div className="flex gap-2 justify-center items-center">
+          <Toaster position="top-center" />
+          <Select
+            label="Exam Name"
+            items={examNames}
+            onChange={onExamNameChange}
+            defaultSelectedKeys={
+              (examNames.length > 0 && [examNames[0].exam_name_id]) || []
+            }
+            placeholder="Select Exam Name"
+            className="my-2"
+            disallowEmptySelection
           >
-            {(item: any) => (
-              <TableRow key={item.exam_id}>
-                {(columnKey) => (
-                  <TableCell>
-                    {columnKey === "date" ? (
-                      new Date(item[columnKey]).toLocaleDateString("en-GB")
-                    ) : columnKey === "exam_code" || columnKey === "venue" ? (
-                      item[columnKey].includes(",") ? (
-                        <Tooltip
-                          content={ReactHtmlParser(
-                            item[columnKey].split(",").join("<br />")
-                          )}
-                          placement="bottom"
-                        >
-                          <span className="cursor-pointer underline">
-                            {item[columnKey].split(",")[0]}
-                          </span>
+            {(examName) => (
+              <SelectItem
+                key={examName.exam_name_id}
+                value={examName.exam_name_id}
+              >
+                {examName.exam_name}
+              </SelectItem>
+            )}
+          </Select>
+
+          <div className="flex gap-2 justify-center items-center">
+            <FiTrash2
+              size={20}
+              color={`red`}
+              className="cursor-pointer hover:opacity-50"
+              onClick={handleDelete}
+            />
+            <FaUpload
+              size={20}
+              className="cursor-pointer hover:opacity-50"
+              onClick={() => setReUploadConfirmationModal(true)}
+            />
+          </div>
+        </div>
+
+        <SearchInput
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          searchType={searchType}
+          setSearchType={setSearchType}
+          handleSearch={handleSearch}
+          setSearchResults={setSearchResults}
+        />
+
+        <div className="flex gap-2 items-center justify-start my-6">
+          <TableDatePicker />
+          <div
+            className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2  border-gray-500 rounded cursor-pointer hover:opacity-60"
+            onClick={resetDates}
+          >
+            <FiRefreshCw size={20} color={`gray`} />
+          </div>
+          <div
+            className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2 border-gray-500 rounded cursor-pointer hover:opacity-60"
+            onClick={handleFilter}
+          >
+            <FiFilter size={20} color={`gray`} />
+          </div>
+        </div>
+
+        <Table
+          // isStriped
+          aria-label="Exams timetable"
+          onSortChange={handleSortChange}
+          bottomContent={
+            pages > 1 && (
+              <div className="flex w-full justify-center">
+                <Pagination
+                  isCompact
+                  showControls
+                  showShadow
+                  color="primary"
+                  page={page}
+                  total={pages}
+                  onChange={(page) => setPage(page)}
+                />
+              </div>
+            )
+          }
+          classNames={{
+            table: isLoading || isEmpty ? "min-h-[400px]" : "",
+          }}
+        >
+          <TableHeader>
+            <TableColumn key="date" allowsSorting>
+              Date
+            </TableColumn>
+            <TableColumn key="exam_code">Exam Code(s)</TableColumn>
+            <TableColumn key="start_time">Start Time</TableColumn>
+            <TableColumn key="end_time">End Time</TableColumn>
+            <TableColumn key="venue">Venue(s)</TableColumn>
+            <TableColumn key="year" allowsSorting>
+              Year
+            </TableColumn>
+            <TableColumn key="action">Action</TableColumn>
+          </TableHeader>
+
+          {isEmpty ? (
+            <TableBody emptyContent={"No schedule for this exams."}>
+              {[]}
+            </TableBody>
+          ) : (
+            <TableBody
+              loadingContent={<Spinner />}
+              loadingState={loadingState}
+              items={items}
+              aria-colspan={3}
+            >
+              {(item: any) => (
+                <TableRow key={item.exam_id}>
+                  {(columnKey) => (
+                    <TableCell>
+                      {columnKey === "date" ? (
+                        new Date(item[columnKey]).toLocaleDateString("en-GB")
+                      ) : columnKey === "exam_code" || columnKey === "venue" ? (
+                        item[columnKey].includes(",") ? (
+                          <Tooltip
+                            content={ReactHtmlParser(
+                              item[columnKey].split(",").join("<br />")
+                            )}
+                            placement="bottom"
+                          >
+                            <span className="cursor-pointer underline">
+                              {item[columnKey].split(",")[0]}
+                            </span>
+                          </Tooltip>
+                        ) : (
+                          item[columnKey]
+                        )
+                      ) : columnKey === "action" ? (
+                        <Tooltip content="View">
+                          <FiEye
+                            size={20}
+                            className="cursor-pointer hover:opacity-60"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => handleView(item)}
+                          />
                         </Tooltip>
                       ) : (
                         item[columnKey]
-                      )
-                    ) : columnKey === "action" ? (
-                      <Tooltip content="View">
-                        <FiEye
-                          size={20}
-                          className="cursor-pointer hover:opacity-60"
-                          style={{ cursor: "pointer" }}
-                          onClick={() => handleView(item)}
-                        />
-                      </Tooltip>
-                    ) : (
-                      item[columnKey]
-                    )}
-                  </TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
+                      )}
+                    </TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          )}
+        </Table>
+        {modalOpen && (
+          <ViewNEditModal
+            isOpen={modalOpen}
+            onClose={() => setModalOpen(false)}
+            selectedExam={selectedExam}
+            mutate={mutate}
+          />
         )}
-      </Table>
-      {modalOpen && (
-        <ViewNEditModal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          selectedExam={selectedExam}
-          mutate={mutate}
-        />
-      )}
-    </div>
+
+        {deleteConfirmationModal1 && (
+          <ExamsDeleteConfirmationModal
+            isOpen={deleteConfirmationModal1}
+            onClose={() => setDeleteConfirmationModal1(false)}
+            onConfirm={handleConfirmDelete1}
+            message="Are you sure you want to delete the Exam Schedule?"
+            confirmLabel="Confirm"
+          />
+        )}
+
+        {deleteConfirmationModal2 && (
+          <ExamsDeleteConfirmationModal
+            isOpen={deleteConfirmationModal2}
+            onClose={() => setDeleteConfirmationModal2(false)}
+            onConfirm={handleConfirmDelete2}
+            message="This action is irreversible. Are you absolutely sure you want to proceed?"
+            confirmLabel="Delete"
+            isDeleting={isDeleting}
+          />
+        )}
+
+        {reUploadConfirmationModal && (
+          <ExamsDeleteConfirmationModal
+            isOpen={reUploadConfirmationModal}
+            onClose={() => setReUploadConfirmationModal(false)}
+            onConfirm={handleReupload}
+            message="This action will delete existing exam schedule and allow for reupload. Are you absolutely sure you want to proceed?"
+            confirmLabel="Confirm"
+            isDeleting={isDeleting}
+          />
+        )}
+      </div>
+    </>
   );
 }

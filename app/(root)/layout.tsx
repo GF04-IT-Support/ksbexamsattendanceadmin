@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
 import "../globals.css";
 import { Providers } from "../providers";
 import Header from "@/components/shared/Header";
@@ -21,7 +20,6 @@ export default function RootLayout({
 }) {
   return (
     <AuthProvider>
-      <ClerkProvider>
         <html lang="en">
           <body className={inter.className}>
             <Providers>
@@ -35,7 +33,6 @@ export default function RootLayout({
             </Providers>
           </body>
         </html>
-      </ClerkProvider>
     </AuthProvider>
   );
 }

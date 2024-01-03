@@ -52,3 +52,22 @@ export async function blockUnblockUser(id: string, blocked: boolean) {
     };
   }
 }
+
+export async function addNewUser(data: any) {
+  try {
+    const emailExists = await prisma.user.findFirst({
+      where: {
+        email: data.email,
+      },
+    });
+
+    if (emailExists) {
+      return { message: "Email already exists" };
+    }
+
+    await prisma.user.create({ data });
+    return { message: "User created successfully" };
+  } catch (error: any) {
+    return { message: "An error occurred while creating the user." };
+  }
+}

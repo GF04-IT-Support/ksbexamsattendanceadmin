@@ -1,4 +1,6 @@
 {
   "WillLuke.nextjs.addTypesOnSave": true,
-  "WillLuke.nextjs.hasPrompted": true
+  "WillLuke.nextjs.hasPrompted": true,
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.typeCheckingMode": "off"
 }

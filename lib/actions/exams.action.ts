@@ -12,14 +12,25 @@ import {
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
 
-export async function extractExamsSchedule(base64PdfData: string) {
+// const pythonPath = "C:/Users/New/anaconda3/envs/ksbEA/python.exe";
+const pythonPath =
+  "C:/Users/New/Desktop/NSS-KSB/ksbexamsattendanceadmin/.venv/Scripts/python.exe";
+
+export async function extractExamsSchedule(
+  base64PdfData: string,
+  exam_name_id?: string
+) {
   return new Promise(async (resolve, reject) => {
     try {
+      if (exam_name_id) {
+        await deleteExamsSchedule(exam_name_id);
+      }
+
       const scriptPath = path.join(
         process.cwd(),
         "utils/scripts/exams_schedule_extractor.py"
       );
-      const pythonProcess = spawn("python", ["-u", scriptPath]);
+      const pythonProcess = spawn(pythonPath, ["-u", scriptPath]);
 
       pythonProcess.stdin.setDefaultEncoding("utf-8");
       pythonProcess.stdin.write(base64PdfData);
@@ -153,7 +164,7 @@ export async function extractInvigilatorsSchedule(base64PdfData: string) {
         process.cwd(),
         "utils/scripts/invigilators_extractor.py"
       );
-      const pythonProcess = spawn("python", ["-u", scriptPath]);
+      const pythonProcess = spawn(pythonPath, ["-u", scriptPath]);
 
       pythonProcess.stdin.setDefaultEncoding("utf-8");
       pythonProcess.stdin.write(base64PdfData);
@@ -230,6 +241,20 @@ export async function editExamsSchedule(exam_id: string, data: any) {
     return { message: "The exam schedule has been updated successfully!" };
   } catch (error: any) {
     return { message: "An error occurred while updating the exam schedule." };
+  }
+}
+
+export async function deleteExamsSchedule(exam_name_id: string) {
+  try {
+    await prisma.examName.delete({
+      where: {
+        exam_name_id: exam_name_id,
+      },
+    });
+    revalidatePath("/exams-schedule");
+    return { message: "Exam deleted successfully" };
+  } catch (error: any) {
+    return { message: "An error occurred while deleting the exam schedule." };
   }
 }
 

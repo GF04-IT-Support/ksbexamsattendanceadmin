@@ -1,6 +1,7 @@
 import prisma from "@/utils/prisma";
-import { currentUser } from "@clerk/nextjs";
 import { assignStaffToExamSession } from "../actions/exams.action";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/utils/auth";
 
 const fuzz = require("fuzzball");
 
@@ -171,7 +172,7 @@ export async function matchInvigilatorsWithAbbreviatedNames(
 }
 
 export async function correlateInvigilatorsWithExams(details: any) {
-  const user = await currentUser();
+  const { user } = await getServerSession(authOptions);
 
   if (!user) return null;
 

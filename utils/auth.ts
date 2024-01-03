@@ -54,7 +54,7 @@ export const authOptions = {
         }
       }
 
-      return false;
+      return '/sign-in?error=User is not authorized';
     },
     jwt: async ({ token, user }: any) => {
       if (user) {
