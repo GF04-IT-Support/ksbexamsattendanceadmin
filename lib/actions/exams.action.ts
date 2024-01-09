@@ -157,6 +157,45 @@ export async function getExamsSchedule(examsNameId: string, role?: string) {
   }
 }
 
+export async function getUpcomingExamsSchedule() {
+  try {
+    const currentDate = new Date();
+
+    const upcomingExams = await prisma.exam.findMany({
+      where: {
+        date: {
+          gte: currentDate,
+        },
+      },
+      // where: {
+      //   AND: [
+      //     { date: { gte: new Date("2023-08-23") } },
+      //     { date: { lte: new Date("2023-08-27") } },
+      //   ],
+      // },
+      include: {
+        sessions: {
+          include: {
+            venue: true,
+            assignments: {
+              include: {
+                staff: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        date: "asc",
+      },
+    });
+
+    return upcomingExams;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
 export async function extractInvigilatorsSchedule(base64PdfData: string) {
   return new Promise(async (resolve, reject) => {
     try {

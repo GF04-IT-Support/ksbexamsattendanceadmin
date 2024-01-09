@@ -33,6 +33,7 @@ import StaffAssignModal from "../modals/StaffAssignModal";
 import { fetchStaffDetails } from "@/lib/actions/staff.action";
 import UploadForm from "../forms/UploadForm";
 import { produce } from "immer";
+import CollapsibleStaffList from "../shared/CollapsibleStaffList";
 
 type ExamName = {
   exam_name_id: string;
@@ -407,7 +408,14 @@ export default function ExamsScheduleTable({
                       </TableCell>
 
                       <TableCell>
-                        {Object.values(assignments[item.exam_id] || {}).flatMap(
+                        <CollapsibleStaffList
+                          staffNames={Object.values(
+                            assignments[item.exam_id] || {}
+                          )
+                            .flatMap((staffs: any[]) => staffs)
+                            .map((staff) => staff.staff_name)}
+                        />
+                        {/* {Object.values(assignments[item.exam_id] || {}).flatMap(
                           (staffs: any[]) => staffs
                         ).length > 0 ? (
                           Object.values(assignments[item.exam_id] || {})
@@ -423,7 +431,7 @@ export default function ExamsScheduleTable({
                           <p className="text-gray-500 text-center">
                             No staff assigned
                           </p>
-                        )}
+                        )} */}
                       </TableCell>
 
                       <TableCell className="w-[40px]">

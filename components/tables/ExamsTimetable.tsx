@@ -27,7 +27,7 @@ import SearchInput from "../inputs/SearchInput";
 import ViewNEditModal from "../modals/ViewNEditExamsModal";
 import toast, { Toaster } from "react-hot-toast";
 import { FaUpload } from "react-icons/fa";
-import ExamsDeleteConfirmationModal from "../modals/ExamsDeleteConfirmationMoodal";
+import ExamsDeleteConfirmationModal from "../modals/ExamsDeleteConfirmationModal";
 import ExamsUploadModal from "../modals/ExamsUploadModal";
 
 type ExamName = {
