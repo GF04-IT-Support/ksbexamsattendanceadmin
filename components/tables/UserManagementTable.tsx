@@ -32,7 +32,11 @@ import {
 } from "react-icons/fi";
 import CreateNewUserModal from "../modals/CreateNewUserModal";
 import { FaEllipsisV } from "react-icons/fa";
-import { blockUnblockUser, deleteUser } from "@/lib/actions/users.action";
+import {
+  blockUnblockUser,
+  changeRole,
+  deleteUser,
+} from "@/lib/actions/users.action";
 import DeleteConfirmationModal from "../modals/DeleteConfirmationModal";
 import toast, { Toaster } from "react-hot-toast";
 import { useSession } from "next-auth/react";
@@ -48,12 +52,12 @@ type Users = {
 
 interface UserManagementTableProps {
   users: Users[];
+  ID: string;
 }
 
-function UserManagementTable({ users }: UserManagementTableProps) {
+function UserManagementTable({ users, ID }: UserManagementTableProps) {
   const admins = users.filter((user) => user.role === "admin");
   const checkers = users.filter((user) => user.role === "checker");
-  const { data: session }: any = useSession();
 
   const [selectedTab, setSelectedTab] = useState<any>("admin");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -110,7 +114,7 @@ function UserManagementTable({ users }: UserManagementTableProps) {
   };
 
   const handleBlockUnblock = async (id: string, status: boolean) => {
-    if (id === session?.user.id) return;
+    if (id === ID) return;
 
     try {
       await blockUnblockUser(id, status);
@@ -149,7 +153,27 @@ function UserManagementTable({ users }: UserManagementTableProps) {
     columns.push(<TableColumn key="subRole">Role</TableColumn>);
   }
   columns.push(<TableColumn key="emailVerified">Email Verified</TableColumn>);
+
+  if (selectedUsers.some((user) => user.googleId !== null)) {
+    columns.push(<TableColumn key="status">Status</TableColumn>);
+  }
   columns.push(<TableColumn key="actions">Actions</TableColumn>);
+
+  const roles = ["Supreme", "Super", "Normal"];
+
+  const isBlockUnblockDisabled = (id: string) => {
+    if (id === ID) return true;
+    return false;
+  };
+
+  const handleRoleChange = async (id: string, role: string) => {
+    if (id === ID) return;
+    try {
+      await changeRole(id, role.toLowerCase());
+    } catch (error: any) {
+      throw new Error(error);
+    }
+  };
 
   return (
     <div>
@@ -251,6 +275,21 @@ function UserManagementTable({ users }: UserManagementTableProps) {
                   </TableCell>
                 );
 
+                if (item.googleId) {
+                  cells.push(
+                    <TableCell key="status">
+                      <Chip
+                        color={item.blocked ? "danger" : "success"}
+                        startContent={
+                          item.blocked ? <FiXCircle /> : <FiCheckCircle />
+                        }
+                      >
+                        {item.blocked ? "Blocked" : "Active"}
+                      </Chip>
+                    </TableCell>
+                  );
+                }
+
                 cells.push(
                   <TableCell key="actions">
                     <Dropdown aria-label="Actions">
@@ -259,8 +298,15 @@ function UserManagementTable({ users }: UserManagementTableProps) {
                           <FaEllipsisV />
                         </Button>
                       </DropdownTrigger>
-                      <DropdownMenu>
-                        {item.googleId ? (
+                      {item.googleId ? (
+                        <DropdownMenu
+                          closeOnSelect={false}
+                          disabledKeys={
+                            isBlockUnblockDisabled(item.id)
+                              ? ["Block", "Role"]
+                              : []
+                          }
+                        >
                           <DropdownItem
                             startContent={
                               item.blocked ? <FiUnlock /> : <FiLock />
@@ -270,10 +316,37 @@ function UserManagementTable({ users }: UserManagementTableProps) {
                                 ? handleBlockUnblock(item.id, false)
                                 : handleBlockUnblock(item.id, true)
                             }
+                            key="Block"
                           >
                             {item.blocked ? "Unblock" : "Block"}
                           </DropdownItem>
-                        ) : (
+                          <DropdownItem key="Role">
+                            <Dropdown>
+                              <DropdownTrigger>
+                                <p className="ml-2">Change Role</p>
+                              </DropdownTrigger>
+                              <DropdownMenu>
+                                {roles
+                                  .filter(
+                                    (role) =>
+                                      role.toLowerCase() !== item.subRole
+                                  )
+                                  .map((role) => (
+                                    <DropdownItem
+                                      key={role}
+                                      onClick={() =>
+                                        handleRoleChange(item.id, role)
+                                      }
+                                    >
+                                      {role}
+                                    </DropdownItem>
+                                  ))}
+                              </DropdownMenu>
+                            </Dropdown>
+                          </DropdownItem>
+                        </DropdownMenu>
+                      ) : (
+                        <DropdownMenu>
                           <DropdownItem
                             color="danger"
                             startContent={<FiTrash2 />}
@@ -281,8 +354,8 @@ function UserManagementTable({ users }: UserManagementTableProps) {
                           >
                             Delete
                           </DropdownItem>
-                        )}
-                      </DropdownMenu>
+                        </DropdownMenu>
+                      )}
                     </Dropdown>
                   </TableCell>
                 );

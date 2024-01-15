@@ -4,7 +4,6 @@ import React from "react";
 import { sidebarLinks } from "@/lib/constants";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { SignedIn, SignOutButton, useAuth } from "@clerk/nextjs";
 import { FaSignOutAlt } from "react-icons/fa";
 
 const Sidebar = () => {

@@ -114,4 +114,5 @@ model Attendance {
   exam_session ExamSession @relation(fields: [exam_session_id], references: [exam_session_id], onDelete: Cascade)
   staff Staff @relation(fields: [staff_id], references: [staff_id])
   archived Boolean @default(false)
+  @@unique([staff_id, exam_session_id], name: "staff_id_exam_session_id")
 }

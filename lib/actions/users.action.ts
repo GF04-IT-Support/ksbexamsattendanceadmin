@@ -71,3 +71,13 @@ export async function addNewUser(data: any) {
     return { message: "An error occurred while creating the user." };
   }
 }
+
+export async function changeRole(id: string, subRole: string) {
+  try {
+    await prisma.user.update({ where: { id }, data: { subRole } });
+    revalidatePath("/user-management");
+    return { message: "Role changed successfully" };
+  } catch (error: any) {
+    return { message: "An error occurred while changing the role." };
+  }
+}
