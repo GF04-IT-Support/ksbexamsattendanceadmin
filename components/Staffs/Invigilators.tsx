@@ -3,7 +3,7 @@
 import React from "react";
 import { Accordion, AccordionItem, Card, CardBody } from "@nextui-org/react";
 import StaffDetailsTable from "../tables/StaffDetailsTable";
-import ExamsScheduleTable from "../tables/ExamsScheduleTable1";
+import ExamsScheduleTable from "../tables/ExamsScheduleTable";
 
 type ExamName = {
   exam_name_id: string;

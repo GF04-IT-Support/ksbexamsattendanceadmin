@@ -243,7 +243,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
               (examNames.length > 0 && [examNames[0].exam_name_id]) || []
             }
             placeholder="Select Exam Name"
-            className="my-2"
+            className="my-2 max-sm:w-[300px] "
             disallowEmptySelection
           >
             {(examName) => (
@@ -271,33 +271,36 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
           </div>
         </div>
 
-        <SearchInput
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          searchType={searchType}
-          setSearchType={setSearchType}
-          handleSearch={handleSearch}
-          setSearchResults={setSearchResults}
-        />
+        <div className=" max-[525px]:flex-col max-md:flex gap-2">
+          <SearchInput
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            searchType={searchType}
+            setSearchType={setSearchType}
+            handleSearch={handleSearch}
+            setSearchResults={setSearchResults}
+          />
 
-        <div className="flex gap-2 items-center justify-start my-6">
-          <TableDatePicker />
-          <div
-            className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2  border-gray-500 rounded cursor-pointer hover:opacity-60"
-            onClick={resetDates}
-          >
-            <FiRefreshCw size={20} color={`gray`} />
-          </div>
-          <div
-            className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2 border-gray-500 rounded cursor-pointer hover:opacity-60"
-            onClick={handleFilter}
-          >
-            <FiFilter size={20} color={`gray`} />
+          <div className="max-[525px]:flex-row max-md:flex-col flex gap-2 items-center justify-start min-[525px]:my-6">
+            <TableDatePicker />
+            <div className="max-md:flex gap-2 flex">
+              <div
+                className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2  border-gray-500 rounded cursor-pointer hover:opacity-60"
+                onClick={resetDates}
+              >
+                <FiRefreshCw size={20} color={`gray`} />
+              </div>
+              <div
+                className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2 border-gray-500 rounded cursor-pointer hover:opacity-60"
+                onClick={handleFilter}
+              >
+                <FiFilter size={20} color={`gray`} />
+              </div>
+            </div>
           </div>
         </div>
 
         <Table
-          // isStriped
           aria-label="Exams timetable"
           onSortChange={handleSortChange}
           bottomContent={
@@ -384,6 +387,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
             </TableBody>
           )}
         </Table>
+
         {modalOpen && (
           <ViewNEditModal
             isOpen={modalOpen}

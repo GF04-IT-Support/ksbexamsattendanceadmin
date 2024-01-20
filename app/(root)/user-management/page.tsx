@@ -6,7 +6,7 @@ import { authOptions } from "@/utils/auth";
 
 export default async function UserManagement() {
   const users: any = await fetchUsers();
-  const { user } = await getServerSession(authOptions);
+  const { user }: any = await getServerSession(authOptions);
 
   return (
     <div>

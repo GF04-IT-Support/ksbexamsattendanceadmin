@@ -6,8 +6,8 @@ export default async function ExamSchedule() {
   const examsNames = await getExamsNames();
 
   return (
-    <div>
+    <>
       <ExamsTimetable examNames={examsNames} />
-    </div>
+    </>
   );
 }

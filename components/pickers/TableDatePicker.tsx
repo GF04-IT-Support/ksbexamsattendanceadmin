@@ -29,19 +29,19 @@ export default function TableDatePicker() {
   return (
     <LocalizationProvider dateAdapter={AdapterMoment}>
       <DemoContainer components={["DatePicker"]}>
-        <div className="flex gap-5 items-center overflow-hidden py-2">
+        <div className="max-[525px]:flex-row max-md:flex-col flex gap-5 items-center overflow-hidden py-2">
           <DatePicker
             label="From"
             value={startDate && moment(startDate)}
             onChange={handleStartDateChange}
-            className={`${classes.datePicker} w-[200px]`}
+            className={`${classes.datePicker} max-w-[200px]`}
           />
           <p> - </p>
           <DatePicker
             label="To"
             value={endDate && moment(endDate)}
             onChange={handleEndDateChange}
-            className={`${classes.datePicker} w-[200px]`}
+            className={`${classes.datePicker} max-w-[200px]`}
           />
         </div>
       </DemoContainer>

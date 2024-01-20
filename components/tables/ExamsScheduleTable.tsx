@@ -2,35 +2,46 @@
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
   Pagination,
   Select,
   SelectItem,
   Spinner,
-  // Tooltip,
   Chip,
+  Tooltip,
   Modal,
   ModalContent,
   useDisclosure,
 } from "@nextui-org/react";
-import Tooltip from "@mui/material/Tooltip";
-import { TableCell as TableC } from "@mui/material";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TableFooter,
+} from "@mui/material";
 import useSWR from "swr";
-import { getExamsSchedule } from "@/lib/actions/exams.action";
+import {
+  getExamsSchedule,
+  lockOrUnlockExams,
+} from "@/lib/actions/exams.action";
 import TableDatePicker from "../pickers/TableDatePicker";
-import { FiFilter, FiRefreshCw, FiEye, FiUserPlus } from "react-icons/fi";
+import {
+  FiFilter,
+  FiRefreshCw,
+  FiLock,
+  FiUnlock,
+  FiUserPlus,
+} from "react-icons/fi";
 import { useDateStore } from "@/zustand/store";
 import SearchInput from "../inputs/SearchInput";
 import { Toaster } from "react-hot-toast";
 import StaffAssignModal from "../modals/StaffAssignModal";
 import { fetchStaffDetails } from "@/lib/actions/staff.action";
 import UploadForm from "../forms/UploadForm";
-import { produce } from "immer";
+import CollapsibleStaffList from "../shared/CollapsibleStaffList";
 
 type ExamName = {
   exam_name_id: string;
@@ -70,6 +81,7 @@ export default function ExamsScheduleTable({
     examId: string;
     venue: string;
     assignments: [];
+    dateTime: any;
   } | null>(null);
   const [assignments, setAssignments] = useState<{ [key: string]: [] }>({});
   const selectedVenuesRef = useRef(selectedVenues);
@@ -79,9 +91,13 @@ export default function ExamsScheduleTable({
     data: examsData = [],
     mutate,
     isLoading,
-  } = useSWR(`examsSchedule/${selectedId}/${role}`, () =>
-    getExamsSchedule(selectedId, role)
-  );
+  } = useSWR(`examsSchedule/${selectedId}/${role}`, async () => {
+    const unsortedExamsData = await getExamsSchedule(selectedId, role);
+    return [...unsortedExamsData].sort(
+      (a: any, b: any) =>
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+  });
 
   const { data: staffDetails = [] } = useSWR(`staffDetails`, () =>
     fetchStaffDetails(role)
@@ -117,7 +133,7 @@ export default function ExamsScheduleTable({
       setAssignments(initialAssignments);
       selectedVenuesSet.current = false;
     }
-  }, [examsData]);
+  }, [examsData, page]);
 
   useEffect(() => {
     if (!isLoading && !startDate && !endDate) {
@@ -201,7 +217,7 @@ export default function ExamsScheduleTable({
   };
 
   const handleVenueChange = (event: any, examId: string) => {
-    const selectedVenue = event.target.value;
+    const selectedVenue = event.target.value.trim();
     setSelectedVenues((prev) => {
       const newSelectedVenues = { ...prev, [examId]: selectedVenue };
       return newSelectedVenues;
@@ -230,23 +246,33 @@ export default function ExamsScheduleTable({
     });
   };
 
-  const handleAssign = (examId: string) => {
+  const handleAssign = (item: any) => {
+    const examId = item.exam_id;
     const venue = selectedVenuesRef.current[examId];
     const assignments: any = Object.values(assignmentsRef.current[examId]);
+    const dateTime: any = {
+      date: new Date(item.date).toLocaleDateString("en-GB"),
+      startTime: item.start_time,
+      endTime: item.end_time,
+    };
 
-    setSelectedExam({ examId, venue, assignments });
+    setSelectedExam({ examId, venue, assignments, dateTime });
     setModalOpen(true);
   };
 
-  const loadingState = isLoading ? "loading" : "idle";
-  const isEmpty =
-    (searchResults || filteredExamsData).length === 0 && !isLoading;
+  const handleLockOrUnlock = async (examId: string, locked: boolean) => {
+    try {
+      await lockOrUnlockExams(examId, locked);
+    } catch (error: any) {
+      throw new Error(error);
+    }
+  };
 
   return (
     <>
       {role === "invigilators" && (
-        <div className="flex justify-center items-center">
-          <Chip>
+        <div className="flex  break-words justify-center items-center">
+          <div className="px-4 text-center py-1 w-max rounded-full bg-[#D4D4D8]">
             Assign Invigilators manually below or click{" "}
             <p
               onClick={onOpen}
@@ -255,7 +281,7 @@ export default function ExamsScheduleTable({
               here
             </p>{" "}
             to upload invigilators timetable
-          </Chip>
+          </div>
         </div>
       )}
 
@@ -284,131 +310,190 @@ export default function ExamsScheduleTable({
           </Select>
         </div>
 
-        <SearchInput
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          searchType={searchType}
-          setSearchType={setSearchType}
-          handleSearch={handleSearch}
-          setSearchResults={setSearchResults}
-          isStaffSearch
-        />
+        <div className=" max-[525px]:flex-col max-md:flex gap-2">
+          <SearchInput
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            searchType={searchType}
+            setSearchType={setSearchType}
+            handleSearch={handleSearch}
+            setSearchResults={setSearchResults}
+          />
 
-        <div className="flex gap-2 items-center justify-start my-6">
-          <TableDatePicker />
-          <div
-            className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2  border-gray-500 rounded cursor-pointer hover:opacity-60"
-            onClick={resetDates}
-          >
-            <FiRefreshCw size={20} color={`gray`} />
-          </div>
-          <div
-            className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2 border-gray-500 rounded cursor-pointer hover:opacity-60"
-            onClick={handleFilter}
-          >
-            <FiFilter size={20} color={`gray`} />
+          <div className="max-[525px]:flex-row max-md:flex-col flex gap-2 items-center justify-start min-[525px]:my-6">
+            <TableDatePicker />
+            <div className="max-md:flex gap-2 flex">
+              <div
+                className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2  border-gray-500 rounded cursor-pointer hover:opacity-60"
+                onClick={resetDates}
+              >
+                <FiRefreshCw size={20} color={`gray`} />
+              </div>
+              <div
+                className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2 border-gray-500 rounded cursor-pointer hover:opacity-60"
+                onClick={handleFilter}
+              >
+                <FiFilter size={20} color={`gray`} />
+              </div>
+            </div>
           </div>
         </div>
 
-        <Table
-          isStriped
-          aria-label="Exams timetable"
-          bottomContent={
-            pages > 1 && (
-              <div className="flex w-full justify-center">
-                <Pagination
-                  isCompact
-                  showControls
-                  showShadow
-                  color="primary"
-                  page={page}
-                  total={pages}
-                  onChange={(page) => setPage(page)}
-                />
-              </div>
-            )
-          }
-          classNames={{
-            table: isLoading ? "min-h-[400px]" : "",
-          }}
-        >
-          <TableHeader>
-            <TableColumn key="date">Date/Time</TableColumn>
-            <TableColumn key="venue">Venue</TableColumn>
-            <TableColumn key={role}>{label}</TableColumn>
-            <TableColumn key="action">Action</TableColumn>
-          </TableHeader>
-
-          {isEmpty ? (
-            <TableBody emptyContent={"No schedule for this exams."}>
-              {[]}
-            </TableBody>
-          ) : (
-            <TableBody
-              loadingContent={<Spinner />}
-              loadingState={loadingState}
-              items={items}
-              aria-colspan={3}
+        <TableContainer component={Paper} style={{ padding: "1rem" }}>
+          <Table aria-label="Exams timetable">
+            <TableHead
+              style={{
+                backgroundColor: "#F4F4F5",
+                borderBottom: 0,
+              }}
             >
-              {(item: any) => (
-                <TableRow key={item.exam_id}>
-                  <TableCell className="w-[120px]">
-                    <div>{new Date(item.date).toLocaleDateString("en-GB")}</div>
-                    <div className="text-[10px]">{`${item.start_time} - ${item.end_time}`}</div>
-                  </TableCell>
+              <TableRow>
+                <TableCell
+                  style={{
+                    borderTopLeftRadius: "0.5rem",
+                    borderBottomLeftRadius: "0.5rem",
+                    color: "#71717A",
+                    fontWeight: 600,
+                  }}
+                >
+                  Date/Time
+                </TableCell>
+                <TableCell style={{ color: "#71717A", fontWeight: 600 }}>
+                  Venue
+                </TableCell>
+                <TableCell
+                  style={{ color: "#71717A", fontWeight: 600 }}
+                  className="capitalize"
+                >
+                  {label}
+                </TableCell>
+                <TableCell
+                  style={{
+                    borderTopRightRadius: "0.5rem",
+                    borderBottomRightRadius: "0.5rem",
+                    color: "#71717A",
+                    fontWeight: 600,
+                  }}
+                >
+                  Action
+                </TableCell>
+              </TableRow>
+            </TableHead>
 
-                  <TableCell className="w-[170px]">
-                    <Select
-                      aria-label="Venue"
-                      value={item.venue}
-                      className="w-[150px]"
-                      onChange={(event) =>
-                        handleVenueChange(event, item.exam_id)
-                      }
-                      disallowEmptySelection
-                      defaultSelectedKeys={
-                        (item.venue.length > 0 && [item.venue.split(",")[0]]) ||
-                        []
-                      }
-                    >
-                      {item.venue.split(",").map((venue: string) => (
-                        <SelectItem key={venue} value={venue}>
-                          {venue}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                  </TableCell>
-
-                  <TableCell>
-                    {Object.values(assignments[item.exam_id] || {}).flatMap(
-                      (staffs: any[]) => staffs
-                    ).length > 0
-                      ? Object.values(assignments[item.exam_id] || {})
-                          .flatMap((staffs: any[]) => staffs)
-                          .map(
-                            (staff, index, arr) =>
-                              `${staff.staff_name}${
-                                index < arr.length - 1 ? ", " : ""
-                              }`
-                          )
-                          .join("")
-                      : "No staff assigned"}
-                  </TableCell>
-
-                  <TableCell className="w-[40px]">
-                    {/* <Tooltip title="Assign"> */}
-                    <FiUserPlus
-                      size={20}
-                      className="cursor-pointer hover:opacity-60"
-                      onClick={() => handleAssign(item.exam_id)}
-                    />
-                    {/* </Tooltip> */}
+            {isLoading ? (
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={4}>
+                    <div className="h-[400px] flex items-center justify-center">
+                      <Spinner />
+                    </div>
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          )}
-        </Table>
+              </TableBody>
+            ) : (
+              <>
+                <TableBody>
+                  {items.map((item: any) => (
+                    <TableRow key={item.exam_id}>
+                      <TableCell className="w-[140px]">
+                        <div className="text-center">
+                          {new Date(item.date).toLocaleDateString("en-GB")}
+                        </div>
+                        <div className="text-[12px] text-center text-gray-500">{`${item.start_time} - ${item.end_time}`}</div>
+                      </TableCell>
+
+                      <TableCell className="w-[170px]">
+                        <Select
+                          aria-label="Venue"
+                          value={item.venue}
+                          className="w-[150px]"
+                          onChange={(event) =>
+                            handleVenueChange(event, item.exam_id)
+                          }
+                          disallowEmptySelection
+                          defaultSelectedKeys={
+                            (item.venue.length > 0 && [
+                              item.venue.split(",")[0],
+                            ]) ||
+                            []
+                          }
+                        >
+                          {item.venue.split(",").map((venue: string) => (
+                            <SelectItem key={venue} value={venue}>
+                              {venue}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </TableCell>
+
+                      <TableCell>
+                        <CollapsibleStaffList
+                          staffNames={Object.values(
+                            assignments[item.exam_id] || {}
+                          )
+                            .flatMap((staffs: any[]) => staffs)
+                            .map((staff) => staff.staff_name)}
+                        />
+                      </TableCell>
+
+                      <TableCell className="w-[40px]">
+                        <div className="relative flex items-center gap-2">
+                          {/* <Tooltip content="Assign"> */}
+                          <FiUserPlus
+                            size={20}
+                            className="cursor-pointer hover:opacity-60"
+                            onClick={() => handleAssign(item)}
+                          />
+                          {/* </Tooltip> */}
+                          {item.locked ? (
+                            <Tooltip content="Unlock">
+                              <FiUnlock
+                                size={20}
+                                className="cursor-pointer hover:opacity-60"
+                                onClick={() =>
+                                  handleLockOrUnlock(item.exam_id, false)
+                                }
+                              />
+                            </Tooltip>
+                          ) : (
+                            <Tooltip content="Lock">
+                              <FiLock
+                                size={20}
+                                className="cursor-pointer hover:opacity-60"
+                                onClick={() =>
+                                  handleLockOrUnlock(item.exam_id, true)
+                                }
+                              />
+                            </Tooltip>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                <TableFooter>
+                  {pages > 1 && (
+                    <TableRow>
+                      <TableCell style={{ padding: "20px 0" }} colSpan={4}>
+                        <div className="flex justify-center">
+                          <Pagination
+                            isCompact
+                            showControls
+                            showShadow
+                            color="primary"
+                            page={page}
+                            total={pages}
+                            onChange={(page) => setPage(page)}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableFooter>
+              </>
+            )}
+          </Table>
+        </TableContainer>
 
         {modalOpen && (
           <StaffAssignModal
@@ -428,6 +513,7 @@ export default function ExamsScheduleTable({
         className="p-4"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
+        isDismissable={false}
       >
         <ModalContent>
           {(onClose) => (
@@ -436,6 +522,7 @@ export default function ExamsScheduleTable({
                 uploadType="invigilators"
                 onClose={onClose}
                 mutate={mutate}
+                staffDetails={staffDetails}
               />
             </>
           )}

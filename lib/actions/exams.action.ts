@@ -304,7 +304,7 @@ export async function assignStaffToExamSession(
   role: string,
   keepExisting: boolean = false
 ) {
-  const { user } = await getServerSession(authOptions);
+  const { user }: any = await getServerSession(authOptions);
 
   try {
     const venues = await prisma.venue.findMany();
@@ -386,5 +386,22 @@ export async function assignStaffToExamSession(
       message:
         "An error occurred while assigning staff members to the exam session.",
     };
+  }
+}
+
+export async function lockOrUnlockExams(exam_id: string, locked: boolean) {
+  try {
+    await prisma.exam.update({
+      where: {
+        exam_id: exam_id,
+      },
+      data: {
+        locked: locked,
+      },
+    });
+    revalidatePath("/staff-management");
+    return { message: "The exam has been locked successfully!" };
+  } catch (error: any) {
+    return { message: "An error occurred while locking the exam." };
   }
 }

@@ -39,7 +39,6 @@ import {
 } from "@/lib/actions/users.action";
 import DeleteConfirmationModal from "../modals/DeleteConfirmationModal";
 import toast, { Toaster } from "react-hot-toast";
-import { useSession } from "next-auth/react";
 
 type Users = {
   id: number;
@@ -205,7 +204,7 @@ function UserManagementTable({ users, ID }: UserManagementTableProps) {
             onChange={handleSearch}
             onClear={() => setSearchQuery("")}
             placeholder="Search..."
-            className="w-[400px]"
+            className="w-[400px] mr-4"
           />
           <Button
             color="primary"
@@ -213,7 +212,9 @@ function UserManagementTable({ users, ID }: UserManagementTableProps) {
             onClick={() => setIsModalOpen(true)}
           >
             <FiPlus size={22} />
-            Add New {selectedTab === "admin" ? "Admin" : "Checker"}
+            <p className="max-sm:hidden">
+              Add New {selectedTab === "admin" ? "Admin" : "Checker"}
+            </p>
           </Button>
         </div>
 

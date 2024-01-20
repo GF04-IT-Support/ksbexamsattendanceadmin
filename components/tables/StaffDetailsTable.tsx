@@ -139,15 +139,17 @@ export default function StaffDetailsTable({ id, label }: StaffProps) {
           onChange={handleSearch}
           onClear={() => setSearchQuery("")}
           placeholder="Search..."
-          className="w-[400px]"
+          className="w-[400px] max-sm:mr-2"
         />
         <Button
           color="primary"
-          className="flex gap-2 justify-center mt-4"
+          className="flex w-auto gap-2 justify-center mt-4"
           onClick={() => setShowCreateModal(true)}
         >
           <FiPlus size={22} />
-          Add New {label.endsWith("s") ? label.slice(0, -1) : label}
+          <p className="max-sm:hidden">
+            Add New {label.endsWith("s") ? label.slice(0, -1) : label}
+          </p>
         </Button>
       </div>
       <Table

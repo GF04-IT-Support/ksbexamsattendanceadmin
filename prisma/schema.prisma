@@ -50,6 +50,7 @@ model Exam {
   exam_code String @unique
   venue String
   year String
+  locked Boolean @default(false)
   sessions ExamSession[]
   exam_name ExamName @relation(fields: [exam_name_id], references: [exam_name_id], onDelete: Cascade)
   exam_name_id String
@@ -110,7 +111,7 @@ model Attendance {
   attendance_id String @id @default(cuid()) @map("_id")
   exam_session_id String
   staff_id String
-  attendance_status String
+  attendance_status String?
   exam_session ExamSession @relation(fields: [exam_session_id], references: [exam_session_id], onDelete: Cascade)
   staff Staff @relation(fields: [staff_id], references: [staff_id])
   archived Boolean @default(false)

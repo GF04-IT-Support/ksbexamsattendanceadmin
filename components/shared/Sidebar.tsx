@@ -3,11 +3,9 @@
 import React from "react";
 import { sidebarLinks } from "@/lib/constants";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { FaSignOutAlt } from "react-icons/fa";
+import { usePathname } from "next/navigation";
 
 const Sidebar = () => {
-  const router = useRouter();
   const pathname = usePathname();
 
   return (
@@ -44,17 +42,6 @@ const Sidebar = () => {
           );
         })}
       </div>
-
-      {/* <div className="mt-10 px-6">
-        <SignedIn>
-          <SignOutButton signOutCallback={() => router.push("/sign-in")}>
-            <div className="flex cursor-pointer gap-4 p-4 items-center bg-red-500 rounded-lg hover:opacity-50">
-              <FaSignOutAlt />
-              <p className="text-dark-4 max-lg:hidden">Logout</p>
-            </div>
-          </SignOutButton>
-        </SignedIn>
-      </div> */}
     </section>
   );
 };

@@ -88,11 +88,10 @@ export default function DateAndSessionSelector() {
   const [searchType, setSearchType] = useState("staffName");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
-  const attendanceOptions = ["N/A", "Present", "Absent"];
+  const attendanceOptions = ["N/A", "Present"];
   const [attendanceFilter, setAttendanceFilter] = React.useState([
     "Present",
-    "Absent",
-    "N/A",
+    // "N/A",
   ]);
   const [format, setFormat] = useState<any>("");
   const { isOpen, onOpen, onClose, onOpenChange } = useDisclosure();
@@ -133,8 +132,6 @@ export default function DateAndSessionSelector() {
   function getAttendanceStatus(attendanceStatus: any) {
     if (attendanceStatus[0]?.attendance_status === "Present") {
       return "Present";
-    } else if (attendanceStatus[0]?.attendance_status === "Absent") {
-      return "Absent";
     } else {
       return "N/A";
     }
@@ -433,26 +430,28 @@ export default function DateAndSessionSelector() {
         </ModalContent>
       </Modal>
 
-      <div className="flex justify-between">
+      <div className="flex flex-col sm:flex-row justify-between">
         <div className="flex gap-5 justify-center items-center overflow-hidden py-2 pb-4">
           <LocalizationProvider dateAdapter={AdapterMoment}>
-            <DatePicker
-              label={isRange ? "From" : "Date"}
-              value={startDate}
-              onChange={(date) => setStartDate(date)}
-              className={`${classes.datePicker} w-[200px]`}
-            />
-            {isRange && (
-              <>
-                <p> - </p>
-                <DatePicker
-                  label="To"
-                  value={endDate}
-                  onChange={(date) => setEndDate(date)}
-                  className={`${classes.datePicker} w-[200px]`}
-                />
-              </>
-            )}
+            <div className="flex flex-col">
+              <DatePicker
+                label={isRange ? "From" : "Date"}
+                value={startDate}
+                onChange={(date) => setStartDate(date)}
+                className={`${classes.datePicker} max-[525px]:w-auto w-[200px]`}
+              />
+              {isRange && (
+                <>
+                  <p className="text-center"> - </p>
+                  <DatePicker
+                    label="To"
+                    value={endDate}
+                    onChange={(date) => setEndDate(date)}
+                    className={`${classes.datePicker} max-[525px]:w-auto w-[200px]`}
+                  />
+                </>
+              )}
+            </div>
             <FormControlLabel
               control={
                 <Checkbox
@@ -473,7 +472,7 @@ export default function DateAndSessionSelector() {
           </LocalizationProvider>
         </div>
 
-        <div className="flex gap-4 justify-end my-4">
+        <div className="flex max-[525px]:flex-col gap-4 sm:justify-end my-4 mt-2">
           <Dropdown>
             <DropdownTrigger>
               <Button
@@ -538,7 +537,7 @@ export default function DateAndSessionSelector() {
         </div>
       </div>
 
-      <div className="flex justify-between">
+      <div className="flex md:justify-between max-[525px]:flex-col max-md:flex gap-2 pb-4">
         <SearchInput
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -666,11 +665,11 @@ export default function DateAndSessionSelector() {
                           >
                             Mark Present
                           </DropdownItem>
-                          <DropdownItem
+                          {/* <DropdownItem
                             onClick={() => handleMarkAttendance("Absent", item)}
                           >
                             Mark Absent
-                          </DropdownItem>
+                          </DropdownItem> */}
                         </DropdownMenu>
                       </Dropdown>
                     ) : (

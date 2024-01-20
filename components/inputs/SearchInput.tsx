@@ -86,7 +86,7 @@ export default function SearchInput({
   }, [searchQuery]);
 
   return (
-    <div className="flex gap-2 items-center justify-start my-6">
+    <div className="flex flex-col max-sm:flex-row gap-2 items-center justify-start min-[525px]:my-6 md:flex-row md:items-end">
       {searchType === "date" ? (
         <LocalizationProvider dateAdapter={AdapterMoment}>
           <DemoContainer components={["DatePicker"]}>
@@ -97,7 +97,7 @@ export default function SearchInput({
                 }
                 label="Search"
                 onChange={handleDateChange}
-                className={`${classes.datePicker} w-[200px]`}
+                className={`${classes.datePicker} w-full md:w-[200px]`}
               />
             </div>
           </DemoContainer>
@@ -105,7 +105,6 @@ export default function SearchInput({
       ) : (
         <Input
           id="searchInput"
-          // label='Search'
           isClearable
           startContent={
             <FiSearch
@@ -131,11 +130,11 @@ export default function SearchInput({
         onChange={(e: any) => setSearchType(e.target.value)}
         className="w-[200px]"
       >
-        {(searchType) => (
-          <SelectItem key={searchType.id} value={searchType.id}>
-            {searchType.label}
+        {searchTypes.map((type) => (
+          <SelectItem key={type.id} value={type.id}>
+            {type.label}
           </SelectItem>
-        )}
+        ))}
       </Select>
     </div>
   );

@@ -3,7 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "./prisma";
 import { getServerSession } from "next-auth";
 
-export const authOptions = {
+export const authOptions: any = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
@@ -54,7 +54,7 @@ export const authOptions = {
         }
       }
 
-      return '/sign-in?error=User is not authorized';
+      return "/sign-in?error=User is not authorized";
     },
     jwt: async ({ token, user }: any) => {
       if (user) {

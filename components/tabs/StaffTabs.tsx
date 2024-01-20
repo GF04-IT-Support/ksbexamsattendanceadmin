@@ -28,7 +28,7 @@ export default function StaffTabs({ examsNames }: ExamsTimetableProps) {
             title={
               <div className="flex items-center space-x-2">
                 {item.icon}
-                <span>{item.label}</span>
+                <span className="max-sm:hidden">{item.label}</span>
               </div>
             }
           >
