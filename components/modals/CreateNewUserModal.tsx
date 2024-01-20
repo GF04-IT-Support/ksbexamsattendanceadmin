@@ -50,7 +50,7 @@ function CreateNewUserModal({ isOpen, onClose, tab }: CreateNewUserModalProps) {
     const data = {
       email: email,
       role: tab,
-      ...(!role && { subRole: role }),
+      ...(role && { subRole: role }),
     };
 
     try {

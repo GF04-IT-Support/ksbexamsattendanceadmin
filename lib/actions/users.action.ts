@@ -66,6 +66,7 @@ export async function addNewUser(data: any) {
     }
 
     await prisma.user.create({ data });
+    revalidatePath("/user-management");
     return { message: "User created successfully" };
   } catch (error: any) {
     return { message: "An error occurred while creating the user." };

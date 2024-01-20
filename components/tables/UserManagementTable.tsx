@@ -153,9 +153,7 @@ function UserManagementTable({ users, ID }: UserManagementTableProps) {
   }
   columns.push(<TableColumn key="emailVerified">Email Verified</TableColumn>);
 
-  if (selectedUsers.some((user) => user.googleId !== null)) {
-    columns.push(<TableColumn key="status">Status</TableColumn>);
-  }
+  columns.push(<TableColumn key="status">Status</TableColumn>);
   columns.push(<TableColumn key="actions">Actions</TableColumn>);
 
   const roles = ["Supreme", "Super", "Normal"];
@@ -244,10 +242,17 @@ function UserManagementTable({ users, ID }: UserManagementTableProps) {
             <TableBody items={items} aria-colspan={3}>
               {(item: any) => {
                 const cells = [
-                  <TableCell key="name">{item.name}</TableCell>,
+                  <TableCell key="name">
+                    {item.name ? (
+                      item.name
+                    ) : (
+                      <p className="text-gray-400 text-center">N/A</p>
+                    )}
+                  </TableCell>,
+
                   <TableCell key="email">{item.email}</TableCell>,
                 ];
-                if (item.subRole !== null) {
+                if (item.subRole) {
                   cells.push(
                     <TableCell key="subRole" className="capitalize">
                       {item.subRole}
@@ -276,9 +281,9 @@ function UserManagementTable({ users, ID }: UserManagementTableProps) {
                   </TableCell>
                 );
 
-                if (item.googleId) {
-                  cells.push(
-                    <TableCell key="status">
+                cells.push(
+                  <TableCell key="status">
+                    {item.googleId ? (
                       <Chip
                         color={item.blocked ? "danger" : "success"}
                         startContent={
@@ -287,9 +292,11 @@ function UserManagementTable({ users, ID }: UserManagementTableProps) {
                       >
                         {item.blocked ? "Blocked" : "Active"}
                       </Chip>
-                    </TableCell>
-                  );
-                }
+                    ) : (
+                      <p className="text-gray-400 text-center">N/A</p>
+                    )}
+                  </TableCell>
+                );
 
                 cells.push(
                   <TableCell key="actions">
@@ -366,6 +373,7 @@ function UserManagementTable({ users, ID }: UserManagementTableProps) {
           )}
         </Table>
       </div>
+
       {isModalOpen && (
         <CreateNewUserModal
           isOpen={isModalOpen}
