@@ -172,7 +172,7 @@ export async function matchInvigilatorsWithAbbreviatedNames(
 }
 
 export async function correlateInvigilatorsWithExams(details: any) {
-  const { user } = await getServerSession(authOptions);
+  const { user }: any = await getServerSession(authOptions);
 
   if (!user) return null;
 
