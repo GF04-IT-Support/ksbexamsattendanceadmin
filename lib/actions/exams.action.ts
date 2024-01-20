@@ -12,7 +12,7 @@ import {
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
 
-const pythonPath = process.env.PYTHON_PATH as string;
+const python = process.env.PYTHON_PATH as string;
 
 export async function extractExamsSchedule(
   base64PdfData: string,
@@ -28,6 +28,7 @@ export async function extractExamsSchedule(
         process.cwd(),
         "utils/scripts/exams_schedule_extractor.py"
       );
+      const pythonPath = path.join(process.cwd(), `${python}`);
       const pythonProcess = spawn(pythonPath, ["-u", scriptPath]);
 
       pythonProcess.stdin.setDefaultEncoding("utf-8");
@@ -201,6 +202,7 @@ export async function extractInvigilatorsSchedule(base64PdfData: string) {
         process.cwd(),
         "utils/scripts/invigilators_extractor.py"
       );
+      const pythonPath = path.join(process.cwd(), `${python}`);
       const pythonProcess = spawn(pythonPath, ["-u", scriptPath]);
 
       pythonProcess.stdin.setDefaultEncoding("utf-8");
