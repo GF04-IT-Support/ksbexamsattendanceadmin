@@ -12,9 +12,7 @@ import {
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
 
-// const pythonPath = "C:/Users/New/anaconda3/envs/ksbEA/python.exe";
-const pythonPath =
-  "C:/Users/New/Desktop/NSS-KSB/ksbexamsattendanceadmin/.venv/Scripts/python.exe";
+const pythonPath = process.env.PYTHON_PATH as string;
 
 export async function extractExamsSchedule(
   base64PdfData: string,
