@@ -3,12 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "flask-dev": "set FLASK_DEBUG=1 && pip install -r requirements.txt && python -m flask --app app/api/(server)/index run -p 8080 --reload",
+    "flask-dev": "set FLASK_DEBUG=1 && pip install -r requirements.txt && python -m flask --app api/index run -p 8080 --reload",
     "next-dev": "next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run flask-dev\"",
     "build": "next build",
-    "next-start": "next start",
-    "start": "concurrently \"npm run next-start\" \"npm run flask-dev\"",
+    "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
