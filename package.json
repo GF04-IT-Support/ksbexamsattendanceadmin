@@ -26,7 +26,6 @@
     "@prisma/client": "^5.7.1",
     "@react-stately/collections": "^3.10.4",
     "@react-stately/tree": "^3.7.5",
-    "autoprefixer": "10.4.14",
     "axios": "^1.6.2",
     "concurrently": "^8.0.1",
     "core-js": "^3.34.0",
