@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "flask-dev": "set FLASK_DEBUG=1 && pip install -r requirements.txt && python -m flask --app app/api/(server)/index run -p 8080 --reload",
+    "next-dev": "next dev",
+    "dev": "concurrently \"npm run next-dev\" \"npm run flask-dev\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -26,6 +28,7 @@
     "@react-stately/tree": "^3.7.5",
     "axios": "^1.6.2",
     "core-js": "^3.34.0",
+    "concurrently": "^8.0.1",
     "framer-motion": "^10.16.5",
     "fuzzball": "^2.1.2",
     "fuzzywuzzy": "^0.1.0",

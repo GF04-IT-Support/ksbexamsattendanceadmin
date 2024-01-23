@@ -8,106 +8,179 @@ import {
   correlateInvigilatorsWithExams,
   fetchInvigilators,
   matchInvigilatorsWithAbbreviatedNames,
-} from "../helpers/exams.helpers";
+} from "@/lib/helpers/exams.helpers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
+import axios from "@/utils/axios";
 
 const pythonPath = process.env.PYTHON_PATH as string;
+
+// export async function extractExamsSchedule(
+//   base64PdfData: string,
+//   exam_name_id?: string
+// ) {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       if (exam_name_id) {
+//         await deleteExamsSchedule(exam_name_id);
+//       }
+
+//       const scriptPath = path.join(
+//         "utils",
+//         "scripts",
+//         "invigilators_extractor.py"
+//       );
+//       // const pythonPath = path.join(process.cwd(), `${python}`);
+//       const pythonProcess = spawn(pythonPath, ["-u", scriptPath]);
+
+//       pythonProcess.stdin.setDefaultEncoding("utf-8");
+//       pythonProcess.stdin.write(base64PdfData);
+//       pythonProcess.stdin.end();
+
+//       let outputData = "";
+
+//       pythonProcess.stdout.on("data", (data) => {
+//         outputData += data;
+//       });
+
+//       //  pythonProcess.stderr.on('data', (data) => {
+//       //   resolve({ message: `An error occurred while uploading the exam schedule` });
+//       // });
+
+//       pythonProcess.on("close", async (code) => {
+//         if (code !== 0) {
+//           resolve({
+//             message: `An error occurred while uploading the exam schedule.`,
+//           });
+//         } else {
+//           const result = JSON.parse(outputData);
+//           const exams = result.exams_schedule;
+//           const exam_name = result.exam_name;
+
+//           const existingExamName = await prisma.examName.findUnique({
+//             where: {
+//               exam_name: exam_name,
+//             },
+//           });
+
+//           if (existingExamName) {
+//             resolve({
+//               message: `The exam schedule has already been uploaded.`,
+//             });
+//             return;
+//           }
+
+//           const examName = await prisma.examName.create({
+//             data: {
+//               exam_name: exam_name,
+//             },
+//           });
+
+//           for (const exam of exams) {
+//             const dateParts = exam.Date.split("/");
+//             const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+//             const date = new Date(isoDate);
+
+//             await prisma.exam.create({
+//               data: {
+//                 date: date,
+//                 start_time: exam["Start Time"],
+//                 end_time: exam["End Time"],
+//                 exam_code: exam["Course Code"],
+//                 venue: exam.Venue,
+//                 year: exam.Year,
+//                 exam_name: {
+//                   connect: {
+//                     exam_name_id: examName.exam_name_id,
+//                   },
+//                 },
+//               },
+//             });
+//           }
+//           resolve({
+//             message: `The exam schedule has been uploaded successfully!`,
+//           });
+//         }
+//         revalidatePath("/exams-schedule");
+//       });
+//     } catch (err) {
+//       resolve({
+//         message: `An error occurred while uploading the exam schedule.`,
+//       });
+//     }
+//   });
+// }
 
 export async function extractExamsSchedule(
   base64PdfData: string,
   exam_name_id?: string
 ) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      if (exam_name_id) {
-        await deleteExamsSchedule(exam_name_id);
-      }
+  try {
+    if (exam_name_id) {
+      await deleteExamsSchedule(exam_name_id);
+    }
 
-      const scriptPath = path.join(
-        "utils",
-        "scripts",
-        "invigilators_extractor.py"
-      );
-      // const pythonPath = path.join(process.cwd(), `${python}`);
-      const pythonProcess = spawn(pythonPath, ["-u", scriptPath]);
+    const response = await axios.post("/extract-exams-schedule", {
+      base64_pdf_data: base64PdfData,
+    });
 
-      pythonProcess.stdin.setDefaultEncoding("utf-8");
-      pythonProcess.stdin.write(base64PdfData);
-      pythonProcess.stdin.end();
+    if (response.error) {
+      return {
+        message: "An error occurred while uploading the exam schedule.",
+      };
+    }
 
-      let outputData = "";
+    const exams = response.data.exams_schedule;
+    const exam_name = response.data.exam_name;
 
-      pythonProcess.stdout.on("data", (data) => {
-        outputData += data;
-      });
+    const existingExamName = await prisma.examName.findUnique({
+      where: {
+        exam_name: exam_name,
+      },
+    });
 
-      //  pythonProcess.stderr.on('data', (data) => {
-      //   resolve({ message: `An error occurred while uploading the exam schedule` });
-      // });
+    if (existingExamName) {
+      return {
+        message: "The exam schedule has already been uploaded.",
+      };
+    }
 
-      pythonProcess.on("close", async (code) => {
-        if (code !== 0) {
-          resolve({
-            message: `An error occurred while uploading the exam schedule.`,
-          });
-        } else {
-          const result = JSON.parse(outputData);
-          const exams = result.exams_schedule;
-          const exam_name = result.exam_name;
+    const examName = await prisma.examName.create({
+      data: {
+        exam_name: exam_name,
+      },
+    });
 
-          const existingExamName = await prisma.examName.findUnique({
-            where: {
-              exam_name: exam_name,
+    for (const exam of exams) {
+      const dateParts = exam.Date.split("/");
+      const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+      const date = new Date(isoDate);
+
+      await prisma.exam.create({
+        data: {
+          date: date,
+          start_time: exam["Start Time"],
+          end_time: exam["End Time"],
+          exam_code: exam["Course Code"],
+          venue: exam.Venue,
+          year: exam.Year,
+          exam_name: {
+            connect: {
+              exam_name_id: examName.exam_name_id,
             },
-          });
-
-          if (existingExamName) {
-            resolve({
-              message: `The exam schedule has already been uploaded.`,
-            });
-            return;
-          }
-
-          const examName = await prisma.examName.create({
-            data: {
-              exam_name: exam_name,
-            },
-          });
-
-          for (const exam of exams) {
-            const dateParts = exam.Date.split("/");
-            const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-            const date = new Date(isoDate);
-
-            await prisma.exam.create({
-              data: {
-                date: date,
-                start_time: exam["Start Time"],
-                end_time: exam["End Time"],
-                exam_code: exam["Course Code"],
-                venue: exam.Venue,
-                year: exam.Year,
-                exam_name: {
-                  connect: {
-                    exam_name_id: examName.exam_name_id,
-                  },
-                },
-              },
-            });
-          }
-          resolve({
-            message: `The exam schedule has been uploaded successfully!`,
-          });
-        }
-        revalidatePath("/exams-schedule");
-      });
-    } catch (err) {
-      resolve({
-        message: `An error occurred while uploading the exam schedule.`,
+          },
+        },
       });
     }
-  });
+
+    return {
+      message: "The exam schedule has been uploaded successfully!",
+    };
+  } catch (error) {
+    return {
+      message: "An error occurred while uploading the exam schedule.",
+    };
+  }
 }
 
 export async function getExamsNames() {
@@ -196,56 +269,80 @@ export async function getUpcomingExamsSchedule() {
   }
 }
 
+// export async function extractInvigilatorsSchedule(base64PdfData: string) {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const scriptPath = path.join(
+//         "utils",
+//         "scripts",
+//         "invigilators_extractor.py"
+//       );
+//       // const pythonPath = path.join(process.cwd(), `${python}`);
+//       const pythonProcess = spawn(pythonPath, ["-u", scriptPath]);
+
+//       pythonProcess.stdin.setDefaultEncoding("utf-8");
+//       pythonProcess.stdin.write(base64PdfData);
+//       pythonProcess.stdin.end();
+
+//       let outputData = "";
+
+//       pythonProcess.stdout.on("data", (data) => {
+//         outputData += data;
+//       });
+
+//       //  pythonProcess.stderr.on('data', (data) => {
+//       //   resolve({ message: `An error occurred while uploading the invigilator schedule` });
+//       // });
+
+//       pythonProcess.on("close", async (code) => {
+//         if (code !== 0) {
+//           resolve({
+//             message: `An error occurred while uploading the exam schedule.`,
+//           });
+//         } else {
+//           const result = JSON.parse(outputData);
+//           console.log(result);
+
+//           // const invigilators = await fetchInvigilators();
+
+//           // const { matchedData, unmatchedData } =
+//           //   await matchInvigilatorsWithAbbreviatedNames(invigilators, result);
+
+//           // resolve({
+//           //   data: { matchedData, unmatchedData },
+//           //   message: `The invigilators schedule has been extracted successfully`,
+//           // });
+//         }
+//       });
+//     } catch (err) {
+//       resolve({
+//         message: `An error occurred while extracting the invigilator's schedule.`,
+//       });
+//     }
+//   });
+// }
+
 export async function extractInvigilatorsSchedule(base64PdfData: string) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const scriptPath = path.join(
-        "utils",
-        "scripts",
-        "invigilators_extractor.py"
-      );
-      // const pythonPath = path.join(process.cwd(), `${python}`);
-      const pythonProcess = spawn(pythonPath, ["-u", scriptPath]);
+  try {
+    const response = await axios.post("/extract-invigilators", {
+      base64_pdf_data: base64PdfData,
+    });
 
-      pythonProcess.stdin.setDefaultEncoding("utf-8");
-      pythonProcess.stdin.write(base64PdfData);
-      pythonProcess.stdin.end();
+    const { invigilators_schedule: result } = response.data;
+    const invigilators = await fetchInvigilators();
 
-      let outputData = "";
+    const { matchedData, unmatchedData } =
+      await matchInvigilatorsWithAbbreviatedNames(invigilators, result);
 
-      pythonProcess.stdout.on("data", (data) => {
-        outputData += data;
-      });
-
-      //  pythonProcess.stderr.on('data', (data) => {
-      //   resolve({ message: `An error occurred while uploading the invigilator schedule` });
-      // });
-
-      pythonProcess.on("close", async (code) => {
-        if (code !== 0) {
-          resolve({
-            message: `An error occurred while uploading the exam schedule.`,
-          });
-        } else {
-          const result = JSON.parse(outputData);
-
-          const invigilators = await fetchInvigilators();
-
-          const { matchedData, unmatchedData } =
-            await matchInvigilatorsWithAbbreviatedNames(invigilators, result);
-
-          resolve({
-            data: { matchedData, unmatchedData },
-            message: `The invigilators schedule has been extracted successfully`,
-          });
-        }
-      });
-    } catch (err) {
-      resolve({
-        message: `An error occurred while extracting the invigilator's schedule.`,
-      });
-    }
-  });
+    return {
+      data: { matchedData, unmatchedData },
+      message: `The invigilators schedule has been extracted successfully`,
+    };
+  } catch (error) {
+    return {
+      message: `An error occurred while extracting the invigilator's schedule.`,
+    };
+  }
 }
 
 export async function addConfirmedInvigilatorsToExams(confirmedData: any) {
