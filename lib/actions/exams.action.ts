@@ -25,8 +25,9 @@ export async function extractExamsSchedule(
       }
 
       const scriptPath = path.join(
-        process.cwd(),
-        "utils/scripts/exams_schedule_extractor.py"
+        "utils",
+        "scripts",
+        "invigilators_extractor.py"
       );
       // const pythonPath = path.join(process.cwd(), `${python}`);
       const pythonProcess = spawn(pythonPath, ["-u", scriptPath]);
@@ -199,8 +200,9 @@ export async function extractInvigilatorsSchedule(base64PdfData: string) {
   return new Promise(async (resolve, reject) => {
     try {
       const scriptPath = path.join(
-        process.cwd(),
-        "utils/scripts/invigilators_extractor.py"
+        "utils",
+        "scripts",
+        "invigilators_extractor.py"
       );
       // const pythonPath = path.join(process.cwd(), `${python}`);
       const pythonProcess = spawn(pythonPath, ["-u", scriptPath]);
