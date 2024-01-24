@@ -38,3 +38,5 @@ next-env.d.ts
 
 #virtual environment
 /.venv
+
+/api/__pycache__/
