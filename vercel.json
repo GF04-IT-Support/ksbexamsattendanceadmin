@@ -9,8 +9,7 @@
       "src": "package.json",
       "use": "@vercel/node",
       "config": {
-        "installCommand": "npm install --force",
-        "buildCommand": "npm run build"
+        "npmInstall": "--force"
       }
     }
   ],
