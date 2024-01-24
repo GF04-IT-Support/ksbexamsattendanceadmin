@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from invigilators_extractor import invigilators_main
-from exams_schedule_extractor import exams_main
+from apiScripts.invigilators_extractor import invigilators_main
+from apiScripts.exams_schedule_extractor import exams_main
 
 app = Flask(__name__)
 CORS(app) 
