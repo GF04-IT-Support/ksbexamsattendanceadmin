@@ -40,3 +40,4 @@ next-env.d.ts
 /.venv
 
 /api/__pycache__/
+/apiScripts/__pycache__/
