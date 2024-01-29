@@ -6,11 +6,6 @@ import { revalidatePath } from "next/cache";
 export async function fetchUsers() {
   try {
     const users = await prisma.user.findMany({
-      // where: {
-      //   googleId: {
-      //     not: null,
-      //   },
-      // },
       select: {
         id: true,
         name: true,

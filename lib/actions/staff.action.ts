@@ -4,7 +4,6 @@ import { exec as execCb } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import prisma from "@/utils/prisma";
-import { revalidatePath } from "next/cache";
 import { getStaffRoles } from "../helpers/staff.helpers";
 
 const exec = promisify(execCb);

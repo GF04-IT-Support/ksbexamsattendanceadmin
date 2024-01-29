@@ -20,7 +20,7 @@ export async function extractExamsSchedule(
       await deleteExamsSchedule(exam_name_id);
     }
 
-    const response = await axios.post("/extract-exams-schedule", {
+    const response = await axios.post("/exams-schedule/extract", {
       base64_pdf_data: base64PdfData,
     });
 
@@ -165,7 +165,7 @@ export async function getUpcomingExamsSchedule() {
 
 export async function extractInvigilatorsSchedule(base64PdfData: string) {
   try {
-    const response = await axios.post("/extract-invigilators", {
+    const response = await axios.post("/invigilators/extract", {
       base64_pdf_data: base64PdfData,
     });
 
