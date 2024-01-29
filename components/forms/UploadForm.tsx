@@ -115,7 +115,9 @@ const UploadForm = ({
             }
 
             setIsLoading(false);
-          } catch (error) {}
+          } catch (error: any) {
+            throw new Error(error);
+          }
         }
       } catch (error) {
         console.error(error);

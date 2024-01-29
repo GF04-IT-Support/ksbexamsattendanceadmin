@@ -181,8 +181,6 @@ export async function correlateInvigilatorsWithExams(details: any) {
     const staffGroups: { [key: string]: string[] } = {};
 
     for (const staff of details) {
-      const matchedDetails = [];
-
       for (const detail of staff.details) {
         const dateParts = detail.Date.split("/");
         const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
@@ -198,26 +196,41 @@ export async function correlateInvigilatorsWithExams(details: any) {
           },
         });
 
-        const examCodes = detail["Course Code"].split(",");
+        // const examCodes = detail["Course Code"].split(",");
 
-        const exam = exams.find((e) => {
-          const examCodesInDb = e.exam_code
-            .split(",")
-            .flatMap((code) => code.split("/").map((part) => part.trim()));
-          return examCodes.some((code: any) =>
-            code
-              .split("/")
-              .map((part: any) => part.trim())
-              .some((part: any) => examCodesInDb.includes(part))
-          );
-        });
+        // const exam = exams.find((e) => {
+        //   const examCodesInDb = e.exam_code
+        //     .split(",")
+        //     .flatMap((code) => code.split("/").map((part) => part.trim()));
+        //   return examCodes.some((code: any) =>
+        //     code
+        //       .split("/")
+        //       .map((part: any) => part.trim())
+        //       .some((part: any) => examCodesInDb.includes(part))
+        //   );
+        // });
 
-        if (exam) {
-          const key = `${exam.exam_id}|${detail.Venue}`;
-          if (!staffGroups[key]) {
-            staffGroups[key] = [];
+        // if (exam) {
+        //   const key = `${exam.exam_id}|${detail.Venue}`;
+        //   if (!staffGroups[key]) {
+        //     staffGroups[key] = [];
+        //   }
+        //   staffGroups[key].push(staff.staff_id);
+        // } else {
+        //   unmatchedDetails.push({
+        //     ...detail,
+        //     staff_name: staff.full_name,
+        //   });
+        // }
+
+        if (exams.length > 0) {
+          for (const exam of exams) {
+            const key = `${exam.exam_id}|${detail.Venue}`;
+            if (!staffGroups[key]) {
+              staffGroups[key] = [];
+            }
+            staffGroups[key].push(staff.staff_id);
           }
-          staffGroups[key].push(staff.staff_id);
         } else {
           unmatchedDetails.push({
             ...detail,
