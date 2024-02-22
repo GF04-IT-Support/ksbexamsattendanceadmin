@@ -26,10 +26,9 @@ import {
 } from "@/lib/actions/exams.action";
 import ReactHtmlParser from "react-html-parser";
 import TableDatePicker from "../pickers/TableDatePicker";
-import { FiFilter, FiRefreshCw, FiEye, FiTrash2 } from "react-icons/fi";
+import { FiFilter, FiRefreshCw, FiTrash2, FiEdit } from "react-icons/fi";
 import { useDateStore } from "@/zustand/store";
 import SearchInput from "../inputs/SearchInput";
-import ViewNEditModal from "../modals/ViewNEditExamsModal";
 import toast, { Toaster } from "react-hot-toast";
 import { FaEllipsisV, FaPlus, FaUpload } from "react-icons/fa";
 import ExamsDeleteConfirmationModal from "../modals/ExamsDeleteConfirmationModal";
@@ -418,7 +417,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
                         )
                       ) : columnKey === "action" ? (
                         <Tooltip content="View">
-                          <FiEye
+                          <FiEdit
                             size={20}
                             className="cursor-pointer hover:opacity-60"
                             style={{ cursor: "pointer" }}

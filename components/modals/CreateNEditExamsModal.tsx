@@ -10,7 +10,7 @@ import {
   Spinner,
 } from "@nextui-org/react";
 import { Card, CardContent, Typography, Grid } from "@material-ui/core";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FiEdit2 } from "react-icons/fi";
 import { AiOutlineClose, AiOutlineCheck } from "react-icons/ai";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
@@ -43,44 +43,18 @@ interface ViewNEditModalProps {
   mutate: () => void;
 }
 
-interface EditableFieldProps {
-  isEditing: boolean;
-  value: string;
-  onEdit: (newValue: string) => void;
-  onToggleEdit: () => void;
-  isMultiple?: boolean;
-  isDate?: boolean;
-}
-
-type EditableFields =
-  | "date"
-  | "exam_code"
-  | "start_time"
-  | "end_time"
-  | "venue"
-  | "year";
-
 const CreateNEditExamsModal = ({
   isOpen,
   onClose,
   selectedExam,
   mutate,
 }: ViewNEditModalProps) => {
-  const [editingFields, setEditingFields] = useState({
-    date: selectedExam.exam_id === "" ? true : false,
-    exam_code: selectedExam.exam_id === "" ? true : false,
-    start_time: selectedExam.exam_id === "" ? true : false,
-    end_time: selectedExam.exam_id === "" ? true : false,
-    venue: selectedExam.exam_id === "" ? true : false,
-    year: selectedExam.exam_id === "" ? true : false,
-  });
-  const [editedExams, setEditedExams] = useState(selectedExam);
-  const [tempValues, setTempValues] = useState(selectedExam);
   const [isSaving, setIsSaving] = useState(false);
+  const [tempValues, setTempValues] = useState(selectedExam);
 
   const isDisabled = () => {
     if (selectedExam.exam_id !== "") {
-      return JSON.stringify(editedExams) !== JSON.stringify(selectedExam);
+      return JSON.stringify(tempValues) !== JSON.stringify(selectedExam);
     } else {
       for (const key in tempValues) {
         if (key !== "exam_id" && tempValues[key as keyof Exam] === "") {
@@ -94,12 +68,12 @@ const CreateNEditExamsModal = ({
   const getChangedValues = () => {
     const changes: Partial<Exam> = {};
 
-    for (const key in editedExams) {
+    for (const key in tempValues) {
       if (
         key !== "exam_id" &&
-        editedExams[key as keyof Exam] !== selectedExam[key as keyof Exam]
+        tempValues[key as keyof Exam] !== selectedExam[key as keyof Exam]
       ) {
-        changes[key as keyof Exam] = editedExams[key as keyof Exam];
+        changes[key as keyof Exam] = tempValues[key as keyof Exam];
       }
     }
 
@@ -151,58 +125,6 @@ const CreateNEditExamsModal = ({
     }
   };
 
-  const EditableField = ({
-    isEditing,
-    value,
-    onEdit,
-    onToggleEdit,
-    isMultiple,
-    isDate,
-  }: EditableFieldProps) => {
-    return (
-      <Grid item xs={6} className="flex gap-4">
-        <div className="flex flex-col gap-3">
-          {isMultiple ? (
-            value
-              .split(",")
-              .map((val, index) => (
-                <TextField
-                  key={val.trim() + index}
-                  value={val.trim()}
-                  variant="standard"
-                />
-              ))
-          ) : isDate ? (
-            <LocalizationProvider dateAdapter={AdapterMoment}>
-              <DemoContainer components={["DatePicker"]}>
-                <DatePicker
-                  value={value && moment(new Date(value))}
-                  className="w-[120px]"
-                />
-              </DemoContainer>
-            </LocalizationProvider>
-          ) : (
-            <TextField
-              key={value}
-              value={value}
-              className="w-[100px]"
-              variant="standard"
-            />
-          )}
-        </div>
-      </Grid>
-    );
-  };
-
-  const handleEdit = (field: EditableFields) => {
-    setEditingFields({ ...editingFields, [field]: !editingFields[field] });
-    if (editingFields[field]) {
-      setEditedExams({ ...editedExams, [field]: tempValues[field] });
-    } else {
-      setTempValues({ ...tempValues, [field]: editedExams[field] });
-    }
-  };
-
   const editableFields = [
     { label: "Exam Code(s):", field: "exam_code", isMultiple: true },
     { label: "Date:", field: "date", isDate: true },
@@ -218,10 +140,8 @@ const CreateNEditExamsModal = ({
         backdrop="blur"
         isDismissable={false}
         size="5xl"
-        hideCloseButton={true}
         isOpen={isOpen}
         onOpenChange={onClose}
-        // scrollBehavior="inside"
         motionProps={{
           variants: {
             enter: {
@@ -266,21 +186,100 @@ const CreateNEditExamsModal = ({
                           <Typography color="textSecondary">{label}</Typography>
                         </Grid>
 
-                        <EditableField
-                          key={field}
-                          isEditing={
-                            editingFields[field as keyof typeof editingFields]
-                          }
-                          value={tempValues[field as keyof typeof tempValues]}
-                          onEdit={(newValue) =>
-                            setTempValues({ ...tempValues, [field]: newValue })
-                          }
-                          onToggleEdit={() =>
-                            handleEdit(field as keyof typeof editingFields)
-                          }
-                          isMultiple={isMultiple}
-                          isDate={isDate}
-                        />
+                        <Grid item xs={6} className="flex gap-4">
+                          <div className="flex flex-col gap-3">
+                            {isMultiple ? (
+                              tempValues[field as keyof typeof tempValues]
+                                .split(",")
+                                .map((val: string, index: number) => (
+                                  <TextField
+                                    key={index}
+                                    value={val.trim()}
+                                    onChange={(e) => {
+                                      const target =
+                                        e.target as HTMLInputElement;
+                                      const newValues = [
+                                        ...tempValues[
+                                          field as keyof typeof tempValues
+                                        ].split(","),
+                                      ];
+                                      newValues[index] = target.value;
+                                      setTempValues({
+                                        ...tempValues,
+                                        [field]: newValues.join(","),
+                                      });
+                                    }}
+                                    onKeyDown={(e) => {
+                                      const target =
+                                        e.target as HTMLInputElement;
+                                      if (
+                                        e.key === "Backspace" &&
+                                        target.value === "" &&
+                                        index > 0
+                                      ) {
+                                        const newValues = [
+                                          ...tempValues[
+                                            field as keyof typeof tempValues
+                                          ].split(","),
+                                        ];
+                                        newValues.splice(index, 1);
+                                        setTempValues({
+                                          ...tempValues,
+                                          [field]: newValues.join(","),
+                                        });
+                                      }
+                                    }}
+                                    variant="standard"
+                                  />
+                                ))
+                            ) : isDate ? (
+                              <LocalizationProvider dateAdapter={AdapterMoment}>
+                                <DemoContainer components={["DatePicker"]}>
+                                  <DatePicker
+                                    value={
+                                      tempValues[
+                                        field as keyof typeof tempValues
+                                      ] &&
+                                      moment(
+                                        new Date(
+                                          tempValues[
+                                            field as keyof typeof tempValues
+                                          ]
+                                        )
+                                      )
+                                    }
+                                    onChange={(date) => {
+                                      if (date) {
+                                        const newDate = date
+                                          .toISOString()
+                                          .split("T")[0];
+                                        setTempValues({
+                                          ...tempValues,
+                                          [field]: newDate,
+                                        });
+                                      }
+                                    }}
+                                    className="w-[120px]"
+                                  />
+                                </DemoContainer>
+                              </LocalizationProvider>
+                            ) : (
+                              <TextField
+                                value={
+                                  tempValues[field as keyof typeof tempValues]
+                                }
+                                onChange={(e) =>
+                                  setTempValues({
+                                    ...tempValues,
+                                    [field]: e.target.value,
+                                  })
+                                }
+                                className="w-[100px]"
+                                variant="standard"
+                              />
+                            )}
+                          </div>
+                        </Grid>
                       </>
                     )
                   )}

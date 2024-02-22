@@ -52,6 +52,24 @@ export async function extractExamsSchedule(
     });
 
     for (const exam of exams) {
+      const venueNames = exam.Venue.split(",").map((v: any) => v.trim());
+
+      for (const venueName of venueNames) {
+        let venue = await prisma.venue.findUnique({
+          where: {
+            name: venueName,
+          },
+        });
+
+        if (!venue) {
+          venue = await prisma.venue.create({
+            data: {
+              name: venueName,
+            },
+          });
+        }
+      }
+
       const dateParts = exam.Date.split("/");
       const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
       const date = new Date(isoDate);
@@ -72,6 +90,7 @@ export async function extractExamsSchedule(
         },
       });
     }
+
     revalidatePath("/exam-schedule");
 
     return {
