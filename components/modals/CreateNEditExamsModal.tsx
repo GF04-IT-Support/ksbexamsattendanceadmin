@@ -60,7 +60,7 @@ type EditableFields =
   | "venue"
   | "year";
 
-const ViewNEditModal = ({
+const CreateNEditExamsModal = ({
   isOpen,
   onClose,
   selectedExam,
@@ -163,81 +163,33 @@ const ViewNEditModal = ({
       <Grid item xs={6} className="flex gap-4">
         <div className="flex flex-col gap-3">
           {isMultiple ? (
-            isEditing ? (
-              value.split(",").map((val, index) => (
+            value
+              .split(",")
+              .map((val, index) => (
                 <TextField
                   key={val.trim() + index}
                   value={val.trim()}
-                  onChange={(e) => {
-                    const newValues = [...value.split(",")];
-                    newValues[index] = e.target.value;
-                    onEdit(newValues.join(","));
-                  }}
                   variant="standard"
                 />
               ))
-            ) : (
-              value.split(",").map((val, index) => (
-                <Typography key={index} color="textPrimary">
-                  {val.trim()}
-                </Typography>
-              ))
-            )
           ) : isDate ? (
-            isEditing ? (
-              <LocalizationProvider dateAdapter={AdapterMoment}>
-                <DemoContainer components={["DatePicker"]}>
-                  <DatePicker
-                    value={value && moment(new Date(value))}
-                    onChange={(date) => {
-                      if (date) {
-                        const newDate = date.toISOString().split("T")[0];
-                        onEdit(newDate);
-                      }
-                    }}
-                    className="w-[120px]"
-                  />
-                </DemoContainer>
-              </LocalizationProvider>
-            ) : (
-              <Typography color="textPrimary">
-                {new Date(value).toLocaleDateString()}
-              </Typography>
-            )
-          ) : isEditing ? (
+            <LocalizationProvider dateAdapter={AdapterMoment}>
+              <DemoContainer components={["DatePicker"]}>
+                <DatePicker
+                  value={value && moment(new Date(value))}
+                  className="w-[120px]"
+                />
+              </DemoContainer>
+            </LocalizationProvider>
+          ) : (
             <TextField
               key={value}
               value={value}
-              onChange={(e) => onEdit(e.target.value)}
               className="w-[100px]"
               variant="standard"
             />
-          ) : (
-            <Typography color="textPrimary">{value}</Typography>
           )}
         </div>
-
-        {selectedExam.exam_id !== "" && (
-          <div className="flex gap-5 items-center">
-            {isEditing ? (
-              <>
-                <AiOutlineClose
-                  className="cursor-pointer hover:opacity-60"
-                  onClick={onToggleEdit}
-                />
-                <AiOutlineCheck
-                  className="cursor-pointer hover:opacity-60"
-                  onClick={onToggleEdit}
-                />
-              </>
-            ) : (
-              <FiEdit2
-                className="cursor-pointer hover:opacity-60"
-                onClick={onToggleEdit}
-              />
-            )}
-          </div>
-        )}
       </Grid>
     );
   };
@@ -314,78 +266,7 @@ const ViewNEditModal = ({
                           <Typography color="textSecondary">{label}</Typography>
                         </Grid>
 
-                        <Grid item xs={6} className="flex gap-4">
-                          <div className="flex flex-col gap-3">
-                            {/* {tempValues[field as keyof typeof tempValues]
-                              .split(",")
-                              .map((val: any, index: any) => (
-                                <TextField
-                                  key={val.trim() + index}
-                                  value={val.trim()}
-                                  onChange={(e) => {
-                                    const newValues = [
-                                      ...tempValues[
-                                        field as keyof typeof tempValues
-                                      ].split(","),
-                                    ];
-                                    newValues[index] = e.target.value;
-                                    setTempValues({
-                                      ...tempValues,
-                                      [field]: newValues.join(","),
-                                    });
-                                  }}
-                                  variant="standard"
-                                />
-                              ))} */}
-                            {isDate ? (
-                              <LocalizationProvider dateAdapter={AdapterMoment}>
-                                <DemoContainer components={["DatePicker"]}>
-                                  <DatePicker
-                                    value={
-                                      tempValues[
-                                        field as keyof typeof tempValues
-                                      ] &&
-                                      moment(
-                                        new Date(
-                                          tempValues[
-                                            field as keyof typeof tempValues
-                                          ]
-                                        )
-                                      )
-                                    }
-                                    onChange={(date) => {
-                                      if (date) {
-                                        const newDate = date
-                                          .toISOString()
-                                          .split("T")[0];
-                                        setTempValues({
-                                          ...tempValues,
-                                          [field]: newDate,
-                                        });
-                                      }
-                                    }}
-                                    className="w-[120px]"
-                                  />
-                                </DemoContainer>
-                              </LocalizationProvider>
-                            ) : (
-                              <TextField
-                                value={
-                                  tempValues[field as keyof typeof tempValues]
-                                }
-                                onChange={(e) =>
-                                  setTempValues({
-                                    ...tempValues,
-                                    [field]: e.target.value,
-                                  })
-                                }
-                                variant="standard"
-                              />
-                            )}
-                          </div>
-                        </Grid>
-
-                        {/* <EditableField
+                        <EditableField
                           key={field}
                           isEditing={
                             editingFields[field as keyof typeof editingFields]
@@ -399,7 +280,7 @@ const ViewNEditModal = ({
                           }
                           isMultiple={isMultiple}
                           isDate={isDate}
-                        /> */}
+                        />
                       </>
                     )
                   )}
@@ -432,4 +313,4 @@ const ViewNEditModal = ({
   );
 };
 
-export default ViewNEditModal;
+export default CreateNEditExamsModal;

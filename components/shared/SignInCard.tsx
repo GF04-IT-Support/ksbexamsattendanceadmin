@@ -15,7 +15,7 @@ function SignInCard() {
   useEffect(() => {
     if (error) {
       setIsLoggingIn(false);
-      toast.error(error);
+      toast.error("Error in signing in. Please try again.");
       router.replace("/sign-in");
     }
   }, []);

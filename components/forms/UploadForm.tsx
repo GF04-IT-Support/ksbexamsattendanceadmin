@@ -90,7 +90,8 @@ const UploadForm = ({
             setIsLoading(false);
             setAcceptedFiles([]);
             if (
-              response?.message === "Your file has been uploaded successfully!"
+              response?.message ===
+              "The exam schedule has been uploaded successfully"
             ) {
               toast.success(response?.message);
               return;

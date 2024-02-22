@@ -13,6 +13,11 @@ import {
   SelectItem,
   Spinner,
   Tooltip,
+  Dropdown,
+  DropdownTrigger,
+  Button,
+  DropdownMenu,
+  DropdownItem,
 } from "@nextui-org/react";
 import useSWR from "swr";
 import {
@@ -26,9 +31,10 @@ import { useDateStore } from "@/zustand/store";
 import SearchInput from "../inputs/SearchInput";
 import ViewNEditModal from "../modals/ViewNEditExamsModal";
 import toast, { Toaster } from "react-hot-toast";
-import { FaUpload } from "react-icons/fa";
+import { FaEllipsisV, FaPlus, FaUpload } from "react-icons/fa";
 import ExamsDeleteConfirmationModal from "../modals/ExamsDeleteConfirmationModal";
 import ExamsUploadModal from "../modals/ExamsUploadModal";
+import CreateNEditExamsModal from "../modals/CreateNEditExamsModal";
 
 type ExamName = {
   exam_name_id: string;
@@ -86,6 +92,14 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
     venue: "",
     year: "",
   });
+
+  useEffect(() => {
+    if (examNames.length > 0) {
+      setSelectedId(examNames[0].exam_name_id);
+    } else {
+      setSelectedId("");
+    }
+  }, [examNames]);
 
   const {
     data: examsData = [],
@@ -229,21 +243,36 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
   const isEmpty =
     (searchResults || filteredExamsData).length === 0 && !isLoading;
 
+  const createNewExamsSchedule = () => {
+    setModalOpen(true);
+    setSelectedExam({
+      date: new Date(),
+      end_time: "",
+      exam_code: "",
+      exam_id: "",
+      exam_name_id: selectedId,
+      start_time: "",
+      venue: "",
+      year: "",
+    });
+  };
+
   return (
     <>
       <ExamsUploadModal details={details} setDetails={setDetails} />
       <div className="my-4 w-full">
+        <Toaster position="top-center" />
         <div className="flex gap-2 justify-center items-center">
-          <Toaster position="top-center" />
           <Select
-            label="Exam Name"
+            label={selectedId !== "" && "Exam Name"}
             items={examNames}
             onChange={onExamNameChange}
-            defaultSelectedKeys={
-              (examNames.length > 0 && [examNames[0].exam_name_id]) || []
+            selectedKeys={(selectedId !== "" && [selectedId]) || []}
+            placeholder={
+              examNames.length === 0 ? "No Exams Available" : "Select Exam"
             }
-            placeholder="Select Exam Name"
-            className="my-2 max-sm:w-[300px] "
+            className="my-2 w-full flex-1"
+            disabled={examNames.length === 0}
             disallowEmptySelection
           >
             {(examName) => (
@@ -256,19 +285,38 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
             )}
           </Select>
 
-          <div className="flex gap-2 justify-center items-center">
-            <FiTrash2
-              size={20}
-              color={`red`}
-              className="cursor-pointer hover:opacity-50"
-              onClick={handleDelete}
-            />
-            <FaUpload
-              size={20}
-              className="cursor-pointer hover:opacity-50"
-              onClick={() => setReUploadConfirmationModal(true)}
-            />
-          </div>
+          <Dropdown aria-label="Actions">
+            <DropdownTrigger>
+              <Button isIconOnly size="sm" variant="light">
+                <FaEllipsisV />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu>
+              <DropdownItem
+                onClick={createNewExamsSchedule}
+                className="text-primary"
+                startContent={<FaPlus size={20} />}
+              >
+                Add Exams Schedule
+              </DropdownItem>
+              <DropdownItem
+                showDivider
+                startContent={<FaUpload size={20} />}
+                onClick={() => setReUploadConfirmationModal(true)}
+              >
+                Reupload Exams
+              </DropdownItem>
+              <DropdownItem
+                onClick={handleDelete}
+                color="danger"
+                className="text-danger"
+                startContent={<FiTrash2 size={20} />}
+                onHoverChange={(e: any) => console.log(e)}
+              >
+                Delete Exams
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         </div>
 
         <div className=" max-[525px]:flex-col max-md:flex gap-2">
@@ -388,8 +436,17 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
           )}
         </Table>
 
-        {modalOpen && (
+        {/* {modalOpen && (
           <ViewNEditModal
+            isOpen={modalOpen}
+            onClose={() => setModalOpen(false)}
+            selectedExam={selectedExam}
+            mutate={mutate}
+          />
+        )} */}
+
+        {modalOpen && (
+          <CreateNEditExamsModal
             isOpen={modalOpen}
             onClose={() => setModalOpen(false)}
             selectedExam={selectedExam}

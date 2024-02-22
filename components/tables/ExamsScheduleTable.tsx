@@ -87,6 +87,14 @@ export default function ExamsScheduleTable({
   const selectedVenuesRef = useRef(selectedVenues);
   const assignmentsRef = useRef(assignments);
 
+  useEffect(() => {
+    if (examsNames.length > 0) {
+      setSelectedId(examsNames[0].exam_name_id);
+    } else {
+      setSelectedId("");
+    }
+  }, [examsNames]);
+
   const {
     data: examsData = [],
     mutate,
@@ -289,14 +297,15 @@ export default function ExamsScheduleTable({
         <div className="flex justify-center items-center">
           <Toaster position="top-center" />
           <Select
-            label="Exam Name"
+            label={selectedId !== "" && "Exam Name"}
             items={examsNames}
             onChange={onExamNameChange}
-            defaultSelectedKeys={
-              (examsNames.length > 0 && [examsNames[0].exam_name_id]) || []
+            selectedKeys={(selectedId !== "" && [selectedId]) || []}
+            placeholder={
+              examsNames.length === 0 ? "No Exams Available" : "Select Exam"
             }
-            placeholder="Select Exam Name"
-            className="my-2"
+            className="my-2 w-full"
+            disabled={examsNames.length === 0}
             disallowEmptySelection
           >
             {(examName) => (
@@ -393,83 +402,93 @@ export default function ExamsScheduleTable({
             ) : (
               <>
                 <TableBody>
-                  {items.map((item: any) => (
-                    <TableRow key={item.exam_id}>
-                      <TableCell className="w-[140px]">
-                        <div className="text-center">
-                          {new Date(item.date).toLocaleDateString("en-GB")}
-                        </div>
-                        <div className="text-[12px] text-center text-gray-500">{`${item.start_time} - ${item.end_time}`}</div>
-                      </TableCell>
-
-                      <TableCell className="w-[170px]">
-                        <Select
-                          aria-label="Venue"
-                          value={item.venue}
-                          className="w-[150px]"
-                          onChange={(event) =>
-                            handleVenueChange(event, item.exam_id)
-                          }
-                          disallowEmptySelection
-                          defaultSelectedKeys={
-                            (item.venue.length > 0 && [
-                              item.venue.split(",")[0],
-                            ]) ||
-                            []
-                          }
-                        >
-                          {item.venue.split(",").map((venue: string) => (
-                            <SelectItem key={venue} value={venue}>
-                              {venue}
-                            </SelectItem>
-                          ))}
-                        </Select>
-                      </TableCell>
-
-                      <TableCell>
-                        <CollapsibleStaffList
-                          staffNames={Object.values(
-                            assignments[item.exam_id] || {}
-                          )
-                            .flatMap((staffs: any[]) => staffs)
-                            .map((staff) => staff.staff_name)}
-                        />
-                      </TableCell>
-
-                      <TableCell className="w-[40px]">
-                        <div className="relative flex items-center gap-2">
-                          {/* <Tooltip content="Assign"> */}
-                          <FiUserPlus
-                            size={20}
-                            className="cursor-pointer hover:opacity-60"
-                            onClick={() => handleAssign(item)}
-                          />
-                          {/* </Tooltip> */}
-                          {item.locked ? (
-                            <Tooltip content="Unlock">
-                              <FiUnlock
-                                size={20}
-                                className="cursor-pointer hover:opacity-60"
-                                onClick={() =>
-                                  handleLockOrUnlock(item.exam_id, false)
-                                }
-                              />
-                            </Tooltip>
-                          ) : (
-                            <Tooltip content="Lock">
-                              <FiLock
-                                size={20}
-                                className="cursor-pointer hover:opacity-60"
-                                onClick={() =>
-                                  handleLockOrUnlock(item.exam_id, true)
-                                }
-                              />
-                            </Tooltip>
-                          )}
+                  {items.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4}>
+                        <div className="h-[400px] text-lg font-semibold flex items-center justify-center">
+                          No Schedule Available
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    items.map((item: any) => (
+                      <TableRow key={item.exam_id}>
+                        <TableCell className="w-[140px]">
+                          <div className="text-center">
+                            {new Date(item.date).toLocaleDateString("en-GB")}
+                          </div>
+                          <div className="text-[12px] text-center text-gray-500">{`${item.start_time} - ${item.end_time}`}</div>
+                        </TableCell>
+
+                        <TableCell className="w-[170px]">
+                          <Select
+                            aria-label="Venue"
+                            value={item.venue}
+                            className="w-[150px]"
+                            onChange={(event) =>
+                              handleVenueChange(event, item.exam_id)
+                            }
+                            disallowEmptySelection
+                            defaultSelectedKeys={
+                              (item.venue.length > 0 && [
+                                item.venue.split(",")[0],
+                              ]) ||
+                              []
+                            }
+                          >
+                            {item.venue.split(",").map((venue: string) => (
+                              <SelectItem key={venue} value={venue}>
+                                {venue}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        </TableCell>
+
+                        <TableCell>
+                          <CollapsibleStaffList
+                            staffNames={Object.values(
+                              assignments[item.exam_id] || {}
+                            )
+                              .flatMap((staffs: any[]) => staffs)
+                              .map((staff) => staff.staff_name)}
+                          />
+                        </TableCell>
+
+                        <TableCell className="w-[40px]">
+                          <div className="relative flex items-center gap-2">
+                            {/* <Tooltip content="Assign"> */}
+                            <FiUserPlus
+                              size={20}
+                              className="cursor-pointer hover:opacity-60"
+                              onClick={() => handleAssign(item)}
+                            />
+                            {/* </Tooltip> */}
+                            {item.locked ? (
+                              <Tooltip content="Unlock">
+                                <FiUnlock
+                                  size={20}
+                                  className="cursor-pointer hover:opacity-60"
+                                  onClick={() =>
+                                    handleLockOrUnlock(item.exam_id, false)
+                                  }
+                                />
+                              </Tooltip>
+                            ) : (
+                              <Tooltip content="Lock">
+                                <FiLock
+                                  size={20}
+                                  className="cursor-pointer hover:opacity-60"
+                                  onClick={() =>
+                                    handleLockOrUnlock(item.exam_id, true)
+                                  }
+                                />
+                              </Tooltip>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
                 <TableFooter>
                   {pages > 1 && (

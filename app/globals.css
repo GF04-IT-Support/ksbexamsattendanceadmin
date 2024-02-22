@@ -7,7 +7,7 @@
 }
 
 .leftsidebar {
-  @apply sticky left-0 top-0 z-20 flex h-screen lg:min-w-[274px]  flex-col justify-between overflow-auto border-r border-r-[#0000FFB2] bg-[#0000FFB2] pt-12 max-[845px]:hidden max-[845px]:min-w-[90px];
+  @apply sticky left-0 top-0 z-20 flex h-screen lg:min-w-[274px]  flex-col justify-between overflow-auto border-r border-r-[#0000FFB2] bg-[#0000FFB2] pt-12 max-[845px]:hidden;
 }
 
 @layer utilities {

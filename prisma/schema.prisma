@@ -48,8 +48,8 @@ model Exam {
   start_time String
   end_time String
   exam_code String @unique
-  venue String
-  year String
+  venue String?
+  year String?
   locked Boolean @default(false)
   sessions ExamSession[]
   exam_name ExamName @relation(fields: [exam_name_id], references: [exam_name_id], onDelete: Cascade)

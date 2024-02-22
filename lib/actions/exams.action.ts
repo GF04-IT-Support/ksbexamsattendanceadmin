@@ -72,9 +72,10 @@ export async function extractExamsSchedule(
         },
       });
     }
+    revalidatePath("/exam-schedule");
 
     return {
-      message: "The exam schedule has been uploaded successfully!",
+      message: "The exam schedule has been uploaded successfully",
     };
   } catch (error) {
     return {
@@ -86,7 +87,7 @@ export async function extractExamsSchedule(
 export async function getExamsNames() {
   try {
     const examNames = await prisma.examName.findMany();
-    return examNames;
+    return examNames.reverse();
   } catch (error: any) {
     throw new Error(error);
   }
@@ -175,6 +176,8 @@ export async function extractInvigilatorsSchedule(base64PdfData: string) {
     const { matchedData, unmatchedData } =
       await matchInvigilatorsWithAbbreviatedNames(invigilators, result);
 
+    revalidatePath("/invigilators-schedule");
+
     return {
       data: { matchedData, unmatchedData },
       message: `The invigilators schedule has been extracted successfully`,
@@ -206,6 +209,33 @@ export async function addConfirmedInvigilatorsToExams(confirmedData: any) {
   }
 }
 
+export async function createExamsSchedule(exam_name_id: string, data: any) {
+  if (data.date) {
+    data.date = new Date(data.date);
+  }
+  try {
+    await prisma.exam.create({
+      data: {
+        date: data.date,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        exam_code: data.exam_code,
+        venue: data.venue,
+        year: data.year,
+        exam_name: {
+          connect: {
+            exam_name_id: exam_name_id,
+          },
+        },
+      },
+    });
+    revalidatePath("/exams-schedule");
+    return { message: "The exam schedule has been created successfully" };
+  } catch (error: any) {
+    return { message: "An error occurred while creating the exam schedule." };
+  }
+}
+
 export async function editExamsSchedule(exam_id: string, data: any) {
   if (data.date) {
     data.date = new Date(data.date);
@@ -217,7 +247,8 @@ export async function editExamsSchedule(exam_id: string, data: any) {
       },
       data: data,
     });
-    return { message: "The exam schedule has been updated successfully!" };
+    revalidatePath("/exams-schedule");
+    return { message: "The exam schedule has been updated successfully" };
   } catch (error: any) {
     return { message: "An error occurred while updating the exam schedule." };
   }
