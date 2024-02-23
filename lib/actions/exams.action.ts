@@ -107,7 +107,7 @@ export async function extractExamsSchedule(
 export async function getExamsNames() {
   try {
     const examNames = await prisma.examName.findMany();
-    return examNames;
+    return examNames.reverse();
   } catch (error: any) {
     throw new Error(error);
   }
