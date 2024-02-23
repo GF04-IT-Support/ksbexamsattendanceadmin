@@ -132,9 +132,7 @@ export default function StaffAssignModal({
           </ModalHeader>
           <ModalHeader className="flex flex-row gap-1">
             <div className="flex flex-col">
-              <div className="text-center text-gray-700">
-                {new Date(dateTime.date).toLocaleDateString("en-GB")}
-              </div>
+              <div className="text-center text-gray-700">{dateTime.date}</div>
               <div className="text-[12px] text-center text-gray-500">{`${dateTime.startTime} - ${dateTime.endTime}`}</div>
             </div>
             - {venue}

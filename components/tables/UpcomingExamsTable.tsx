@@ -32,15 +32,14 @@ function UpcomingExamsTable({ upcomingExams }: any) {
   const [searchResults, setSearchResults] = useState<any>(null);
   const [searchType, setSearchType] = useState("date");
   const [searchQuery, setSearchQuery] = useState("");
-  // const [selections, setSelections] = useState<any>({});
 
   const getInitialSelections = () => {
     const initialSelections: any = {};
     upcomingExams.forEach((exam: any) => {
-      const venues = exam.venue.split(","); // Split the venue string into an array
-      const initialVenue = venues.length > 0 ? venues[0].trim() : null; // Use the first venue as the initial venue
+      const venues = exam.venue.split(",");
+      const initialVenue = venues.length > 0 ? venues[0].trim() : null;
       const initialStaffType =
-        STAFF_TYPES.length > 0 ? STAFF_TYPES[0].value : null; // Use the first staff type as the initial staff type
+        STAFF_TYPES.length > 0 ? STAFF_TYPES[0].value : null;
       initialSelections[exam.exam_id] = {
         selectedVenue: initialVenue,
         selectedStaffType: initialStaffType,
@@ -142,7 +141,10 @@ function UpcomingExamsTable({ upcomingExams }: any) {
         setSearchResults={setSearchResults}
       />
 
-      <TableContainer component={Paper} style={{ padding: "1rem" }}>
+      <TableContainer
+        component={Paper}
+        style={{ padding: "1rem", marginTop: "10px" }}
+      >
         <Table aria-label="Exams timetable">
           <TableHead
             style={{

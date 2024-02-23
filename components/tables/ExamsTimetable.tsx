@@ -265,7 +265,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
       <ExamsUploadModal details={details} setDetails={setDetails} />
       <div className="my-4 w-full">
         <Toaster position="top-center" />
-        <div className="flex gap-2 justify-center items-center">
+        <div className="flex w-full justify-center items-center">
           <Select
             label={selectedId !== "" && "Exam Name"}
             items={examNames}
@@ -274,7 +274,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
             placeholder={
               examNames.length === 0 ? "No Exams Available" : "Select Exam"
             }
-            className="my-2 w-full flex-1"
+            className="px-2 pl-4 my-2 w-full"
             disabled={examNames.length === 0}
             disallowEmptySelection
           >
@@ -288,7 +288,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
             )}
           </Select>
 
-          <Dropdown aria-label="Actions">
+          <Dropdown aria-label="Actions" className="mr-4">
             <DropdownTrigger>
               <Button isIconOnly size="sm" variant="light">
                 <FaEllipsisV />

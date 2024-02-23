@@ -210,7 +210,9 @@ const UploadForm = ({
         >
           <div
             {...getRootProps({ className: "dropzone" })}
-            className="flex flex-col items-center w-full p-4 py-14 cursor-pointer border-2 border-dashed border-gray-600 hover:border-blue"
+            className={`flex flex-col items-center w-full p-4 py-14 cursor-pointer border-2 border-dashed border-gray-600 hover:border-blue ${
+              isLoading ? "pointer-events-none opacity-50" : ""
+            }`}
           >
             <IoIosDocument className="w-10 h-10 text-gray-500 mb-4" />
             <input {...getInputProps()} />

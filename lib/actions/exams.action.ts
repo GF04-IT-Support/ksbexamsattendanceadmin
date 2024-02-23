@@ -335,6 +335,7 @@ export async function assignStaffToExamSession(
     const examSession: any = examSessionMap.get(exam_id);
 
     if (!keepExisting) {
+      // If keepExisting is false, delete all existing staff assignments
       await prisma.staffAssignment.deleteMany({
         where: {
           exam_session_id: examSession.exam_session_id,
@@ -343,30 +344,33 @@ export async function assignStaffToExamSession(
       });
     }
 
-    const existingAssignments = await prisma.staffAssignment.findMany({
-      where: {
-        staff_id: {
-          in: staff_ids,
+    // If staff_ids is not empty, proceed with creating new assignments
+    if (staff_ids.length > 0) {
+      const existingAssignments = await prisma.staffAssignment.findMany({
+        where: {
+          staff_id: {
+            in: staff_ids,
+          },
+          exam_session_id: examSession.exam_session_id,
+          role: role,
         },
-        exam_session_id: examSession.exam_session_id,
-        role: role,
-      },
-    });
+      });
 
-    const assignmentsToCreate = staff_ids.filter(
-      (staff_id) =>
-        !existingAssignments.some(
-          (assignment) => assignment.staff_id === staff_id
-        )
-    );
+      const assignmentsToCreate = staff_ids.filter(
+        (staff_id) =>
+          !existingAssignments.some(
+            (assignment) => assignment.staff_id === staff_id
+          )
+      );
 
-    await prisma.staffAssignment.createMany({
-      data: assignmentsToCreate.map((staff_id) => ({
-        staff_id: staff_id,
-        exam_session_id: examSession.exam_session_id,
-        role: role,
-      })),
-    });
+      await prisma.staffAssignment.createMany({
+        data: assignmentsToCreate.map((staff_id) => ({
+          staff_id: staff_id,
+          exam_session_id: examSession.exam_session_id,
+          role: role,
+        })),
+      });
+    }
 
     return {
       message:
