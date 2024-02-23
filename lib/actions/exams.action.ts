@@ -9,10 +9,7 @@ import {
 } from "@/lib/helpers/exams.helpers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
-// import axios from "@/utils/axios";
-import axios from "axios";
-
-const url = "https://flask-pdfextractor.onrender.com";
+import axios from "@/utils/axios";
 
 export async function extractExamsSchedule(
   base64PdfData: string,
@@ -23,7 +20,7 @@ export async function extractExamsSchedule(
       await deleteExamsSchedule(exam_name_id);
     }
 
-    const response: any = await axios.post(`${url}/exams-schedule/extract`, {
+    const response = await axios.post("/exams-schedule/extract", {
       base64_pdf_data: base64PdfData,
     });
 
@@ -188,7 +185,7 @@ export async function getUpcomingExamsSchedule() {
 
 export async function extractInvigilatorsSchedule(base64PdfData: string) {
   try {
-    const response = await axios.post(`${url}/invigilators/extract`, {
+    const response = await axios.post("/invigilators/extract", {
       base64_pdf_data: base64PdfData,
     });
 
