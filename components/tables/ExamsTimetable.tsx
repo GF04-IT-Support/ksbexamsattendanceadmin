@@ -34,6 +34,7 @@ import { FaEllipsisV, FaPlus, FaUpload } from "react-icons/fa";
 import ExamsDeleteConfirmationModal from "../modals/ExamsDeleteConfirmationModal";
 import ExamsUploadModal from "../modals/ExamsUploadModal";
 import CreateNEditExamsModal from "../modals/CreateNEditExamsModal";
+import { sortDataByStartTime } from "@/lib/helpers/date.helpers";
 
 type ExamName = {
   exam_name_id: string;
@@ -183,17 +184,20 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
         : "asc";
 
     if (descriptor.column === "date" || descriptor.column === "year") {
-      const sortedData = [...filteredExamsData].sort((a, b) => {
-        const aValue =
-          descriptor.column === "date"
-            ? new Date(a.date).getTime()
-            : Number(a.year);
-        const bValue =
-          descriptor.column === "date"
-            ? new Date(b.date).getTime()
-            : Number(b.year);
-        return direction === "asc" ? aValue - bValue : bValue - aValue;
-      });
+      let sortedData;
+      if (descriptor.column === "date") {
+        sortedData = sortDataByStartTime(filteredExamsData.slice());
+        if (direction === "desc") {
+          sortedData.reverse();
+        }
+      } else {
+        sortedData = filteredExamsData.slice().sort((a: any, b: any) => {
+          const aValue = Number(a.year);
+          const bValue = Number(b.year);
+          return direction === "asc" ? aValue - bValue : bValue - aValue;
+        });
+      }
+
       setFilteredExamsData(sortedData);
     }
 

@@ -43,6 +43,7 @@ import { FaEllipsisV, FaFileAlt, FaRegChartBar } from "react-icons/fa";
 import { utils, writeFile } from "xlsx";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
+import { sortDataByStartTime } from "@/lib/helpers/date.helpers";
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -110,11 +111,8 @@ export default function DateAndSessionSelector() {
         : null;
       try {
         const data: any = await fetchExamSessions(start, end);
-        data.sort(
-          (a: any, b: any) =>
-            new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
-        setData(data);
+        const sortedData = sortDataByStartTime([...data]);
+        setData(sortedData);
       } catch (error: any) {
         throw new Error(error);
       } finally {

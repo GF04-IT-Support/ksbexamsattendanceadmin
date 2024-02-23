@@ -10,6 +10,7 @@ import {
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
 import axios from "@/utils/axios";
+import { sortDataByStartTime } from "../helpers/date.helpers";
 
 export async function extractExamsSchedule(
   base64PdfData: string,
@@ -154,7 +155,7 @@ export async function getUpcomingExamsSchedule() {
   try {
     const currentDate = new Date();
 
-    const upcomingExams = await prisma.exam.findMany({
+    let upcomingExams = await prisma.exam.findMany({
       where: {
         date: {
           gte: currentDate,
@@ -176,7 +177,7 @@ export async function getUpcomingExamsSchedule() {
         date: "asc",
       },
     });
-
+    upcomingExams = sortDataByStartTime(upcomingExams);
     return upcomingExams;
   } catch (error: any) {
     throw new Error(error.message);

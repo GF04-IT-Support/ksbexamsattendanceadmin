@@ -15,7 +15,6 @@ import {
 import ReactHtmlParser from "react-html-parser";
 import SearchInput from "../inputs/SearchInput";
 import CollapsibleStaffList from "../shared/CollapsibleStaffList";
-import { Typography } from "@material-ui/core";
 
 const STAFF_TYPES = [
   { label: "Invigilators", value: "invigilators" },

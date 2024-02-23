@@ -42,6 +42,7 @@ import StaffAssignModal from "../modals/StaffAssignModal";
 import { fetchStaffDetails } from "@/lib/actions/staff.action";
 import UploadForm from "../forms/UploadForm";
 import CollapsibleStaffList from "../shared/CollapsibleStaffList";
+import { sortDataByStartTime } from "@/lib/helpers/date.helpers";
 
 type ExamName = {
   exam_name_id: string;
@@ -101,10 +102,8 @@ export default function ExamsScheduleTable({
     isLoading,
   } = useSWR(`examsSchedule/${selectedId}/${role}`, async () => {
     const unsortedExamsData = await getExamsSchedule(selectedId, role);
-    return [...unsortedExamsData].sort(
-      (a: any, b: any) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+    const sortedExamsData = sortDataByStartTime([...unsortedExamsData]);
+    return sortedExamsData;
   });
 
   const { data: staffDetails = [] } = useSWR(`staffDetails`, () =>
