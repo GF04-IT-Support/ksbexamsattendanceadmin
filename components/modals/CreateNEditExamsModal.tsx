@@ -194,7 +194,7 @@ const CreateNEditExamsModal = ({
                                 .map((val: string, index: number) => (
                                   <TextField
                                     key={index}
-                                    value={val.trim()}
+                                    value={val}
                                     onChange={(e) => {
                                       const target =
                                         e.target as HTMLInputElement;
