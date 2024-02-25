@@ -29,7 +29,7 @@ export default function TableDatePicker() {
   return (
     <LocalizationProvider dateAdapter={AdapterMoment}>
       <DemoContainer components={["DatePicker"]}>
-        <div className="max-[525px]:flex-row max-md:flex-col flex gap-5 items-center overflow-hidden py-2">
+        <div className="flex gap-5 items-center overflow-hidden py-2">
           <DatePicker
             label="From"
             value={startDate && moment(startDate)}

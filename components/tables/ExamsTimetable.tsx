@@ -335,7 +335,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
           </Dropdown>
         </div>
 
-        <div className=" max-[525px]:flex-col max-md:flex gap-2">
+        <div className="flex my-4 justify-between max-md:flex-col gap-2">
           <SearchInput
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -345,9 +345,9 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
             setSearchResults={setSearchResults}
           />
 
-          <div className="max-[525px]:flex-row max-md:flex-col flex gap-2 items-center justify-start min-[525px]:my-6">
+          <div className="flex gap-2 items-center justify-center">
             <TableDatePicker />
-            <div className="max-md:flex gap-2 flex">
+            <div className="gap-2 flex">
               <div
                 className="flex p-2 border items-center justify-center h-[42px] w-[42px] mt-2  border-gray-500 rounded cursor-pointer hover:opacity-60"
                 onClick={resetDates}

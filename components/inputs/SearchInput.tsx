@@ -86,7 +86,7 @@ export default function SearchInput({
   }, [searchQuery]);
 
   return (
-    <div className="flex flex-col max-sm:flex-row gap-2 items-center justify-start min-[525px]:my-6 md:flex-row md:items-end">
+    <div className="gap-2 items-center justify-center flex flex-row">
       {searchType === "date" ? (
         <LocalizationProvider dateAdapter={AdapterMoment}>
           <DemoContainer components={["DatePicker"]}>

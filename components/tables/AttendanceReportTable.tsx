@@ -111,8 +111,12 @@ export default function DateAndSessionSelector() {
         : null;
       try {
         const data: any = await fetchExamSessions(start, end);
-        const sortedData = sortDataByStartTime([...data]);
-        setData(sortedData);
+        if (data.length > 0) {
+          const sortedData = sortDataByStartTime([...data]);
+          setData(sortedData);
+        } else {
+          setData([]);
+        }
       } catch (error: any) {
         throw new Error(error);
       } finally {
@@ -122,9 +126,7 @@ export default function DateAndSessionSelector() {
   };
 
   useEffect(() => {
-    if (data.length > 0) {
-      setFilteredData(data);
-    }
+    setFilteredData(data);
   }, [data]);
 
   function getAttendanceStatus(attendanceStatus: any) {
@@ -428,8 +430,8 @@ export default function DateAndSessionSelector() {
         </ModalContent>
       </Modal>
 
-      <div className="flex flex-col sm:flex-row justify-between">
-        <div className="flex gap-5 justify-center items-center overflow-hidden py-2 pb-4">
+      <div className="flex max-[812px]:flex-col flex-row justify-between">
+        <div className="flex gap-2 justify-center items-center overflow-hidden py-2 pb-4">
           <LocalizationProvider dateAdapter={AdapterMoment}>
             <div className="flex flex-col">
               <DatePicker
@@ -470,13 +472,14 @@ export default function DateAndSessionSelector() {
           </LocalizationProvider>
         </div>
 
-        <div className="flex max-[525px]:flex-col gap-4 sm:justify-end my-4 mt-2">
+        <div className="flex px-4 max-[525px]:flex-col gap-4 my-4 mt-2 justify-center items-center">
           <Dropdown>
             <DropdownTrigger>
               <Button
                 startContent={<FaFileAlt />}
                 color={`${isDownloadReportDisabled ? "default" : "primary"}`}
                 disabled={isDownloadReportDisabled}
+                className="max-[525px]:w-full"
               >
                 Download Report
               </Button>
@@ -512,7 +515,9 @@ export default function DateAndSessionSelector() {
                 }
                 color={`${isDownloadReportDisabled ? "default" : "success"}`}
                 disabled={isDownloadReportDisabled}
-                className={`${!isDownloadReportDisabled && "text-white"}`}
+                className={`${
+                  !isDownloadReportDisabled && "text-white"
+                } max-[525px]:w-full`}
               >
                 Download Summary
               </Button>
@@ -535,7 +540,7 @@ export default function DateAndSessionSelector() {
         </div>
       </div>
 
-      <div className="flex md:justify-between max-[525px]:flex-col max-md:flex gap-2 pb-4">
+      <div className="flex md:justify-between max-md:flex-col  gap-2 pb-4">
         <SearchInput
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -546,7 +551,7 @@ export default function DateAndSessionSelector() {
           isStaffSearch
         />
 
-        <div className="pt-5">
+        <div className=" flex justify-center">
           <Select
             label="Attendance Status"
             selectionMode="multiple"
