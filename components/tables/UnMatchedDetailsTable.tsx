@@ -21,6 +21,7 @@ import ReactHtmlParser from "react-html-parser";
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  mutate?: () => void;
   unMatchedDetails: any[];
 };
 
@@ -28,6 +29,7 @@ export default function UnMatchedDetailsTable({
   isOpen,
   onClose,
   unMatchedDetails,
+  mutate,
 }: ModalProps) {
   const rowsPerPage = 10;
   const [page, setPage] = useState(1);
@@ -46,11 +48,16 @@ export default function UnMatchedDetailsTable({
 
     return unmatchedDetailsWithId?.slice(start, end);
   }, [page, unmatchedDetailsWithId]);
+
+  const handleClose = () => {
+    mutate?.();
+    onClose();
+  };
   return (
     <Modal
       backdrop="opaque"
       isOpen={isOpen}
-      onOpenChange={onClose}
+      onOpenChange={handleClose}
       size="4xl"
       isDismissable={false}
       motionProps={{
@@ -142,7 +149,7 @@ export default function UnMatchedDetailsTable({
           </Table>
         </ModalBody>
         <ModalFooter>
-          <Button color="primary" onPress={onClose}>
+          <Button color="primary" onPress={handleClose}>
             OK
           </Button>
         </ModalFooter>

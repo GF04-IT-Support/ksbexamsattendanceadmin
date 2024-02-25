@@ -16,7 +16,6 @@ import { IoIosDocument } from "react-icons/io";
 import UploadConfirmationModal from "../modals/UploadConfirmationModal";
 import ScheduleConfirmationModal from "../modals/ScheduleConfirmationModal";
 import UnMatchedDetailsTable from "../tables/UnMatchedDetailsTable";
-import { setDefaultAutoSelectFamily } from "net";
 
 type UploadFormProps = {
   uploadType: "exams" | "invigilators";
@@ -169,6 +168,7 @@ const UploadForm = ({
       ) {
         toast.success(response.message);
         onClose();
+        mutate?.();
       } else if (response.unmatchedDetails.length > 0) {
         setUnmatchedDetails(response.unmatchedDetails);
         setShowUnmatchedModal(true);
@@ -269,6 +269,7 @@ const UploadForm = ({
           unMatchedDetails={unmatchedDetails}
           isOpen={showUnmatchedModal}
           onClose={onClose}
+          mutate={mutate}
         />
       )}
     </div>

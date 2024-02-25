@@ -22,6 +22,7 @@ import {
 import useSWR from "swr";
 import {
   deleteExamsSchedule,
+  deleteExamsSession,
   getExamsSchedule,
 } from "@/lib/actions/exams.action";
 import ReactHtmlParser from "react-html-parser";
@@ -78,6 +79,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
     useState(false);
   const [details, setDetails] = useState<any>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [examSessionId, setExamSessionId] = useState(null);
   const [sortDescriptor, setSortDescriptor] = React.useState({
     column: "year",
     direction: "asc",
@@ -216,16 +218,27 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
   const handleConfirmDelete2 = async () => {
     setIsDeleting(true);
     try {
-      const response: any = await deleteExamsSchedule(selectedId);
-      if (response?.message === "Exam deleted successfully") {
-        toast.success(response?.message);
+      if (examSessionId) {
+        const response: any = await deleteExamsSession(examSessionId);
+        if (response?.message === "Exam session deleted successfully") {
+          toast.success(response?.message);
+          mutate();
+        } else {
+          toast.error(response?.message);
+        }
       } else {
-        toast.error(response?.message);
+        const response: any = await deleteExamsSchedule(selectedId);
+        if (response?.message === "Exam deleted successfully") {
+          toast.success(response?.message);
+        } else {
+          toast.error(response?.message);
+        }
       }
     } catch (error) {
     } finally {
       setIsDeleting(false);
       setDeleteConfirmationModal2(false);
+      setExamSessionId(null);
     }
   };
 
@@ -420,14 +433,28 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
                           item[columnKey]
                         )
                       ) : columnKey === "action" ? (
-                        <Tooltip content="View">
-                          <FiEdit
-                            size={20}
-                            className="cursor-pointer hover:opacity-60"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => handleView(item)}
-                          />
-                        </Tooltip>
+                        <div className="flex gap-2">
+                          <Tooltip content="Edit">
+                            <FiEdit
+                              size={20}
+                              className="cursor-pointer hover:opacity-60"
+                              style={{ cursor: "pointer" }}
+                              onClick={() => handleView(item)}
+                            />
+                          </Tooltip>
+                          <Tooltip content="Delete">
+                            <FiTrash2
+                              size={20}
+                              className="cursor-pointer hover:opacity-60"
+                              style={{ cursor: "pointer" }}
+                              color="red"
+                              onClick={() => {
+                                handleDelete();
+                                setExamSessionId(item.exam_id);
+                              }}
+                            />
+                          </Tooltip>
+                        </div>
                       ) : (
                         item[columnKey]
                       )}
@@ -438,15 +465,6 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
             </TableBody>
           )}
         </Table>
-
-        {/* {modalOpen && (
-          <ViewNEditModal
-            isOpen={modalOpen}
-            onClose={() => setModalOpen(false)}
-            selectedExam={selectedExam}
-            mutate={mutate}
-          />
-        )} */}
 
         {modalOpen && (
           <CreateNEditExamsModal
@@ -460,7 +478,10 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
         {deleteConfirmationModal1 && (
           <ExamsDeleteConfirmationModal
             isOpen={deleteConfirmationModal1}
-            onClose={() => setDeleteConfirmationModal1(false)}
+            onClose={() => {
+              setDeleteConfirmationModal1(false);
+              setExamSessionId(null);
+            }}
             onConfirm={handleConfirmDelete1}
             message="Are you sure you want to delete the Exam Schedule?"
             confirmLabel="Confirm"
@@ -470,7 +491,10 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
         {deleteConfirmationModal2 && (
           <ExamsDeleteConfirmationModal
             isOpen={deleteConfirmationModal2}
-            onClose={() => setDeleteConfirmationModal2(false)}
+            onClose={() => {
+              setDeleteConfirmationModal2(false);
+              setExamSessionId(null);
+            }}
             onConfirm={handleConfirmDelete2}
             message="This action is irreversible. Are you absolutely sure you want to proceed?"
             confirmLabel="Delete"

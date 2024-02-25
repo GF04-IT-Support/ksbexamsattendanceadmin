@@ -288,6 +288,20 @@ export async function deleteExamsSchedule(exam_name_id: string) {
   }
 }
 
+export async function deleteExamsSession(exam_id: string) {
+  try {
+    await prisma.exam.delete({
+      where: {
+        exam_id: exam_id,
+      },
+    });
+    revalidatePath("/exams-schedule");
+    return { message: "Exam session deleted successfully" };
+  } catch (error: any) {
+    return { message: "An error occurred while deleting the exam schedule." };
+  }
+}
+
 export async function assignStaffToExamSession(
   exam_id: string,
   venue_name: string,
