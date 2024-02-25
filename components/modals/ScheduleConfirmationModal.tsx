@@ -21,7 +21,7 @@ type ConfirmationModalProps = {
   onConfirm: () => void;
   onClose: () => void;
   scheduleData: any;
-  setScheduleData: (data: any) => void;
+  setConfirmedData: React.Dispatch<React.SetStateAction<any>>;
   defaultStaffDetails: any;
 };
 
@@ -30,7 +30,7 @@ export default function ScheduleConfirmationModal({
   onConfirm,
   onClose,
   scheduleData,
-  setScheduleData,
+  setConfirmedData,
   defaultStaffDetails,
 }: ConfirmationModalProps) {
   const { matchedData, unmatchedData } = scheduleData;
@@ -87,7 +87,8 @@ export default function ScheduleConfirmationModal({
     if (staff) {
       let newSelectedStaff = [...selectedStaff];
       newSelectedStaff[index] = {
-        ...staff,
+        staff_id: staff.staff_id,
+        full_name: staff.full_name || staff.staff_name,
         abbreviated_name: unmatchedInvigilatorsDetails[index].abbreviated_name,
         details: unmatchedInvigilatorsDetails[index].details,
       };
@@ -117,8 +118,8 @@ export default function ScheduleConfirmationModal({
     setSelectedUnmatchedIndex(index);
   };
 
-  const handleSubmit = () => {
-    setScheduleData(invigilatorsDetails);
+  const handleSubmit = async () => {
+    setConfirmedData(invigilatorsDetails);
     onClose();
     onConfirm();
   };

@@ -38,6 +38,7 @@ const UploadForm = ({
   const [showModal, setShowModal] = useState(false);
   const [acceptedFiles, setAcceptedFiles] = useState<File[]>([]);
   const [scheduleData, setScheduleData] = useState<any>([]);
+  const [confirmedData, setConfirmedData] = useState<any>([]);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showUnmatchedModal, setShowUnmatchedModal] = useState(false);
   const [unmatchedDetails, setUnmatchedDetails] = useState([]);
@@ -158,7 +159,7 @@ const UploadForm = ({
     try {
       setIsLoading(true);
       const response: any = await addConfirmedInvigilatorsToExams(
-        scheduleData.matchedData
+        confirmedData
       );
 
       if (
@@ -259,7 +260,7 @@ const UploadForm = ({
           isOpen={showConfirmationModal}
           onConfirm={handleConfirm}
           scheduleData={scheduleData}
-          setScheduleData={setScheduleData}
+          setConfirmedData={setConfirmedData}
           defaultStaffDetails={staffDetails}
         />
       )}

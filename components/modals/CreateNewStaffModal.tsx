@@ -30,7 +30,7 @@ type CreateNewStaffModalProps = {
   uniqueRoles: string[];
   staff_name?: string;
   handleUnmatchedChange?: (event: any, index: number) => void;
-  setStaffDetails?: (staffDetails: any) => void;
+  setStaffDetails?: React.Dispatch<React.SetStateAction<any>>;
   selectedUnmatchedIndex?: any;
 };
 
