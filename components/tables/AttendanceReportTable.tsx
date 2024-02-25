@@ -655,8 +655,9 @@ export default function DateAndSessionSelector() {
                             <FaEllipsisV />
                           </Button>
                         </DropdownTrigger>
-                        <DropdownMenu>
+                        <DropdownMenu disabledKeys={["Present"]}>
                           <DropdownItem
+                            key="Present"
                             onClick={() =>
                               handleMarkAttendance("Present", item)
                             }
