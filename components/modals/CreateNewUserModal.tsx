@@ -24,7 +24,7 @@ type CreateNewUserModalProps = {
 };
 
 function CreateNewUserModal({ isOpen, onClose, tab }: CreateNewUserModalProps) {
-  const [role, setRole] = useState("0");
+  const [role, setRole] = useState<any>(tab === "admin" ? "0" : null);
   const [email, setEmail] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
@@ -72,7 +72,7 @@ function CreateNewUserModal({ isOpen, onClose, tab }: CreateNewUserModalProps) {
   const isDisabled = () => {
     if (emailError) return true;
     if (email === "") return true;
-    if (role === "0") return true;
+    if (role && role === "0") return true;
     return false;
   };
 
