@@ -20,12 +20,7 @@ export async function fetchExamSessions(startDate: Date, endDate: Date) {
               include: {
                 staff: {
                   include: {
-                    attendances: {
-                      select: {
-                        attendance_id: true,
-                        attendance_status: true,
-                      },
-                    },
+                    attendances: true,
                   },
                 },
               },
@@ -35,7 +30,24 @@ export async function fetchExamSessions(startDate: Date, endDate: Date) {
       },
     });
 
-    const sessions = exams.filter((exam) => {
+    const filteredExams = exams.map((exam) => ({
+      ...exam,
+      sessions: exam.sessions.map((session) => ({
+        ...session,
+        assignments: session.assignments.map((assignment) => ({
+          ...assignment,
+          staff: {
+            ...assignment.staff,
+            attendances: assignment.staff.attendances.filter(
+              (attendance) =>
+                attendance.exam_session_id === session.exam_session_id
+            ),
+          },
+        })),
+      })),
+    }));
+
+    const sessions = filteredExams.filter((exam) => {
       if (exam.sessions.length === 0) {
         return false;
       }
@@ -98,5 +110,3 @@ export async function takeAttendance(
     };
   }
 }
-
-

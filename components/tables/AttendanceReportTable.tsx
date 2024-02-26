@@ -44,6 +44,7 @@ import { utils, writeFile } from "xlsx";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import { sortDataByStartTime } from "@/lib/helpers/date.helpers";
+import { getStaffRoles } from "@/lib/helpers/staff.helpers";
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -76,6 +77,24 @@ type ColumnKeys =
   | "attendance"
   | "weight";
 
+const staffType = {
+  invigilators: "Invigilators",
+  security: "Security",
+  nurses: "Nurses",
+  itSupport: "IT Support",
+  administrative: "Administrative",
+};
+
+const attendanceOptions = ["N/A", "Present"];
+
+const staffTypeOptions = [
+  "invigilators",
+  "security",
+  "nurses",
+  "itSupport",
+  "administrative",
+];
+
 export default function DateAndSessionSelector() {
   const classes = useStyles();
   const rowsPerPage = 10;
@@ -89,11 +108,9 @@ export default function DateAndSessionSelector() {
   const [searchType, setSearchType] = useState("staffName");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
-  const attendanceOptions = ["N/A", "Present"];
-  const [attendanceFilter, setAttendanceFilter] = React.useState([
-    "Present",
-    // "N/A",
-  ]);
+
+  const [attendanceFilter, setAttendanceFilter] = useState(["Present"]);
+  const [staffTypeFilter, setStaffTypeFilter] = useState(staffTypeOptions);
   const [format, setFormat] = useState<any>("");
   const { isOpen, onOpen, onClose, onOpenChange } = useDisclosure();
   const [selectedColumns, setSelectedColumns] = useState(
@@ -187,8 +204,14 @@ export default function DateAndSessionSelector() {
       (item) => JSON.parse(item as string)
     );
 
-    const filteredItems = uniqueItems.filter((item) =>
-      attendanceFilter.includes(item.attendance)
+    const combinedStaffRoles = staffTypeFilter.flatMap((role) =>
+      getStaffRoles(role)
+    );
+
+    const filteredItems = uniqueItems.filter(
+      (item) =>
+        attendanceFilter.includes(item.attendance) &&
+        combinedStaffRoles.includes(item.staff_role)
     );
 
     filteredItems.sort((a: any, b: any) => {
@@ -202,7 +225,7 @@ export default function DateAndSessionSelector() {
     });
 
     return filteredItems;
-  }, [filteredData, attendanceFilter]);
+  }, [filteredData, attendanceFilter, staffTypeFilter]);
 
   const pages = Math.ceil(
     (searchResults || flattenedItems)?.length / rowsPerPage
@@ -294,8 +317,8 @@ export default function DateAndSessionSelector() {
       excelRows.push(excelData);
     });
 
-    const columnWidths = Object.keys(columnNames).map((key) =>
-      key === "staff_name" ? "*" : "auto"
+    const columnWidths = tableColumn.map((columnName) =>
+      columnName === "Staff Name" ? "*" : "auto"
     );
 
     if (format === "pdf") {
@@ -401,7 +424,6 @@ export default function DateAndSessionSelector() {
               </ModalHeader>
               <ModalBody>
                 <CheckboxGroup
-                  // orientation="horizontal"
                   aria-label="Select Columns"
                   value={Object.keys(selectedColumns).filter(
                     (key) => selectedColumns[key as ColumnKeys]
@@ -540,7 +562,7 @@ export default function DateAndSessionSelector() {
         </div>
       </div>
 
-      <div className="flex md:justify-between max-md:flex-col  gap-2 pb-4">
+      <div className="flex max-[1200px]:flex-col md:justify-between max-md:flex-col  gap-2 pb-4">
         <SearchInput
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -551,7 +573,7 @@ export default function DateAndSessionSelector() {
           isStaffSearch
         />
 
-        <div className=" flex justify-center">
+        <div className="flex gap-1 justify-center">
           <Select
             label="Attendance Status"
             selectionMode="multiple"
@@ -566,6 +588,24 @@ export default function DateAndSessionSelector() {
             {attendanceOptions.map((status) => (
               <SelectItem key={status} value={status} className="capitalize">
                 {status}
+              </SelectItem>
+            ))}
+          </Select>
+
+          <Select
+            label="Staff Type"
+            selectionMode="multiple"
+            placeholder="Select Staff Type"
+            selectedKeys={staffTypeFilter}
+            onSelectionChange={(keys: any) =>
+              setStaffTypeFilter(Array.from(keys))
+            }
+            className="max-w-[220px]"
+            disallowEmptySelection
+          >
+            {staffTypeOptions.map((type) => (
+              <SelectItem key={type} value={type} className="capitalize">
+                {type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()}
               </SelectItem>
             ))}
           </Select>
