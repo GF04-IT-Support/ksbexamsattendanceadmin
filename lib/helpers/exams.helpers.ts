@@ -2,19 +2,14 @@ import prisma from "@/utils/prisma";
 import { assignStaffToExamSession } from "../actions/exams.action";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
+import { getStaffRoles } from "./staff.helpers";
 
 const fuzz = require("fuzzball");
 
 export async function fetchInvigilators() {
+  const staffRoles = getStaffRoles("invigilators");
   return await prisma.staff.findMany({
-    where: {
-      OR: [
-        { staff_role: "Lecturer" },
-        { staff_role: "Part-Time Lecturer" },
-        { staff_role: "PhD Student" },
-        { staff_role: "Other" },
-      ],
-    },
+    where: { staff_role: { in: staffRoles } },
     select: {
       staff_id: true,
       staff_name: true,

@@ -428,16 +428,14 @@ export default function ExamsScheduleTable({
                               handleVenueChange(event, item.exam_id)
                             }
                             disallowEmptySelection
-                            defaultSelectedKeys={
-                              (item.venue.length > 0 && [
-                                item.venue.split(",")[0],
-                              ]) ||
-                              []
-                            }
+                            selectedKeys={[selectedVenues[item.exam_id].trim()]}
                           >
                             {item.venue.split(",").map((venue: string) => (
-                              <SelectItem key={venue} value={venue}>
-                                {venue}
+                              <SelectItem
+                                key={venue.trim()}
+                                value={venue.trim()}
+                              >
+                                {venue.trim()}
                               </SelectItem>
                             ))}
                           </Select>

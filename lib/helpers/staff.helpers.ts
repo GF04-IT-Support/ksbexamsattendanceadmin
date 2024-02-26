@@ -2,7 +2,12 @@ export function getStaffRoles(id: string) {
   let staffRoles;
   switch (id) {
     case "invigilators":
-      staffRoles = ["Lecturer", "Part-Time Lecturer", "PhD Student"];
+      staffRoles = [
+        "Lecturer",
+        "Part-Time Lecturer",
+        "PhD Student",
+        "Librarian",
+      ];
       break;
     case "security":
       staffRoles = ["Security"];

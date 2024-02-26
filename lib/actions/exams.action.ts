@@ -237,11 +237,11 @@ export async function createExamsSchedule(exam_name_id: string, data: any) {
     await prisma.exam.create({
       data: {
         date: data.date,
-        start_time: data.start_time,
-        end_time: data.end_time,
-        exam_code: data.exam_code,
-        venue: data.venue,
-        year: data.year,
+        start_time: data.start_time.trim(),
+        end_time: data.end_time.trim(),
+        exam_code: data.exam_code.trim(),
+        venue: data.venue.trim(),
+        year: data.year.trim(),
         exam_name: {
           connect: {
             exam_name_id: exam_name_id,
@@ -257,15 +257,21 @@ export async function createExamsSchedule(exam_name_id: string, data: any) {
 }
 
 export async function editExamsSchedule(exam_id: string, data: any) {
-  if (data.date) {
-    data.date = new Date(data.date);
+  const trimmedData = Object.keys(data).reduce((acc, key) => {
+    acc[key] = typeof data[key] === "string" ? data[key].trim() : data[key];
+    return acc;
+  }, {} as any);
+
+  if (trimmedData.date) {
+    trimmedData.date = new Date(trimmedData.date);
   }
+
   try {
     await prisma.exam.update({
       where: {
         exam_id: exam_id,
       },
-      data: data,
+      data: trimmedData,
     });
     revalidatePath("/exams-schedule");
     return { message: "The exam schedule has been updated successfully" };

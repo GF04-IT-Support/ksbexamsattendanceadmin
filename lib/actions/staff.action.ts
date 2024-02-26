@@ -86,7 +86,12 @@ export async function updateStaffDetails(id: string, data: any) {
 
 export async function createNewStaff(data: any) {
   try {
-    const staffDetails = await prisma.staff.create({ data });
+    const trimmedData = Object.keys(data).reduce((acc, key) => {
+      acc[key] = typeof data[key] === "string" ? data[key].trim() : data[key];
+      return acc;
+    }, {} as any);
+
+    const staffDetails = await prisma.staff.create({ data: trimmedData });
     return { message: "Staff created successfully", data: staffDetails };
   } catch (error: any) {
     return { message: "An error occurred while creating the staff." };
