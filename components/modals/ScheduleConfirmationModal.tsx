@@ -12,9 +12,13 @@ import {
 } from "@nextui-org/react";
 import { Card, CardContent, Typography, Grid } from "@material-ui/core";
 import { Select, MenuItem } from "@mui/material/";
-import React, { useEffect, useState } from "react";
-import { FiPlusCircle } from "react-icons/fi";
+import React, { useEffect, useRef, useState } from "react";
+import { FiDownload, FiPlusCircle } from "react-icons/fi";
 import CreateNewStaffModal from "./CreateNewStaffModal";
+import * as XLSX from "xlsx";
+import { FaFileAlt, FaFileUpload } from "react-icons/fa";
+import ConfirmInvigilatorsModal from "./ConfirmInvigilatorsModal";
+import toast, { Toaster } from "react-hot-toast";
 
 type ConfirmationModalProps = {
   isOpen: boolean;
@@ -45,6 +49,8 @@ export default function ScheduleConfirmationModal({
     useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [staffDetails, setStaffDetails] = useState(defaultStaffDetails);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [tempValues, setTempValues] = useState([]);
 
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -124,6 +130,163 @@ export default function ScheduleConfirmationModal({
     onConfirm();
   };
 
+  const generateExcel = () => {
+    if (unmatchedInvigilatorsDetails.length !== 0) {
+      return;
+    }
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet([
+      [
+        "Staff ID",
+        "Abbreviated Name",
+        "Full Name",
+        "Date",
+        "Start Time",
+        "End Time",
+        "Course Code",
+        "Venue",
+      ],
+    ]);
+
+    invigilatorsDetails.forEach((invigilator: any) => {
+      const { staff_id, abbreviated_name, full_name, details } = invigilator;
+      details.forEach((detail: any, index: any) => {
+        const {
+          Date,
+          "Start Time": startTime,
+          "End Time": endTime,
+          "Course Code": courseCodes,
+          Venue,
+        } = detail;
+
+        const courseCode = Array.isArray(courseCodes)
+          ? courseCodes.join(", ")
+          : courseCodes;
+        const row =
+          index === 0
+            ? [
+                staff_id,
+                abbreviated_name,
+                full_name,
+                Date,
+                startTime,
+                endTime,
+                courseCode,
+                Venue,
+              ]
+            : ["", "", "", Date, startTime, endTime, courseCode, Venue];
+        XLSX.utils.sheet_add_aoa(worksheet, [row], { origin: -1 });
+      });
+    });
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Invigilator Schedule");
+    XLSX.writeFile(workbook, "invigilator_schedule.xlsx");
+  };
+
+  const handleFileUpload = (event: any) => {
+    const uploadedFile = event.target.files[0];
+
+    if (uploadedFile) {
+      const reader = new FileReader();
+
+      reader.onload = function (event) {
+        const data = event.target?.result;
+        processUploadedFile(data);
+      };
+
+      reader.readAsBinaryString(uploadedFile);
+    }
+  };
+
+  const processUploadedFile = (data: any) => {
+    const workbook = XLSX.read(data, { type: "binary" });
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const extractedData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+    const processedData = changeExcelData(extractedData);
+    if (processedData.error || processedData.length === 0) {
+      toast.error("Wrong excel file uploaded");
+    } else {
+      setShowConfirmModal(true);
+      setTempValues(processedData);
+    }
+  };
+
+  const changeExcelData = (extractedData: any) => {
+    try {
+      if (!extractedData || extractedData.length === 0) {
+        return { error: "No data found in the uploaded Excel file." };
+      }
+
+      extractedData.shift();
+
+      const processedData: any = [];
+
+      extractedData.forEach((row: any, index: number) => {
+        const staff_id = row[0];
+        const abbreviated_name = row[1];
+        const full_name = row[2];
+        const date = row[3];
+        const start_time = row[4];
+        const end_time = row[5];
+        const course_code = row[6];
+        const venue = row[7];
+
+        if (
+          !staff_id ||
+          !full_name ||
+          !date ||
+          !start_time ||
+          !end_time ||
+          !course_code ||
+          !venue
+        ) {
+          return {
+            error: `Row ${index + 1}: One or more required fields are missing.`,
+          };
+        }
+
+        if (staff_id === "" && full_name === "" && processedData.length > 0) {
+          const lastIndex = processedData.length - 1;
+          const lastRecord = processedData[lastIndex];
+
+          lastRecord.details.push({
+            Date: date,
+            "Start Time": start_time,
+            "End Time": end_time,
+            Venue: venue,
+          });
+        } else {
+          processedData.push({
+            staff_id: staff_id,
+            full_name: full_name,
+            abbreviated_name: abbreviated_name,
+            details: [
+              {
+                "Course Code": course_code,
+                Date: date,
+                "Start Time": start_time,
+                "End Time": end_time,
+                Venue: venue,
+              },
+            ],
+          });
+        }
+      });
+
+      return processedData;
+    } catch (error: any) {
+      return { error: error.message };
+    }
+  };
+
+  const handleConfirmSchedule = () => {
+    setInvigilatorsDetails(tempValues);
+    toast.success("New schedule created successfully");
+    setTempValues([]);
+    setShowConfirmModal(false);
+  };
+
   return (
     <Modal
       backdrop="opaque"
@@ -152,6 +315,7 @@ export default function ScheduleConfirmationModal({
         },
       }}
     >
+      <Toaster position="top-center" />
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1 items-center justify-center">
           Confirm Invigilators Name
@@ -305,19 +469,54 @@ export default function ScheduleConfirmationModal({
             </CardContent>
           </Card>
         </ModalBody>
-        <ModalFooter>
-          <Button color="danger" onPress={onClose}>
-            Cancel
-          </Button>
-          <Button
-            disabled={unmatchedInvigilatorsDetails.length === 0}
-            color={
-              unmatchedInvigilatorsDetails.length > 0 ? "default" : "primary"
-            }
-            onPress={handleSubmit}
-          >
-            Submit
-          </Button>
+        <ModalFooter className="flex justify-between">
+          <div className="flex gap-2">
+            <Button
+              startContent={<FiDownload />}
+              disabled={unmatchedInvigilatorsDetails.length === 0}
+              color={
+                unmatchedInvigilatorsDetails.length > 0 ? "default" : "success"
+              }
+              onPress={generateExcel}
+            >
+              <p className="max-sm:hidden">Download Schedule</p>
+            </Button>
+            <Button
+              disabled={unmatchedInvigilatorsDetails.length === 0}
+              color={
+                unmatchedInvigilatorsDetails.length > 0
+                  ? "default"
+                  : "secondary"
+              }
+              startContent={<FaFileUpload />}
+            >
+              <label style={{ cursor: "pointer" }}>
+                <p className="max-sm:hidden">Upload Schedule</p>
+                <input
+                  type="file"
+                  style={{ display: "none" }}
+                  accept=".xlsx, .xls"
+                  onChange={handleFileUpload}
+                  disabled={unmatchedInvigilatorsDetails.length > 0}
+                />
+              </label>
+            </Button>
+          </div>
+
+          <div className="flex gap-2">
+            <Button color="danger" onPress={onClose}>
+              Cancel
+            </Button>
+            <Button
+              disabled={unmatchedInvigilatorsDetails.length > 0}
+              color={
+                unmatchedInvigilatorsDetails.length > 0 ? "default" : "primary"
+              }
+              onPress={handleSubmit}
+            >
+              Submit
+            </Button>
+          </div>
         </ModalFooter>
       </ModalContent>
       {showCreateModal && (
@@ -332,6 +531,19 @@ export default function ScheduleConfirmationModal({
           }
           setStaffDetails={setStaffDetails}
           selectedUnmatchedIndex={selectedUnmatchedIndex}
+        />
+      )}
+
+      {showConfirmModal && (
+        <ConfirmInvigilatorsModal
+          isOpen={showConfirmModal}
+          onClose={() => {
+            setShowConfirmModal(false);
+            setTempValues([]);
+          }}
+          message="Are you sure you want to set this as the new invigilators schedule?"
+          onConfirm={handleConfirmSchedule}
+          confirmLabel="Confirm"
         />
       )}
     </Modal>

@@ -176,8 +176,12 @@ export default function DateAndSessionSelector() {
 
     const timeIn24HourFormat = hours + minutes / 60;
 
-    if (timeIn24HourFormat >= 16) {
-      return 1.5;
+    if (timeIn24HourFormat >= 17) {
+      return 2;
+    }
+
+    if (timeIn24HourFormat >= 16 && timeIn24HourFormat < 17) {
+      return 2;
     }
 
     return 1;

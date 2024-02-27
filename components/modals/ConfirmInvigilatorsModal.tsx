@@ -13,18 +13,16 @@ type ConfirmationModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  isDeleting?: boolean;
   confirmLabel: string;
   message: string;
 };
 
-const ExamsDeleteConfirmationModal = ({
+const ConfirmInvigilatorsModal = ({
   isOpen,
   onClose,
   onConfirm,
-  isDeleting,
-  confirmLabel,
   message,
+  confirmLabel,
 }: ConfirmationModalProps) => {
   return (
     <Modal
@@ -63,15 +61,8 @@ const ExamsDeleteConfirmationModal = ({
           <Button onClick={onClose} color="default">
             Cancel
           </Button>
-          <Button onClick={onConfirm} color="danger">
-            {isDeleting ? (
-              <>
-                <Spinner size="sm" color="default" />
-                Deleting...
-              </>
-            ) : (
-              confirmLabel
-            )}
+          <Button onClick={onConfirm} color="primary">
+            {confirmLabel}
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -79,4 +70,4 @@ const ExamsDeleteConfirmationModal = ({
   );
 };
 
-export default ExamsDeleteConfirmationModal;
+export default ConfirmInvigilatorsModal;

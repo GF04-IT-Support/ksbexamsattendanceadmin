@@ -37,7 +37,7 @@ import {
 } from "react-icons/fi";
 import { useDateStore } from "@/zustand/store";
 import SearchInput from "../inputs/SearchInput";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import StaffAssignModal from "../modals/StaffAssignModal";
 import { fetchStaffDetails } from "@/lib/actions/staff.action";
 import UploadForm from "../forms/UploadForm";
@@ -106,7 +106,7 @@ export default function ExamsScheduleTable({
     return sortedExamsData;
   });
 
-  const { data: staffDetails = [] } = useSWR(`staffDetails`, () =>
+  const { data: staffDetails = [] } = useSWR(`staffDetails/${role}`, () =>
     fetchStaffDetails(role)
   );
 
@@ -270,6 +270,9 @@ export default function ExamsScheduleTable({
   const handleLockOrUnlock = async (examId: string, locked: boolean) => {
     try {
       await lockOrUnlockExams(examId, locked);
+      toast.success(
+        locked ? "Session has been locked" : "Session has been unlocked"
+      );
     } catch (error: any) {
       throw new Error(error);
     }
@@ -460,7 +463,7 @@ export default function ExamsScheduleTable({
                               onClick={() => handleAssign(item)}
                             />
                             {/* </Tooltip> */}
-                            {item.locked ? (
+                            {/* {item.locked ? (
                               <Tooltip content="Unlock">
                                 <FiUnlock
                                   size={20}
@@ -480,7 +483,7 @@ export default function ExamsScheduleTable({
                                   }
                                 />
                               </Tooltip>
-                            )}
+                            )} */}
                           </div>
                         </TableCell>
                       </TableRow>
