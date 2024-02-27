@@ -25,6 +25,7 @@ type ConfirmationModalProps = {
   onConfirm: () => void;
   onClose: () => void;
   scheduleData: any;
+  confirmedData: any[];
   setConfirmedData: React.Dispatch<React.SetStateAction<any>>;
   defaultStaffDetails: any;
 };
@@ -34,6 +35,7 @@ export default function ScheduleConfirmationModal({
   onConfirm,
   onClose,
   scheduleData,
+  confirmedData,
   setConfirmedData,
   defaultStaffDetails,
 }: ConfirmationModalProps) {
@@ -126,9 +128,15 @@ export default function ScheduleConfirmationModal({
 
   const handleSubmit = async () => {
     setConfirmedData(invigilatorsDetails);
-    onClose();
-    onConfirm();
   };
+
+  useEffect(() => {
+    if (confirmedData.length > 0) {
+      onClose();
+      onConfirm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirmedData]);
 
   const generateExcel = () => {
     if (unmatchedInvigilatorsDetails.length !== 0) {

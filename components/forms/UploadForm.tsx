@@ -260,6 +260,7 @@ const UploadForm = ({
           isOpen={showConfirmationModal}
           onConfirm={handleConfirm}
           scheduleData={scheduleData}
+          confirmedData={confirmedData}
           setConfirmedData={setConfirmedData}
           defaultStaffDetails={staffDetails}
         />
