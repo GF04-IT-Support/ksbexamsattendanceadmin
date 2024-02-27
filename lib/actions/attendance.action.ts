@@ -72,7 +72,7 @@ export async function fetchExamSessions(startDate: Date, endDate: Date) {
 export async function takeAttendance(
   staffId: string,
   examSessionId: string,
-  status: string
+  status: string | null
 ) {
   try {
     const existingAttendance = await prisma.attendance.findFirst({

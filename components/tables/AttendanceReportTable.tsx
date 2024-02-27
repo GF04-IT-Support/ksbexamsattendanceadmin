@@ -108,7 +108,6 @@ export default function DateAndSessionSelector() {
   const [searchType, setSearchType] = useState("staffName");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
-
   const [attendanceFilter, setAttendanceFilter] = useState(["Present"]);
   const [staffTypeFilter, setStaffTypeFilter] = useState(staffTypeOptions);
   const [format, setFormat] = useState<any>("");
@@ -144,7 +143,15 @@ export default function DateAndSessionSelector() {
 
   useEffect(() => {
     setFilteredData(data);
+    setSearchResults(null);
+    setSearchQuery("");
   }, [data]);
+
+  useEffect(() => {
+    setPage(1);
+    setSearchResults(null);
+    setSearchQuery("");
+  }, [attendanceFilter, staffTypeFilter, filteredData]);
 
   function getAttendanceStatus(attendanceStatus: any) {
     if (attendanceStatus[0]?.attendance_status === "Present") {
@@ -271,7 +278,7 @@ export default function DateAndSessionSelector() {
     setSearchResults(results);
   };
 
-  const handleMarkAttendance = async (action: string, item: any) => {
+  const handleMarkAttendance = async (action: string | null, item: any) => {
     try {
       const response = await takeAttendance(
         item.staff_id,
@@ -704,20 +711,24 @@ export default function DateAndSessionSelector() {
                             <FaEllipsisV />
                           </Button>
                         </DropdownTrigger>
-                        <DropdownMenu disabledKeys={["Present"]}>
+                        <DropdownMenu>
                           <DropdownItem
-                            key="Present"
+                            key={
+                              item.attendance === "Present"
+                                ? "Absent"
+                                : "Present"
+                            }
                             onClick={() =>
-                              handleMarkAttendance("Present", item)
+                              handleMarkAttendance(
+                                item.attendance === "Present"
+                                  ? null
+                                  : "Present",
+                                item
+                              )
                             }
                           >
-                            Mark Present
+                            {item.attendance === "Present" ? "UnMark" : "Mark"}
                           </DropdownItem>
-                          {/* <DropdownItem
-                            onClick={() => handleMarkAttendance("Absent", item)}
-                          >
-                            Mark Absent
-                          </DropdownItem> */}
                         </DropdownMenu>
                       </Dropdown>
                     ) : (
