@@ -47,19 +47,22 @@ export async function fetchExamSessions(startDate: Date, endDate: Date) {
       })),
     }));
 
-    const sessions = filteredExams.filter((exam) => {
-      if (exam.sessions.length === 0) {
-        return false;
-      }
-
-      for (let session of exam.sessions) {
-        if (session.assignments && session.assignments.length > 0) {
-          return true;
+    const sessions = filteredExams.map((exam) => ({
+      ...exam,
+      sessions: exam.sessions.filter((session) => {
+        if (!session.assignments || session.assignments.length === 0) {
+          return false;
         }
-      }
 
-      return false;
-    });
+        const examVenues = exam.venue
+          ? exam.venue.split(",").map((venue) => venue.trim())
+          : [];
+        return session.assignments.some(() => {
+          const assignmentVenue = session.venue.name;
+          return examVenues.includes(assignmentVenue);
+        });
+      }),
+    }));
 
     return sessions;
   } catch (error: any) {

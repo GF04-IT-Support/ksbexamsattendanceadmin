@@ -77,14 +77,6 @@ type ColumnKeys =
   | "attendance"
   | "weight";
 
-const staffType = {
-  invigilators: "Invigilators",
-  security: "Security",
-  nurses: "Nurses",
-  itSupport: "IT Support",
-  administrative: "Administrative",
-};
-
 const attendanceOptions = ["N/A", "Present"];
 
 const staffTypeOptions = [
@@ -140,6 +132,19 @@ export default function DateAndSessionSelector() {
       }
     }
   };
+
+  useEffect(() => {
+    if (isRange) {
+      if (startDate && endDate) {
+        handleFetchClick();
+      }
+    } else {
+      if (startDate) {
+        setEndDate(null);
+        handleFetchClick();
+      }
+    }
+  }, [startDate, endDate, isRange]);
 
   useEffect(() => {
     setFilteredData(data);
@@ -466,7 +471,7 @@ export default function DateAndSessionSelector() {
       <div className="flex max-[812px]:flex-col flex-row justify-between">
         <div className="flex gap-2 justify-center items-center overflow-hidden py-2 pb-4">
           <LocalizationProvider dateAdapter={AdapterMoment}>
-            <div className="flex flex-col">
+            <div className="flex gap-3  max-[1200px]:flex-col">
               <DatePicker
                 label={isRange ? "From" : "Date"}
                 value={startDate}
@@ -475,7 +480,6 @@ export default function DateAndSessionSelector() {
               />
               {isRange && (
                 <>
-                  <p className="text-center"> - </p>
                   <DatePicker
                     label="To"
                     value={endDate}
@@ -495,13 +499,6 @@ export default function DateAndSessionSelector() {
               }
               label=""
             />
-            <Button
-              color={`${isDisabled ? "default" : "primary"}`}
-              disabled={isDisabled}
-              onClick={handleFetchClick}
-            >
-              {isLoading ? <Spinner size="sm" color="default" /> : "Fetch"}
-            </Button>
           </LocalizationProvider>
         </div>
 
