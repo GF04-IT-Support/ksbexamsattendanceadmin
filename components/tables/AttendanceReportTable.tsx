@@ -32,7 +32,7 @@ import {
   Chip,
 } from "@nextui-org/react";
 import { useStyles } from "@/lib/helpers/styles.helpers";
-import { Button } from "@nextui-org/react";
+import { Button, Checkbox as AttendanceCheckbox } from "@nextui-org/react";
 import {
   fetchExamSessions,
   takeAttendance,
@@ -45,6 +45,7 @@ import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import { sortDataByStartTime } from "@/lib/helpers/date.helpers";
 import { getStaffRoles } from "@/lib/helpers/staff.helpers";
+import toast, { Toaster } from "react-hot-toast";
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -110,6 +111,7 @@ export default function DateAndSessionSelector() {
 
   const handleFetchClick = async () => {
     if (startDate) {
+      setFilteredData([]);
       setIsLoading(true);
       const start: any = new Date(
         startDate.toDate().setHours(0, 0, 0, 0)
@@ -153,10 +155,10 @@ export default function DateAndSessionSelector() {
   }, [data]);
 
   useEffect(() => {
-    setPage(1);
-    setSearchResults(null);
-    setSearchQuery("");
-  }, [attendanceFilter, staffTypeFilter, filteredData]);
+    if (searchQuery.length > 0) {
+      handleSearch(searchQuery, searchType);
+    }
+  }, [filteredData, attendanceFilter, staffTypeFilter]);
 
   function getAttendanceStatus(attendanceStatus: any) {
     if (attendanceStatus[0]?.attendance_status === "Present") {
@@ -229,15 +231,17 @@ export default function DateAndSessionSelector() {
         attendanceFilter.includes(item.attendance) &&
         combinedStaffRoles.includes(item.staff_role)
     );
-
     filteredItems.sort((a: any, b: any) => {
+      const nameComparison = a.staff_name.localeCompare(b.staff_name);
+      if (nameComparison !== 0) return nameComparison;
+
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
 
       if (dateA < dateB) return -1;
       if (dateA > dateB) return 1;
 
-      return a.staff_name.localeCompare(b.staff_name);
+      return 0;
     });
 
     return filteredItems;
@@ -283,17 +287,35 @@ export default function DateAndSessionSelector() {
     setSearchResults(results);
   };
 
-  const handleMarkAttendance = async (action: string | null, item: any) => {
+  const handleMarkAttendance = async (checked: boolean, item: any) => {
     try {
+      const status = checked ? "Present" : null;
+
       const response = await takeAttendance(
         item.staff_id,
         item.exam_session_id,
-        action
+        status
       );
-      if (response.message === "Attendance taken successfully") {
-        await handleFetchClick();
+      if (response.message === "Attendance taken successfully" && checked) {
+        toast.success("Attendance Taken Successfully");
+      }
+      const start: any = new Date(
+        startDate.toDate().setHours(0, 0, 0, 0)
+      ).toISOString();
+      const end: any = endDate
+        ? new Date(endDate.toDate().setHours(0, 0, 0, 0)).toISOString()
+        : null;
+      try {
+        const data: any = await fetchExamSessions(start, end);
+        if (data.length > 0) {
+          const sortedData = sortDataByStartTime([...data]);
+          setFilteredData(sortedData);
+        }
+      } catch (error: any) {
+        throw new Error(error);
       }
     } catch (error: any) {
+      console.error("Error in handleMarkAttendance:", error);
       throw new Error(error);
     }
   };
@@ -357,7 +379,19 @@ export default function DateAndSessionSelector() {
 
       pdfMake.createPdf(docDefinition).download("report.pdf");
     } else if (format === "excel") {
-      const worksheet = utils.json_to_sheet(excelRows);
+      const worksheet = utils.json_to_sheet(excelRows, {
+        header: tableColumn,
+      });
+      const maxLengths = tableColumn.map((column) => {
+        return Math.max(
+          ...excelRows.map((row: any) => row[column]?.toString().length || 0),
+          column.length
+        );
+      });
+
+      worksheet["!cols"] = maxLengths.map((maxLen) => ({
+        wch: maxLen + 2,
+      }));
       const workbook = utils.book_new();
       utils.book_append_sheet(workbook, worksheet, "Report");
       writeFile(workbook, "report.xlsx");
@@ -411,7 +445,19 @@ export default function DateAndSessionSelector() {
 
       pdfMake.createPdf(docDefinition).download("summary.pdf");
     } else if (format === "excel") {
-      const worksheet = utils.json_to_sheet(excelRows);
+      const worksheet = utils.json_to_sheet(excelRows, {
+        header: tableColumn,
+      });
+      const maxLengths = tableColumn.map((column) => {
+        return Math.max(
+          ...excelRows.map((row: any) => row[column]?.toString().length || 0),
+          column.length
+        );
+      });
+
+      worksheet["!cols"] = maxLengths.map((maxLen) => ({
+        wch: maxLen + 2,
+      }));
       const workbook = utils.book_new();
       utils.book_append_sheet(workbook, worksheet, "Summary");
       writeFile(workbook, "summary.xlsx");
@@ -419,7 +465,6 @@ export default function DateAndSessionSelector() {
   };
 
   const loadingState = isLoading ? "loading" : "idle";
-  const isDisabled = startDate === null;
   const isDownloadReportDisabled = flattenedItems.length === 0;
   const isEmpty = (searchResults || flattenedItems).length === 0 && !isLoading;
 
@@ -503,6 +548,7 @@ export default function DateAndSessionSelector() {
         </div>
 
         <div className="flex px-4 max-[525px]:flex-col gap-4 my-4 mt-2 justify-center items-center">
+          <Toaster position="top-center" />
           <Dropdown>
             <DropdownTrigger>
               <Button
@@ -587,7 +633,7 @@ export default function DateAndSessionSelector() {
             selectionMode="multiple"
             placeholder="Select attendance status"
             selectedKeys={attendanceFilter}
-            className="w-[220px]"
+            className="w-[180px]"
             onSelectionChange={(keys: any) =>
               setAttendanceFilter(Array.from(keys))
             }
@@ -608,7 +654,7 @@ export default function DateAndSessionSelector() {
             onSelectionChange={(keys: any) =>
               setStaffTypeFilter(Array.from(keys))
             }
-            className="max-w-[220px]"
+            className="w-[220px]"
             disallowEmptySelection
           >
             {staffTypeOptions.map((type) => (
@@ -702,32 +748,14 @@ export default function DateAndSessionSelector() {
                         {item[columnKey]}
                       </Chip>
                     ) : columnKey === "action" ? (
-                      <Dropdown aria-label="Actions">
-                        <DropdownTrigger>
-                          <Button isIconOnly size="sm" variant="light">
-                            <FaEllipsisV />
-                          </Button>
-                        </DropdownTrigger>
-                        <DropdownMenu>
-                          <DropdownItem
-                            key={
-                              item.attendance === "Present"
-                                ? "Absent"
-                                : "Present"
-                            }
-                            onClick={() =>
-                              handleMarkAttendance(
-                                item.attendance === "Present"
-                                  ? null
-                                  : "Present",
-                                item
-                              )
-                            }
-                          >
-                            {item.attendance === "Present" ? "UnMark" : "Mark"}
-                          </DropdownItem>
-                        </DropdownMenu>
-                      </Dropdown>
+                      <AttendanceCheckbox
+                        defaultSelected={item.attendance === "Present"}
+                        color="success"
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          handleMarkAttendance(checked, item);
+                        }}
+                      ></AttendanceCheckbox>
                     ) : (
                       item[columnKey]
                     )}
