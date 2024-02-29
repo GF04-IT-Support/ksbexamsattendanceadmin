@@ -87,6 +87,7 @@ export default function ExamsScheduleTable({
   const [assignments, setAssignments] = useState<{ [key: string]: [] }>({});
   const selectedVenuesRef = useRef(selectedVenues);
   const assignmentsRef = useRef(assignments);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     if (examsNames.length > 0) {
@@ -111,12 +112,15 @@ export default function ExamsScheduleTable({
   );
 
   useEffect(() => {
-    if (examsData.length > 0 && !selectedVenuesSet.current) {
+    if (examsData.length > 0 && !selectedVenuesSet.current && !initialized) {
       const initialSelectedVenues = examsData.reduce((acc: any, item: any) => {
         acc[item.exam_id] = item.venue.split(",")[0];
         return acc;
       }, {});
 
+      setSelectedVenues(initialSelectedVenues);
+
+      // Set initial assignments
       const initialAssignments = examsData.reduce((acc: any, exam: any) => {
         const firstVenue = exam.venue.split(",")[0];
         if (firstVenue) {
@@ -136,11 +140,33 @@ export default function ExamsScheduleTable({
         return acc;
       }, {});
 
-      setSelectedVenues(initialSelectedVenues);
       setAssignments(initialAssignments);
+      setInitialized(true);
       selectedVenuesSet.current = false;
+    } else if (initialized) {
+      // Update assignments based on selected venues
+      const newAssignments = examsData.reduce((acc: any, exam: any) => {
+        const selectedVenue = selectedVenues[exam.exam_id];
+        if (selectedVenue) {
+          if (!acc[exam.exam_id]) {
+            acc[exam.exam_id] = {};
+          }
+          acc[exam.exam_id][selectedVenue] = [];
+          const filteredSessions = exam.sessions.filter(
+            (session: any) => session.venue.name === selectedVenue
+          );
+          filteredSessions.forEach((session: any) => {
+            acc[exam.exam_id][selectedVenue].push(
+              ...session.assignments.map((assignment: any) => assignment.staff)
+            );
+          });
+        }
+        return acc;
+      }, {});
+
+      setAssignments(newAssignments);
     }
-  }, [examsData, page]);
+  }, [examsData]);
 
   useEffect(() => {
     if (!isLoading && !startDate && !endDate) {
@@ -404,7 +430,7 @@ export default function ExamsScheduleTable({
             ) : (
               <>
                 <TableBody>
-                  {items.length === 0 ? (
+                  {examsData.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={4}>
                         <div className="h-[400px] text-lg font-semibold flex items-center justify-center">

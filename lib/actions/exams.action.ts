@@ -154,13 +154,13 @@ export async function getExamsSchedule(examsNameId: string, role?: string) {
 export async function getUpcomingExamsSchedule() {
   try {
     const currentDate = new Date();
+    const currentDateWithoutTime = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate()
+    );
 
     let upcomingExams = await prisma.exam.findMany({
-      where: {
-        date: {
-          gte: currentDate,
-        },
-      },
       include: {
         sessions: {
           include: {
@@ -174,9 +174,35 @@ export async function getUpcomingExamsSchedule() {
         },
       },
       orderBy: {
-        date: "asc",
+        end_time: "asc",
       },
     });
+
+    upcomingExams = upcomingExams.filter((exam) => {
+      const examDate = new Date(exam.date);
+      const examDateWithoutTime = new Date(
+        examDate.getFullYear(),
+        examDate.getMonth(),
+        examDate.getDate()
+      );
+
+      const endTimeParts = exam.end_time.split(":");
+      let hours = parseInt(endTimeParts[0]);
+      const isPM = exam.end_time.toLowerCase().includes("pm");
+
+      if (isPM && hours !== 12) {
+        hours += 12;
+      } else if (!isPM && hours === 12) {
+        hours = 0;
+      }
+
+      const constructedDate = new Date(examDateWithoutTime);
+      constructedDate.setHours(hours);
+      constructedDate.setMinutes(parseInt(endTimeParts[1]));
+
+      return constructedDate >= currentDate;
+    });
+
     upcomingExams = sortDataByStartTime(upcomingExams);
     return upcomingExams;
   } catch (error: any) {
