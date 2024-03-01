@@ -230,6 +230,8 @@ export default function ScheduleConfirmationModal({
 
       const processedData: any = [];
 
+      let currentStaff: any = null;
+
       extractedData.forEach((row: any, index: number) => {
         const staff_id = row[0];
         const abbreviated_name = row[1];
@@ -240,32 +242,18 @@ export default function ScheduleConfirmationModal({
         const course_code = row[6];
         const venue = row[7];
 
-        if (
-          !staff_id ||
-          !full_name ||
-          !date ||
-          !start_time ||
-          !end_time ||
-          !course_code ||
-          !venue
-        ) {
-          return {
-            error: `Row ${index + 1}: One or more required fields are missing.`,
-          };
-        }
-
-        if (staff_id === "" && full_name === "" && processedData.length > 0) {
-          const lastIndex = processedData.length - 1;
-          const lastRecord = processedData[lastIndex];
-
-          lastRecord.details.push({
-            Date: date,
-            "Start Time": start_time,
-            "End Time": end_time,
-            Venue: venue,
-          });
+        if (staff_id === "" && full_name === "") {
+          if (currentStaff) {
+            currentStaff.details.push({
+              "Course Code": course_code,
+              Date: date,
+              "Start Time": start_time,
+              "End Time": end_time,
+              Venue: venue,
+            });
+          }
         } else {
-          processedData.push({
+          currentStaff = {
             staff_id: staff_id,
             full_name: full_name,
             abbreviated_name: abbreviated_name,
@@ -278,7 +266,8 @@ export default function ScheduleConfirmationModal({
                 Venue: venue,
               },
             ],
-          });
+          };
+          processedData.push(currentStaff);
         }
       });
 

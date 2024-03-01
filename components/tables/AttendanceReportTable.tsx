@@ -46,6 +46,7 @@ import pdfFonts from "pdfmake/build/vfs_fonts";
 import { sortDataByStartTime } from "@/lib/helpers/date.helpers";
 import { getStaffRoles } from "@/lib/helpers/staff.helpers";
 import toast, { Toaster } from "react-hot-toast";
+import moment from "moment";
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -108,6 +109,10 @@ export default function DateAndSessionSelector() {
   const [selectedColumns, setSelectedColumns] = useState(
     initialSelectedColumns
   );
+
+  useEffect(() => {
+    setStartDate(moment(new Date()));
+  }, []);
 
   const handleFetchClick = async () => {
     if (startDate) {

@@ -1,5 +1,19 @@
 export function getStaffRoles(id: string) {
+  const allStaffRoles = [
+    "Lecturer",
+    "Part-Time Lecturer",
+    "PhD Student",
+    "Librarian",
+    "Security",
+    "Nurse",
+    "Ambulance",
+    "IT Support",
+    "Administrative",
+    "Other",
+  ];
+
   let staffRoles;
+
   switch (id) {
     case "invigilators":
       staffRoles = [
@@ -19,7 +33,19 @@ export function getStaffRoles(id: string) {
       staffRoles = ["IT Support"];
       break;
     case "administrative":
-      staffRoles = ["Administrative", "Other"];
+      staffRoles = allStaffRoles.filter(
+        (role) =>
+          ![
+            "Lecturer",
+            "Part-Time Lecturer",
+            "PhD Student",
+            "Librarian",
+            "Security",
+            "Nurse",
+            "Ambulance",
+            "IT Support",
+          ].includes(role)
+      );
       break;
     default:
       throw new Error(`Invalid id: ${id}`);
