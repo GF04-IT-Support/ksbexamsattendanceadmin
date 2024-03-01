@@ -131,7 +131,7 @@ export default function CreateNewStaffModal({
             Create New Staff
           </ModalHeader>
           <ModalBody>
-            <Card style={{ margin: "1rem", padding: "1rem" }}>
+            <Card className="sm:p-4 sm:m-4">
               <CardContent>
                 <Grid container spacing={3}>
                   <Grid item xs={6}>

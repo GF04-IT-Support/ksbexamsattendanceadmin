@@ -110,7 +110,7 @@ function CreateNewUserModal({ isOpen, onClose, tab }: CreateNewUserModalProps) {
             Create New {tab === "admin" ? "Admin" : "Checker"}
           </ModalHeader>
           <ModalBody>
-            <Card style={{ margin: "1rem", padding: "1rem" }}>
+            <Card className="sm:p-4 sm:m-4">
               <CardContent>
                 <Grid container alignItems="center" spacing={4}>
                   <Grid item xs={6}>

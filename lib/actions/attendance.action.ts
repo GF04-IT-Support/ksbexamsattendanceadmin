@@ -13,6 +13,7 @@ export async function fetchExamSessions(startDate: Date, endDate: Date) {
         },
       },
       include: {
+        exam_name: true,
         sessions: {
           include: {
             venue: true,

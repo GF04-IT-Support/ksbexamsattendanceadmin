@@ -153,6 +153,14 @@ export default function DateAndSessionSelector() {
     }
   }, [startDate, endDate, isRange]);
 
+  const examNames = useMemo(() => {
+    const examNames = data.map((session: any) => session.exam_name.exam_name);
+
+    const uniqueExamNames = Array.from(new Set(examNames));
+
+    return uniqueExamNames;
+  }, [data]);
+
   useEffect(() => {
     setFilteredData(data);
     setSearchResults(null);
@@ -336,26 +344,38 @@ export default function DateAndSessionSelector() {
   };
 
   const handleDownloadReport = (format: "pdf" | "excel") => {
+    const cleanedExamNames = examNames.map((name: any) =>
+      name.replace(/\s*\(.*?\)\s*/g, "").replace(/academic year.*$/i, "")
+    );
+    const headerExamName =
+      cleanedExamNames.length > 0 ? cleanedExamNames[0] : "";
+
     const selectedColumnKeys = (
       Object.keys(selectedColumns) as ColumnKeys[]
     ).filter((key) => selectedColumns[key]);
 
-    const tableColumn = selectedColumnKeys.map((key) => columnNames[key]);
+    const tableColumn = [
+      "SN",
+      ...selectedColumnKeys.map((key) => columnNames[key]),
+    ];
     const tableRows: any = [];
     const excelRows: any = [];
 
-    flattenedItems.forEach((item: any) => {
-      const itemData = selectedColumnKeys.map((column) => {
-        if (column === "date") {
-          return new Date(item[column]).toLocaleDateString("en-GB");
-        }
-        return item[column];
-      });
+    flattenedItems.forEach((item: any, index: number) => {
+      const itemData = [
+        index + 1,
+        ...selectedColumnKeys.map((column) => {
+          if (column === "date") {
+            return new Date(item[column]).toLocaleDateString("en-GB");
+          }
+          return item[column];
+        }),
+      ];
       tableRows.push(itemData);
 
-      const excelData: any = {};
-      selectedColumnKeys.forEach((column, index) => {
-        excelData[tableColumn[index]] = itemData[index];
+      const excelData: any = { SN: index + 1 };
+      selectedColumnKeys.forEach((column, columnIndex) => {
+        excelData[tableColumn[columnIndex + 1]] = itemData[columnIndex + 1];
       });
       excelRows.push(excelData);
     });
@@ -366,12 +386,22 @@ export default function DateAndSessionSelector() {
 
     if (format === "pdf") {
       const docDefinition = {
-        pageSize: {
-          width: 841.89,
-          height: 595.28,
-        },
-        pageOrientation: "landscape" as const,
         content: [
+          {
+            text: [
+              { text: "KNUST SCHOOL OF BUSINESS", style: "header" },
+              "\n",
+              { text: `${headerExamName}`, style: "subheader" },
+              "\n",
+              {
+                text: "EXAMINATION STAFF ATTENDANCE REPORT",
+                style: { color: "red", fontSize: 14, bold: true },
+              },
+              "\n",
+              `(${staffTypeFilter.join(", ").toUpperCase()})\n\n`,
+            ],
+            alignment: "center",
+          },
           {
             table: {
               widths: columnWidths,
@@ -380,13 +410,46 @@ export default function DateAndSessionSelector() {
             },
           },
         ],
+        styles: {
+          header: {
+            fontSize: 18,
+            bold: true,
+            color: "blue",
+          },
+          subheader: {
+            fontSize: 14,
+            bold: true,
+          },
+        },
       };
 
-      pdfMake.createPdf(docDefinition).download("report.pdf");
+      pdfMake
+        .createPdf(docDefinition as any)
+        .download(
+          `${headerExamName} ATTENDANCE REPORT(${startDate
+            .toDate()
+            .toLocaleDateString("en-GB")}${
+            endDate ? ` - ${endDate.toDate().toLocaleDateString("en-GB")}` : ""
+          }).pdf`
+        );
     } else if (format === "excel") {
-      const worksheet = utils.json_to_sheet(excelRows, {
-        header: tableColumn,
+      const workbook = utils.book_new();
+      const worksheet = utils.aoa_to_sheet([]);
+
+      worksheet["D1"] = {
+        v: "KNUST SCHOOL OF BUSINESS",
+      };
+      worksheet["C2"] = { v: headerExamName };
+      worksheet["D3"] = { v: "EXAMINATION STAFF ATTENDANCE REPORT" };
+      worksheet["C4"] = { v: `(${staffTypeFilter.join(", ").toUpperCase()})` };
+
+      utils.sheet_add_aoa(worksheet, [tableColumn], { origin: "A6" });
+
+      utils.sheet_add_json(worksheet, excelRows, {
+        origin: "A7",
+        skipHeader: true,
       });
+
       const maxLengths = tableColumn.map((column) => {
         return Math.max(
           ...excelRows.map((row: any) => row[column]?.toString().length || 0),
@@ -397,9 +460,16 @@ export default function DateAndSessionSelector() {
       worksheet["!cols"] = maxLengths.map((maxLen) => ({
         wch: maxLen + 2,
       }));
-      const workbook = utils.book_new();
+
       utils.book_append_sheet(workbook, worksheet, "Report");
-      writeFile(workbook, "report.xlsx");
+      writeFile(
+        workbook,
+        `${headerExamName} ATTENDANCE REPORT (${startDate
+          .toDate()
+          .toLocaleDateString("en-GB")}${
+          endDate ? ` - ${endDate.toDate().toLocaleDateString("en-GB")}` : ""
+        }).xlsx`
+      );
     }
 
     setSelectedColumns(initialSelectedColumns);
@@ -407,52 +477,138 @@ export default function DateAndSessionSelector() {
   };
 
   const handleDownloadSummary = (format: "pdf" | "excel") => {
+    const cleanedExamNames = examNames.map((name: any) =>
+      name.replace(/\s*\(.*?\)\s*/g, "").replace(/academic year.*$/i, "")
+    );
+    const headerExamName =
+      cleanedExamNames.length > 0 ? cleanedExamNames[0] : "";
+
     const summaryData = flattenedItems.reduce((acc: any, item: any) => {
       const key = `${item.staff_name}-${item.staff_role}`;
       if (!acc[key]) {
         acc[key] = {
+          sn: 0,
           staff_name: item.staff_name,
           staff_role: item.staff_role,
           weight_sum: 0,
+          attendance_count: 0,
         };
       }
       acc[key].weight_sum += item.weight;
+      acc[key].attendance_count += item.attendance === "Present" ? 1 : 0;
       return acc;
     }, {});
 
     const summaryArray = Object.values(summaryData);
 
-    const tableColumn = ["Staff Name", "Staff Role", "Weight Sum"];
+    summaryArray.forEach((item: any, index: number) => {
+      item.sn = index + 1;
+    });
+
+    const tableColumn = [
+      "SN",
+      "Staff Name",
+      "Staff Role",
+      "Weight Sum",
+      "Attendance Count",
+    ];
     const tableRows = summaryArray.map((item: any) => [
+      item.sn,
       item.staff_name,
       item.staff_role,
       item.weight_sum,
+      item.attendance_count,
     ]);
 
     const excelRows = summaryArray.map((item: any) => ({
+      SN: item.sn,
       "Staff Name": item.staff_name,
       "Staff Role": item.staff_role,
       "Weight Sum": item.weight_sum,
+      "Attendance Count": item.attendance_count,
     }));
 
     if (format === "pdf") {
       const docDefinition = {
         content: [
           {
+            text: [
+              { text: "KNUST SCHOOL OF BUSINESS", style: "header" },
+              "\n",
+              { text: `${headerExamName}`, style: "subheader" },
+              "\n",
+              {
+                text: "EXAMINATION STAFF SUMMARY REPORT",
+                style: { color: "red", fontSize: 14, bold: true },
+              },
+              "\n",
+              `(${staffTypeFilter.join(", ").toUpperCase()})\n`,
+              `${startDate.toDate().toLocaleDateString("en-GB")}${
+                endDate
+                  ? ` - ${endDate.toDate().toLocaleDateString("en-GB")}`
+                  : ""
+              }\n\n`,
+            ],
+            alignment: "center",
+          },
+          {
             table: {
-              widths: ["*", "*", "*"],
+              widths: ["auto", "*", "*", "auto", "auto"],
               headerRows: 1,
               body: [tableColumn, ...tableRows],
             },
           },
+          {
+            text: [
+              "\n",
+              {
+                text: "Total number of sessions: " + data.length,
+                style: "footer",
+              },
+            ],
+            alignment: "right",
+          },
         ],
       };
 
-      pdfMake.createPdf(docDefinition).download("summary.pdf");
+      pdfMake
+        .createPdf(docDefinition as any)
+        .download(
+          `${headerExamName} SUMMARY REPORT (${startDate
+            .toDate()
+            .toLocaleDateString("en-GB")}${
+            endDate ? ` - ${endDate.toDate().toLocaleDateString("en-GB")}` : ""
+          }).pdf`
+        );
     } else if (format === "excel") {
-      const worksheet = utils.json_to_sheet(excelRows, {
-        header: tableColumn,
+      const workbook = utils.book_new();
+      const worksheet = utils.aoa_to_sheet([]);
+
+      worksheet["C1"] = {
+        v: "KNUST SCHOOL OF BUSINESS",
+      };
+      worksheet["B2"] = { v: headerExamName };
+      worksheet["C3"] = { v: "EXAMINATION STAFF ATTENDANCE REPORT" };
+      worksheet["B4"] = { v: `(${staffTypeFilter.join(", ").toUpperCase()})` };
+      worksheet["C5"] = {
+        v: `${startDate.toDate().toLocaleDateString("en-GB")}${
+          endDate ? ` - ${endDate.toDate().toLocaleDateString("en-GB")}` : ""
+        }`,
+      };
+      worksheet[`D6`] = {
+        v: `Total number of sessions: ${data.length}`,
+      };
+
+      utils.sheet_add_aoa(worksheet, [tableColumn], { origin: "A8" });
+
+      utils.sheet_add_json(worksheet, excelRows, {
+        origin: "A8",
       });
+
+      // worksheet[`D${excelRows.length + 10}`] = {
+      //   v: `Total number of sessions: ${data.length}`,
+      // };
+
       const maxLengths = tableColumn.map((column) => {
         return Math.max(
           ...excelRows.map((row: any) => row[column]?.toString().length || 0),
@@ -463,9 +619,16 @@ export default function DateAndSessionSelector() {
       worksheet["!cols"] = maxLengths.map((maxLen) => ({
         wch: maxLen + 2,
       }));
-      const workbook = utils.book_new();
-      utils.book_append_sheet(workbook, worksheet, "Summary");
-      writeFile(workbook, "summary.xlsx");
+
+      utils.book_append_sheet(workbook, worksheet, "Report");
+      writeFile(
+        workbook,
+        `${headerExamName} SUMMARY REPORT (${startDate
+          .toDate()
+          .toLocaleDateString("en-GB")}${
+          endDate ? ` - ${endDate.toDate().toLocaleDateString("en-GB")}` : ""
+        }).xlsx`
+      );
     }
   };
 

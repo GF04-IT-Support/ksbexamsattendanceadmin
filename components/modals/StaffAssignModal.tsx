@@ -138,7 +138,7 @@ export default function StaffAssignModal({
             - {venue}
           </ModalHeader>
           <ModalBody>
-            <Card className="p-4 m-4 min-h-[250px]">
+            <Card className="sm:p-4 sm:m-4 min-h-[250px]">
               <CardContent className="flex items-center justify-start">
                 <Autocomplete
                   multiple

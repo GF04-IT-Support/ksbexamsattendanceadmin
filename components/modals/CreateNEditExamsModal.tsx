@@ -175,7 +175,7 @@ const CreateNEditExamsModal = ({
                 maxHeight: "500px",
                 overflow: "auto",
               }}
-              className="custom-scrollbar"
+              className="custom-scrollbar sm:p-4 sm:m-4"
             >
               <CardContent>
                 <Grid container spacing={3}>

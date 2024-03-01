@@ -320,12 +320,10 @@ export default function ScheduleConfirmationModal({
         <ModalBody>
           <Card
             style={{
-              margin: "1rem",
-              padding: "1rem",
               maxHeight: "500px",
               overflow: "auto",
             }}
-            className="custom-scrollbar"
+            className="custom-scrollbar sm:p-4 sm:m-4"
           >
             <CardContent>
               <div className="text-xl font-bold mb-3 flex justify-center items-center">
