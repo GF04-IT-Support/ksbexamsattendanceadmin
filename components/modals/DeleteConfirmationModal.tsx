@@ -55,10 +55,10 @@ export default function DeleteConfirmationModal({
           <p>Are you sure you want to delete this staff/user?</p>
         </ModalBody>
         <ModalFooter>
-          <Button color="default" onPress={onClose}>
+          <Button color="default" onClick={onClose}>
             Cancel
           </Button>
-          <Button color="danger" onPress={onConfirm}>
+          <Button color="danger" onClick={onConfirm}>
             {isDeleting ? (
               <>
                 <Spinner size="sm" color="default" />

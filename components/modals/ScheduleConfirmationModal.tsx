@@ -472,7 +472,7 @@ export default function ScheduleConfirmationModal({
               color={
                 unmatchedInvigilatorsDetails.length > 0 ? "default" : "success"
               }
-              onPress={generateExcel}
+              onClick={generateExcel}
             >
               <p className="max-sm:hidden">Download Schedule</p>
             </Button>
@@ -499,7 +499,7 @@ export default function ScheduleConfirmationModal({
           </div>
 
           <div className="flex gap-2">
-            <Button color="danger" onPress={onClose}>
+            <Button color="danger" onClick={onClose}>
               Cancel
             </Button>
             <Button
@@ -507,7 +507,7 @@ export default function ScheduleConfirmationModal({
               color={
                 unmatchedInvigilatorsDetails.length > 0 ? "default" : "primary"
               }
-              onPress={handleSubmit}
+              onClick={handleSubmit}
             >
               Submit
             </Button>

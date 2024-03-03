@@ -149,7 +149,7 @@ export default function UnMatchedDetailsTable({
           </Table>
         </ModalBody>
         <ModalFooter>
-          <Button color="primary" onPress={handleClose}>
+          <Button color="primary" onClick={handleClose}>
             OK
           </Button>
         </ModalFooter>

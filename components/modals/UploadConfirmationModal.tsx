@@ -53,10 +53,10 @@ export default function UploadConfirmationModal({
           <p>Are you sure you want to upload this schedule?</p>
         </ModalBody>
         <ModalFooter>
-          <Button color="danger" onPress={onClose}>
+          <Button color="danger" onClick={onClose}>
             Cancel
           </Button>
-          <Button color="primary" onPress={onConfirm}>
+          <Button color="primary" onClick={onConfirm}>
             Confirm
           </Button>
         </ModalFooter>
