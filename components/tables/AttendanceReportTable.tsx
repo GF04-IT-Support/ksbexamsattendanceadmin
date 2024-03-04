@@ -39,7 +39,7 @@ import {
 } from "@/lib/actions/attendance.action";
 import ReactHtmlParser from "react-html-parser";
 import SearchInput from "../inputs/SearchInput";
-import { FaEllipsisV, FaFileAlt, FaRegChartBar } from "react-icons/fa";
+import { FaFileAlt, FaRegChartBar } from "react-icons/fa";
 import { utils, writeFile } from "xlsx";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
@@ -389,9 +389,22 @@ export default function DateAndSessionSelector() {
         content: [
           {
             text: [
-              { text: "KNUST SCHOOL OF BUSINESS", style: "header" },
+              {
+                text: "KNUST SCHOOL OF BUSINESS",
+                style: {
+                  fontSize: 18,
+                  bold: true,
+                  color: "blue",
+                },
+              },
               "\n",
-              { text: `${headerExamName}`, style: "subheader" },
+              {
+                text: `${headerExamName}`,
+                style: {
+                  fontSize: 14,
+                  bold: true,
+                },
+              },
               "\n",
               {
                 text: "EXAMINATION STAFF ATTENDANCE REPORT",
@@ -406,21 +419,16 @@ export default function DateAndSessionSelector() {
             table: {
               widths: columnWidths,
               headerRows: 1,
-              body: [tableColumn, ...tableRows],
+              body: [
+                tableColumn.map((column) => ({
+                  text: column,
+                  style: { bold: true },
+                })),
+                ...tableRows,
+              ],
             },
           },
         ],
-        styles: {
-          header: {
-            fontSize: 18,
-            bold: true,
-            color: "blue",
-          },
-          subheader: {
-            fontSize: 14,
-            bold: true,
-          },
-        },
       };
 
       pdfMake
@@ -533,9 +541,22 @@ export default function DateAndSessionSelector() {
         content: [
           {
             text: [
-              { text: "KNUST SCHOOL OF BUSINESS", style: "header" },
+              {
+                text: "KNUST SCHOOL OF BUSINESS",
+                style: {
+                  fontSize: 18,
+                  bold: true,
+                  color: "blue",
+                },
+              },
               "\n",
-              { text: `${headerExamName}`, style: "subheader" },
+              {
+                text: `${headerExamName}`,
+                style: {
+                  fontSize: 14,
+                  bold: true,
+                },
+              },
               "\n",
               {
                 text: "EXAMINATION STAFF SUMMARY REPORT",
@@ -555,7 +576,13 @@ export default function DateAndSessionSelector() {
             table: {
               widths: ["auto", "*", "*", "auto", "auto"],
               headerRows: 1,
-              body: [tableColumn, ...tableRows],
+              body: [
+                tableColumn.map((column) => ({
+                  text: column,
+                  style: { bold: true },
+                })),
+                ...tableRows,
+              ],
             },
           },
           {
@@ -587,7 +614,10 @@ export default function DateAndSessionSelector() {
       worksheet["C1"] = {
         v: "KNUST SCHOOL OF BUSINESS",
       };
-      worksheet["B2"] = { v: headerExamName };
+      worksheet["B2"] = {
+        v: headerExamName,
+        s: { font: { sz: 18, bold: true } },
+      };
       worksheet["C3"] = { v: "EXAMINATION STAFF ATTENDANCE REPORT" };
       worksheet["B4"] = { v: `(${staffTypeFilter.join(", ").toUpperCase()})` };
       worksheet["C5"] = {
