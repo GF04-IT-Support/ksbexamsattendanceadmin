@@ -260,6 +260,52 @@ export default function DateAndSessionSelector() {
     return filteredItems;
   }, [filteredData, attendanceFilter, staffTypeFilter]);
 
+  const summarizedData = useMemo(() => {
+    const items = filteredData?.flatMap((item: any) =>
+      item.sessions.flatMap((session: any) =>
+        session.assignments.map((assignment: any) => ({
+          ...item,
+          index: Math.random(),
+          staff_venue: session.venue.name,
+          staff_name: assignment.staff.staff_name,
+          staff_id: assignment.staff.staff_id,
+          staff_role: assignment.staff.staff_role,
+          attendance: getAttendanceStatus(assignment.staff.attendances),
+          exam_session_id: session.exam_session_id,
+          weight: calculateWeight(item.date, item.start_time),
+        }))
+      )
+    );
+
+    const uniqueItems = Array.from(new Set(items.map(JSON.stringify))).map(
+      (item) => JSON.parse(item as string)
+    );
+
+    const combinedStaffRoles = staffTypeFilter.flatMap((role) =>
+      getStaffRoles(role)
+    );
+
+    const filteredItems = uniqueItems.filter(
+      (item) =>
+        ["Present", "N/A"].includes(item.attendance) &&
+        combinedStaffRoles.includes(item.staff_role)
+    );
+    filteredItems.sort((a: any, b: any) => {
+      const nameComparison = a.staff_name.localeCompare(b.staff_name);
+      if (nameComparison !== 0) return nameComparison;
+
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+
+      if (dateA < dateB) return -1;
+      if (dateA > dateB) return 1;
+
+      return 0;
+    });
+
+    return filteredItems;
+  }, [filteredData, staffTypeFilter]);
+
   const pages = Math.ceil(
     (searchResults || flattenedItems)?.length / rowsPerPage
   );
@@ -491,7 +537,7 @@ export default function DateAndSessionSelector() {
     const headerExamName =
       cleanedExamNames.length > 0 ? cleanedExamNames[0] : "";
 
-    const summaryData = flattenedItems.reduce((acc: any, item: any) => {
+    const summaryData = summarizedData.reduce((acc: any, item: any) => {
       const key = `${item.staff_name}-${item.staff_role}`;
       if (!acc[key]) {
         acc[key] = {
@@ -500,10 +546,14 @@ export default function DateAndSessionSelector() {
           staff_role: item.staff_role,
           weight_sum: 0,
           attendance_count: 0,
+          sessions_assigned: 0,
         };
       }
-      acc[key].weight_sum += item.weight;
+      if (item.attendance === "Present") {
+        acc[key].weight_sum += item.weight;
+      }
       acc[key].attendance_count += item.attendance === "Present" ? 1 : 0;
+      acc[key].sessions_assigned += 1;
       return acc;
     }, {});
 
@@ -519,6 +569,7 @@ export default function DateAndSessionSelector() {
       "Staff Role",
       "Weight Sum",
       "Attendance Count",
+      "Sessions Assigned",
     ];
     const tableRows = summaryArray.map((item: any) => [
       item.sn,
@@ -526,6 +577,7 @@ export default function DateAndSessionSelector() {
       item.staff_role,
       item.weight_sum,
       item.attendance_count,
+      item.sessions_assigned,
     ]);
 
     const excelRows = summaryArray.map((item: any) => ({
@@ -534,6 +586,7 @@ export default function DateAndSessionSelector() {
       "Staff Role": item.staff_role,
       "Weight Sum": item.weight_sum,
       "Attendance Count": item.attendance_count,
+      "Sessions Assigned": item.sessions_assigned,
     }));
 
     if (format === "pdf") {
@@ -574,7 +627,7 @@ export default function DateAndSessionSelector() {
           },
           {
             table: {
-              widths: ["auto", "*", "*", "auto", "auto"],
+              widths: ["auto", "*", "*", "auto", "auto", "auto"],
               headerRows: 1,
               body: [
                 tableColumn.map((column) => ({
@@ -618,7 +671,7 @@ export default function DateAndSessionSelector() {
         v: headerExamName,
         s: { font: { sz: 18, bold: true } },
       };
-      worksheet["C3"] = { v: "EXAMINATION STAFF ATTENDANCE REPORT" };
+      worksheet["C3"] = { v: "EXAMINATION STAFF SUMMARY REPORT" };
       worksheet["B4"] = { v: `(${staffTypeFilter.join(", ").toUpperCase()})` };
       worksheet["C5"] = {
         v: `${startDate.toDate().toLocaleDateString("en-GB")}${
@@ -634,10 +687,6 @@ export default function DateAndSessionSelector() {
       utils.sheet_add_json(worksheet, excelRows, {
         origin: "A8",
       });
-
-      // worksheet[`D${excelRows.length + 10}`] = {
-      //   v: `Total number of sessions: ${data.length}`,
-      // };
 
       const maxLengths = tableColumn.map((column) => {
         return Math.max(
