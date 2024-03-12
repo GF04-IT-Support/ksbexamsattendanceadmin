@@ -11,11 +11,14 @@ function SignInCard() {
   const error = useSearchParams().get("error");
   const router = useRouter();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const toastId = React.useRef<string | null>(null);
 
   useEffect(() => {
-    if (error) {
+    if (error && !toastId.current) {
       setIsLoggingIn(false);
-      toast.error("Error in signing in. Please try again.");
+      toastId.current = toast.error(error, {
+        duration: 3000,
+      });
       router.replace("/sign-in");
     }
   }, []);
