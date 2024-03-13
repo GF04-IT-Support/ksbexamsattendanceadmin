@@ -285,10 +285,8 @@ export default function DateAndSessionSelector() {
       getStaffRoles(role)
     );
 
-    const filteredItems = uniqueItems.filter(
-      (item) =>
-        ["Present", "N/A"].includes(item.attendance) &&
-        combinedStaffRoles.includes(item.staff_role)
+    const filteredItems = uniqueItems.filter((item) =>
+      combinedStaffRoles.includes(item.staff_role)
     );
     filteredItems.sort((a: any, b: any) => {
       const nameComparison = a.staff_name.localeCompare(b.staff_name);
