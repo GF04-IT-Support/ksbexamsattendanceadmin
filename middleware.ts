@@ -2,7 +2,7 @@ import { withAuth } from "next-auth/middleware";
 
 export default withAuth({
   callbacks: {
-    authorized: async ({ req, token }: any) => {
+    authorized: ({ req, token }: any) => {
       if (!token && req.nextUrl.pathname !== "/sign-in") {
         return false;
       }
@@ -17,6 +17,5 @@ export default withAuth({
   pages: {
     signIn: "/sign-in",
     signOut: "/sign-in",
-    error: "/sign-in",
   },
 });
