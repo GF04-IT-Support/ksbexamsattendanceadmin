@@ -77,3 +77,66 @@ export async function changeRole(id: string, subRole: string) {
     return { message: "An error occurred while changing the role." };
   }
 }
+
+export async function checkIfUserIsBlocked(id: string) {
+  try {
+    const user = await prisma.user.findFirst({ where: { id } });
+    return user?.blocked;
+  } catch (error: any) {
+    return { message: "An error occurred while checking if user is blocked." };
+  }
+}
+
+export async function changeBlockedStatus() {
+  try {
+    await prisma.user.updateMany({
+      data: {
+        blocked: false,
+      },
+    });
+  } catch (error: any) {
+    throw new Error(error);
+  }
+}
+
+// export async function changeArchivedStatus() {
+//   try {
+//     await prisma.exam.updateMany({
+//       data: {
+//         archived: false,
+//       },
+//     });
+//     await prisma.examName.updateMany({
+//       data: {
+//         archived: false,
+//       },
+//     });
+//     await prisma.staff.updateMany({
+//       data: {
+//         archived: false,
+//       },
+//     });
+//     await prisma.venue.updateMany({
+//       data: {
+//         archived: false,
+//       },
+//     });
+//     await prisma.examSession.updateMany({
+//       data: {
+//         archived: false,
+//       },
+//     });
+//     await prisma.staffAssignment.updateMany({
+//       data: {
+//         archived: false,
+//       },
+//     });
+//     await prisma.attendance.updateMany({
+//       data: {
+//         archived: false,
+//       },
+//     });
+//   } catch (error: any) {
+//     throw new Error(error);
+//   }
+// }

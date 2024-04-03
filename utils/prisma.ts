@@ -15,13 +15,13 @@ prisma.$use(
     params: Prisma.MiddlewareParams,
     next: (params: Prisma.MiddlewareParams) => Promise<any>
   ) => {
-    // if (params.model && params.action === "findMany") {
-    //   params.args = params.args || {};
-    //   params.args.where = params.args.where || {};
-    //   if (!("archived" in params.args.where)) {
-    //     params.args.where.archived = false;
-    //   }
-    // }
+    if (params.model && params.action === "findMany") {
+      params.args = params.args || {};
+      params.args.where = params.args.where || {};
+      if (!("archived" in params.args.where)) {
+        params.args.where.archived = false;
+      }
+    }
 
     return next(params);
   }

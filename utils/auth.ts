@@ -2,6 +2,8 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "./prisma";
 import { getServerSession } from "next-auth";
+import { checkIfUserIsBlocked } from "@/lib/actions/users.action";
+import { signOut } from "next-auth/react";
 
 export const authOptions: any = {
   adapter: PrismaAdapter(prisma),
@@ -20,7 +22,11 @@ export const authOptions: any = {
           where: { email: email },
         });
 
-        if (existingUser && existingUser.role === "admin") {
+        if (
+          existingUser &&
+          existingUser.role === "admin" &&
+          !existingUser.blocked
+        ) {
           await prisma.user.update({
             where: { email: email },
             data: {
@@ -66,6 +72,10 @@ export const authOptions: any = {
     },
     session: async ({ session, token }: any) => {
       if (token) {
+        const userIsBlocked = await checkIfUserIsBlocked(token.user_id);
+        if (userIsBlocked) {
+          await signOut();
+        }
         session.user.id = token.user_id;
         session.user.role = token.role;
         session.user.subRole = token.subRole;
