@@ -299,6 +299,7 @@ export default function ExamsScheduleTable({
       toast.success(
         locked ? "Session has been locked" : "Session has been unlocked"
       );
+      mutate();
     } catch (error: any) {
       throw new Error(error);
     }
@@ -482,34 +483,28 @@ export default function ExamsScheduleTable({
 
                         <TableCell className="w-[40px]">
                           <div className="relative flex items-center gap-2">
-                            {/* <Tooltip content="Assign"> */}
                             <FiUserPlus
                               size={20}
                               className="cursor-pointer hover:opacity-60"
                               onClick={() => handleAssign(item)}
                             />
-                            {/* </Tooltip> */}
-                            {/* {item.locked ? (
-                              <Tooltip content="Unlock">
-                                <FiUnlock
-                                  size={20}
-                                  className="cursor-pointer hover:opacity-60"
-                                  onClick={() =>
-                                    handleLockOrUnlock(item.exam_id, false)
-                                  }
-                                />
-                              </Tooltip>
+                            {item.locked ? (
+                              <FiUnlock
+                                size={20}
+                                className="cursor-pointer hover:opacity-60"
+                                onClick={() =>
+                                  handleLockOrUnlock(item.exam_id, false)
+                                }
+                              />
                             ) : (
-                              <Tooltip content="Lock">
-                                <FiLock
-                                  size={20}
-                                  className="cursor-pointer hover:opacity-60"
-                                  onClick={() =>
-                                    handleLockOrUnlock(item.exam_id, true)
-                                  }
-                                />
-                              </Tooltip>
-                            )} */}
+                              <FiLock
+                                size={20}
+                                className="cursor-pointer hover:opacity-60"
+                                onClick={() =>
+                                  handleLockOrUnlock(item.exam_id, true)
+                                }
+                              />
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
