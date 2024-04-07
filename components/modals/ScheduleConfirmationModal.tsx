@@ -92,6 +92,7 @@ export default function ScheduleConfirmationModal({
     }
 
     let staff = staffDetails.find((staff: any) => staff.staff_id === value);
+
     if (staff) {
       let newSelectedStaff = [...selectedStaff];
       newSelectedStaff[index] = {
@@ -423,7 +424,9 @@ export default function ScheduleConfirmationModal({
                                 }
                               >
                                 <MenuItem value="default" disabled>
-                                  Select Invigilator
+                                  <p className="text-gray-500">
+                                    Select Invigilator
+                                  </p>
                                 </MenuItem>
                                 {staffDetails.map((staff: any) => (
                                   <MenuItem
@@ -468,7 +471,7 @@ export default function ScheduleConfirmationModal({
           <div className="flex gap-2">
             <Button
               startContent={<FiDownload />}
-              disabled={unmatchedInvigilatorsDetails.length === 0}
+              disabled={unmatchedInvigilatorsDetails.length > 0}
               color={
                 unmatchedInvigilatorsDetails.length > 0 ? "default" : "success"
               }

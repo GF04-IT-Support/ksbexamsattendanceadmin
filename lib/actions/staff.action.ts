@@ -55,8 +55,8 @@ export async function fetchStaffDetails(id: string) {
   try {
     const staffDetails = await prisma.staff.findMany({
       where: { staff_role: { in: staffRoles } },
+      orderBy: { staff_name: "asc" },
     });
-
     return staffDetails;
   } catch (error: any) {
     throw new Error(error);

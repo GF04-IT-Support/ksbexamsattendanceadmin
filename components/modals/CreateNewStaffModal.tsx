@@ -64,7 +64,17 @@ export default function CreateNewStaffModal({
           typeof handleUnmatchedChange === "function" &&
           selectedUnmatchedIndex !== undefined
         ) {
-          setStaffDetails((prev: any) => [...prev, response?.data]);
+          setStaffDetails((prev: any) => {
+            const sortedData = [...prev, response?.data].sort((a, b) => {
+              const aName = a.abbreviated_name || a.staff_name.toLowerCase();
+              const bName = b.abbreviated_name || b.staff_name.toLowerCase();
+              return aName.localeCompare(bName, undefined, {
+                numeric: true,
+                sensitivity: "base",
+              });
+            });
+            return sortedData;
+          });
           handleUnmatchedChange(
             response?.data.staff_id,
             selectedUnmatchedIndex
