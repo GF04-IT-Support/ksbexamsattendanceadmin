@@ -104,6 +104,8 @@ export default function DateAndSessionSelector() {
   const [searchResults, setSearchResults] = useState<any>(null);
   const [attendanceFilter, setAttendanceFilter] = useState(["Present"]);
   const [staffTypeFilter, setStaffTypeFilter] = useState(staffTypeOptions);
+  const [startTimeFilter, setStartTimeFilter] = useState<any>([]);
+  const [sessions, setSessions] = useState<any>([]);
   const [format, setFormat] = useState<any>("");
   const { isOpen, onOpen, onClose, onOpenChange } = useDisclosure();
   const [selectedColumns, setSelectedColumns] = useState(
@@ -128,6 +130,11 @@ export default function DateAndSessionSelector() {
         const data: any = await fetchExamSessions(start, end);
         if (data.length > 0) {
           const sortedData = sortDataByStartTime([...data]);
+          const uniqueStartTimes = Array.from(
+            new Set(sortedData.map((d) => d.start_time))
+          );
+          setSessions(uniqueStartTimes);
+          setStartTimeFilter(uniqueStartTimes);
           setData(sortedData);
         } else {
           setData([]);
@@ -242,7 +249,8 @@ export default function DateAndSessionSelector() {
     const filteredItems = uniqueItems.filter(
       (item) =>
         attendanceFilter.includes(item.attendance) &&
-        combinedStaffRoles.includes(item.staff_role)
+        combinedStaffRoles.includes(item.staff_role) &&
+        startTimeFilter.includes(item.start_time)
     );
     filteredItems.sort((a: any, b: any) => {
       const nameComparison = a.staff_name.localeCompare(b.staff_name);
@@ -258,7 +266,7 @@ export default function DateAndSessionSelector() {
     });
 
     return filteredItems;
-  }, [filteredData, attendanceFilter, staffTypeFilter]);
+  }, [filteredData, attendanceFilter, staffTypeFilter, startTimeFilter]);
 
   const summarizedData = useMemo(() => {
     const items = filteredData?.flatMap((item: any) =>
@@ -285,9 +293,12 @@ export default function DateAndSessionSelector() {
       getStaffRoles(role)
     );
 
-    const filteredItems = uniqueItems.filter((item) =>
-      combinedStaffRoles.includes(item.staff_role)
+    const filteredItems = uniqueItems.filter(
+      (item) =>
+        combinedStaffRoles.includes(item.staff_role) &&
+        startTimeFilter.includes(item.start_time)
     );
+
     filteredItems.sort((a: any, b: any) => {
       const nameComparison = a.staff_name.localeCompare(b.staff_name);
       if (nameComparison !== 0) return nameComparison;
@@ -302,7 +313,7 @@ export default function DateAndSessionSelector() {
     });
 
     return filteredItems;
-  }, [filteredData, staffTypeFilter]);
+  }, [filteredData, staffTypeFilter, startTimeFilter]);
 
   const pages = Math.ceil(
     (searchResults || flattenedItems)?.length / rowsPerPage
@@ -861,7 +872,7 @@ export default function DateAndSessionSelector() {
         </div>
       </div>
 
-      <div className="flex max-[1200px]:flex-col md:justify-between max-md:flex-col  gap-2 pb-4">
+      <div className="flex max-[1400px]:flex-col md:justify-between max-md:flex-col  gap-2 pb-4">
         <SearchInput
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -873,6 +884,24 @@ export default function DateAndSessionSelector() {
         />
 
         <div className="flex gap-1 justify-center">
+          <Select
+            label="Sessions"
+            selectionMode="multiple"
+            placeholder="Select attendance status"
+            selectedKeys={startTimeFilter}
+            className="w-[180px]"
+            onSelectionChange={(keys: any) =>
+              setStartTimeFilter(Array.from(keys))
+            }
+            disallowEmptySelection
+          >
+            {sessions.map((status: any) => (
+              <SelectItem key={status} value={status} className="capitalize">
+                {status}
+              </SelectItem>
+            ))}
+          </Select>
+
           <Select
             label="Attendance Status"
             selectionMode="multiple"
