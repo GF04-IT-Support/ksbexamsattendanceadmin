@@ -166,6 +166,10 @@ export default function ExamsScheduleTable({
 
       setAssignments(newAssignments);
     }
+  }, [examsData]);
+
+  useEffect(() => {
+    setInitialized(false);
   }, [selectedId]);
 
   useEffect(() => {
