@@ -166,7 +166,7 @@ export default function ExamsScheduleTable({
 
       setAssignments(newAssignments);
     }
-  }, [examsData]);
+  }, [selectedId]);
 
   useEffect(() => {
     if (!isLoading && !startDate && !endDate) {
@@ -458,7 +458,9 @@ export default function ExamsScheduleTable({
                               handleVenueChange(event, item.exam_id)
                             }
                             disallowEmptySelection
-                            selectedKeys={[selectedVenues[item.exam_id].trim()]}
+                            selectedKeys={[
+                              selectedVenues[item.exam_id]?.trim(),
+                            ]}
                           >
                             {item.venue.split(",").map((venue: string) => (
                               <SelectItem
