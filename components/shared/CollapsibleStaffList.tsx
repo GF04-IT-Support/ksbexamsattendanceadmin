@@ -25,12 +25,15 @@ export default function CollapsibleStaffList({
         aria-controls="panel-staff-content"
         id="panel-staff-header"
       >
-        <p>{staffNames[0]}</p>
+        <p>
+          {staffNames[0]}{" "}
+          <span className="text-gray-500">({staffNames.length})</span>
+        </p>
       </AccordionSummary>
       <AccordionDetails>
         {staffNames.slice(1).map((name, index) => (
           <p key={index}>{name}</p>
-        ))}
+        ))}{" "}
       </AccordionDetails>
     </Accordion>
   );
