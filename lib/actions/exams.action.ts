@@ -46,9 +46,12 @@ export async function extractExamsSchedule(
       };
     }
 
+    const allExams = await prisma.examName.findMany();
+
     const examName = await prisma.examName.create({
       data: {
         exam_name: exam_name,
+        order: String(allExams.length + 1),
       },
     });
 
@@ -106,8 +109,12 @@ export async function extractExamsSchedule(
 
 export async function getExamsNames() {
   try {
-    const examNames = await prisma.examName.findMany();
-    return examNames.reverse();
+    const examNames = await prisma.examName.findMany({
+      orderBy: {
+        order: "desc",
+      },
+    });
+    return examNames;
   } catch (error: any) {
     throw new Error(error);
   }
@@ -444,5 +451,45 @@ export async function lockOrUnlockExams(exam_id: string, locked: boolean) {
     return { message: "The exam has been locked successfully!" };
   } catch (error: any) {
     return { message: "An error occurred while locking the exam." };
+  }
+}
+
+export async function createNewExamsSchedule(exam_name: string) {
+  try {
+    const allExams = await prisma.examName.findMany();
+
+    const newExams = await prisma.examName.create({
+      data: {
+        exam_name: exam_name,
+        order: String(allExams.length + 1),
+      },
+    });
+    revalidatePath("/exams-schedule");
+    return {
+      message: "The exam schedule has been created successfully",
+      newExams,
+    };
+  } catch (error: any) {
+    return { message: "An error occurred while creating the exam schedule" };
+  }
+}
+
+export async function editExams(examNameOrder: any[]) {
+  try {
+    const updates = examNameOrder.map(
+      ({ exam_name, exam_name_id, order, archived, selected }) =>
+        prisma.examName.update({
+          where: { exam_name_id },
+          data: { order, exam_name, archived, selected },
+        })
+    );
+
+    await prisma.$transaction(updates);
+
+    revalidatePath("/exams-schedule");
+
+    return { message: "Exams edited successfully" };
+  } catch (error: any) {
+    return { message: "An error occurred while editing exams" };
   }
 }

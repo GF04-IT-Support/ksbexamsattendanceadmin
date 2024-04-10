@@ -20,7 +20,7 @@
     "@mui/x-date-pickers": "^6.18.2",
     "@mui/x-date-pickers-pro": "^6.18.2",
     "@next-auth/prisma-adapter": "^0.4.4-canary.81",
-    "@nextui-org/react": "^2.2.9",
+    "@nextui-org/react": "^2.2.10",
     "@prisma/client": "^5.7.1",
     "@react-stately/collections": "^3.10.4",
     "@react-stately/tree": "^3.7.5",

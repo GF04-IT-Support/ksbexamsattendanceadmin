@@ -32,10 +32,12 @@ import { useDateStore } from "@/zustand/store";
 import SearchInput from "../inputs/SearchInput";
 import toast, { Toaster } from "react-hot-toast";
 import { FaEllipsisV, FaPlus, FaUpload } from "react-icons/fa";
+import { MdAssignment } from "react-icons/md";
 import ExamsDeleteConfirmationModal from "../modals/ExamsDeleteConfirmationModal";
 import ExamsUploadModal from "../modals/ExamsUploadModal";
 import CreateNEditExamsModal from "../modals/CreateNEditExamsModal";
 import { sortDataByStartTime } from "@/lib/helpers/date.helpers";
+import ExamNamesTable from "./ExamNamesTable";
 
 type ExamName = {
   exam_name_id: string;
@@ -71,6 +73,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [examsModalOpen, setExamsModalOpen] = useState(false);
   const [deleteConfirmationModal1, setDeleteConfirmationModal1] =
     useState(false);
   const [deleteConfirmationModal2, setDeleteConfirmationModal2] =
@@ -278,61 +281,64 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
       <ExamsUploadModal details={details} setDetails={setDetails} />
       <div className="my-4 w-full">
         <Toaster position="top-center" />
-        <div className="flex w-full justify-center items-center">
-          <Select
-            label={selectedId !== "" && "Exam Name"}
-            items={examNames}
-            onChange={onExamNameChange}
-            selectedKeys={(selectedId !== "" && [selectedId]) || []}
-            placeholder={
-              examNames.length === 0 ? "No Exams Available" : "Select Exam"
-            }
-            className="px-2 pl-4 my-2 w-full"
-            disabled={examNames.length === 0}
-            disallowEmptySelection
-          >
-            {(examName) => (
-              <SelectItem
-                key={examName.exam_name_id}
-                value={examName.exam_name_id}
-              >
-                {examName.exam_name}
-              </SelectItem>
-            )}
-          </Select>
+        <div className="flex w-full items-center ">
+          <div className="w-[95%]">
+            <Select
+              label={selectedId !== "" && "Exam Name"}
+              items={examNames}
+              onChange={onExamNameChange}
+              selectedKeys={(selectedId !== "" && [selectedId]) || []}
+              placeholder={
+                examNames.length === 0 ? "No Exams Available" : "Select Exam"
+              }
+              className="w-full"
+              disabled={examNames.length === 0}
+              disallowEmptySelection
+            >
+              {(examName) => (
+                <SelectItem
+                  key={examName.exam_name_id}
+                  value={examName.exam_name_id}
+                >
+                  {examName.exam_name}
+                </SelectItem>
+              )}
+            </Select>
+          </div>
 
-          <Dropdown aria-label="Actions" className="mr-4">
-            <DropdownTrigger>
-              <Button isIconOnly size="sm" variant="light">
-                <FaEllipsisV />
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu>
-              <DropdownItem
-                onClick={createNewExamsSchedule}
-                className="text-primary"
-                startContent={<FaPlus size={20} />}
-              >
-                Add Exams Schedule
-              </DropdownItem>
-              <DropdownItem
-                showDivider
-                startContent={<FaUpload size={20} />}
-                onClick={() => setReUploadConfirmationModal(true)}
-              >
-                Reupload Exams
-              </DropdownItem>
-              <DropdownItem
-                onClick={handleDelete}
-                color="danger"
-                className="text-danger"
-                startContent={<FiTrash2 size={20} />}
-                onHoverChange={(e: any) => console.log(e)}
-              >
-                Delete Exams
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+          <div className="w-[5%]">
+            <Dropdown aria-label="Actions">
+              <DropdownTrigger>
+                <Button isIconOnly size="sm" variant="light">
+                  <FaEllipsisV size={16} />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu>
+                <DropdownItem
+                  onClick={createNewExamsSchedule}
+                  color="primary"
+                  className="text-primary"
+                  startContent={<FaPlus size={20} />}
+                >
+                  Add Exams Schedule
+                </DropdownItem>
+                <DropdownItem
+                  showDivider
+                  className="text-default-800"
+                  startContent={<FaUpload size={20} />}
+                  onClick={() => setReUploadConfirmationModal(true)}
+                >
+                  Reupload Exams
+                </DropdownItem>
+                <DropdownItem
+                  onClick={() => setExamsModalOpen(true)}
+                  startContent={<MdAssignment size={20} />}
+                >
+                  Manage Exams
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
         </div>
 
         <div className="flex my-4 justify-between max-md:flex-col gap-2">
@@ -433,28 +439,35 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
                           item[columnKey]
                         )
                       ) : columnKey === "action" ? (
-                        <div className="flex gap-2">
-                          <Tooltip content="Edit">
-                            <FiEdit
-                              size={20}
-                              className="cursor-pointer hover:opacity-60"
-                              style={{ cursor: "pointer" }}
-                              onClick={() => handleView(item)}
-                            />
-                          </Tooltip>
-                          <Tooltip content="Delete">
-                            <FiTrash2
-                              size={20}
-                              className="cursor-pointer hover:opacity-60"
-                              style={{ cursor: "pointer" }}
-                              color="red"
-                              onClick={() => {
-                                handleDelete();
-                                setExamSessionId(item.exam_id);
-                              }}
-                            />
-                          </Tooltip>
-                        </div>
+                        <>
+                          <Dropdown aria-label="Actions">
+                            <DropdownTrigger>
+                              <Button isIconOnly size="sm" variant="light">
+                                <FaEllipsisV size={16} />
+                              </Button>
+                            </DropdownTrigger>
+                            <DropdownMenu>
+                              <DropdownItem
+                                onClick={() => handleView(item)}
+                                className="text-primary"
+                                startContent={<FiEdit size={20} />}
+                              >
+                                Edit Schedule
+                              </DropdownItem>
+                              <DropdownItem
+                                onClick={() => {
+                                  handleDelete();
+                                  setExamSessionId(item.exam_id);
+                                }}
+                                color="danger"
+                                className="text-danger"
+                                startContent={<FiTrash2 size={20} />}
+                              >
+                                Delete Schedule
+                              </DropdownItem>
+                            </DropdownMenu>
+                          </Dropdown>
+                        </>
                       ) : (
                         item[columnKey]
                       )}
@@ -510,6 +523,14 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
             message="This action will delete existing exam schedule and allow for reupload. Are you absolutely sure you want to proceed?"
             confirmLabel="Confirm"
             isDeleting={isDeleting}
+          />
+        )}
+
+        {examsModalOpen && (
+          <ExamNamesTable
+            isOpen={examsModalOpen}
+            onClose={() => setExamsModalOpen(false)}
+            examNames={examNames}
           />
         )}
       </div>
