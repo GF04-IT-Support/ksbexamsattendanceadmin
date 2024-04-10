@@ -9,6 +9,7 @@ import {
   Button,
   Pagination,
   Input,
+  Checkbox,
 } from "@nextui-org/react";
 import {
   Table,
@@ -242,6 +243,14 @@ const ExamNamesTable = ({ isOpen, onClose, examNames }: ExamsNamesProps) => {
                         color: "#71717A",
                         fontWeight: 600,
                       }}
+                    ></TableCell>
+                    <TableCell
+                      style={{
+                        borderTopLeftRadius: "0.5rem",
+                        borderBottomLeftRadius: "0.5rem",
+                        color: "#71717A",
+                        fontWeight: 600,
+                      }}
                     >
                       Name
                     </TableCell>
@@ -264,6 +273,20 @@ const ExamNamesTable = ({ isOpen, onClose, examNames }: ExamsNamesProps) => {
                     ) : (
                       items.map((item: any, index: number) => (
                         <TableRow key={item.exam_name_id}>
+                          <TableCell>
+                            <Checkbox
+                              defaultSelected={item.selected === true}
+                              onChange={(e) =>
+                                setExamDetails(
+                                  examDetails.map((exam: any) =>
+                                    exam.exam_name_id === item.exam_name_id
+                                      ? { ...exam, selected: e.target.checked }
+                                      : exam
+                                  )
+                                )
+                              }
+                            />
+                          </TableCell>
                           <TableCell>
                             {Object.keys(isEditing).includes(
                               item.exam_name_id

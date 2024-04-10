@@ -110,6 +110,9 @@ export async function extractExamsSchedule(
 export async function getExamsNames() {
   try {
     const examNames = await prisma.examName.findMany({
+      where: {
+        selected: true,
+      },
       orderBy: {
         order: "desc",
       },
