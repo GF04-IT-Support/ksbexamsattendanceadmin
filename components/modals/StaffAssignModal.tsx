@@ -41,7 +41,8 @@ export default function StaffAssignModal({
   staffDetails,
   mutate,
 }: StaffAssignModalProps) {
-  const { examId, venue, assignments, dateTime } = selectedExam;
+  const { examId, venue, assignments, dateTime, allAssignedStaff } =
+    selectedExam;
   const sortedStaffDetails = [...staffDetails].sort((a, b) =>
     a.staff_role.localeCompare(b.staff_role)
   );
@@ -49,6 +50,7 @@ export default function StaffAssignModal({
   const assignmentStaffIds = assignments.flatMap((assignment: any[]) =>
     assignment.map((staff: any) => staff.staff_id)
   );
+
   const defaultSelectedStaff = sortedStaffDetails.filter((staff: any) =>
     assignmentStaffIds.includes(staff.staff_id)
   );
@@ -151,6 +153,23 @@ export default function StaffAssignModal({
                   filterSelectedOptions
                   value={selectedStaff}
                   onChange={(event, newValue) => {
+                    const lastSelectedStaff = newValue[newValue.length - 1];
+                    if (
+                      lastSelectedStaff &&
+                      allAssignedStaff.some(
+                        (staff: any) =>
+                          staff.staff_id === lastSelectedStaff.staff_id
+                      )
+                    ) {
+                      const assignedStaff = allAssignedStaff.find(
+                        (staff: any) =>
+                          staff.staff_id === lastSelectedStaff.staff_id
+                      );
+                      toast.error(
+                        `${lastSelectedStaff.staff_name} is already assigned to ${assignedStaff.venue}`
+                      );
+                      return;
+                    }
                     setSelectedStaff(newValue);
                   }}
                   renderInput={(params) => (

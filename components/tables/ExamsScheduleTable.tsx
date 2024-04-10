@@ -83,6 +83,7 @@ export default function ExamsScheduleTable({
     venue: string;
     assignments: [];
     dateTime: any;
+    allAssignedStaff: any;
   } | null>(null);
   const [assignments, setAssignments] = useState<{ [key: string]: [] }>({});
   const selectedVenuesRef = useRef(selectedVenues);
@@ -292,8 +293,20 @@ export default function ExamsScheduleTable({
       startTime: item.start_time,
       endTime: item.end_time,
     };
+    let allAssignedStaff = item.sessions.flatMap((session: any) => {
+      const { venue } = session;
+      return session.assignments.flatMap((assignment: any) => ({
+        ...assignment.staff,
+        venue: venue.name,
+      }));
+    });
+    allAssignedStaff = allAssignedStaff.filter((staff: any) => {
+      return !assignments[0].some(
+        (assigned: any) => assigned.staff_id === staff.staff_id
+      );
+    });
 
-    setSelectedExam({ examId, venue, assignments, dateTime });
+    setSelectedExam({ examId, venue, assignments, dateTime, allAssignedStaff });
     setModalOpen(true);
   };
 
