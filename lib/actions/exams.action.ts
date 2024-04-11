@@ -123,6 +123,15 @@ export async function getExamsNames() {
   }
 }
 
+export async function getAllExamsNames() {
+  try {
+    const examNames = await prisma.examName.findMany();
+    return examNames;
+  } catch (error: any) {
+    throw new Error(error);
+  }
+}
+
 export async function getExamsSchedule(examsNameId: string, role?: string) {
   try {
     let exams;

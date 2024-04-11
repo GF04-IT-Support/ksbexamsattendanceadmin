@@ -530,7 +530,6 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
           <ExamNamesTable
             isOpen={examsModalOpen}
             onClose={() => setExamsModalOpen(false)}
-            examNames={examNames}
           />
         )}
       </div>
