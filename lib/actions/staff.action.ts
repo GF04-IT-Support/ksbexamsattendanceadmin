@@ -5,6 +5,7 @@ import { promisify } from "util";
 import path from "path";
 import prisma from "@/utils/prisma";
 import { getStaffRoles } from "../helpers/staff.helpers";
+import { revalidatePath } from "next/cache";
 
 const exec = promisify(execCb);
 
@@ -78,6 +79,7 @@ export async function updateStaffDetails(id: string, data: any) {
       where: { staff_id: id },
       data,
     });
+    revalidatePath("/staff-management");
     return { message: "Staff details updated successfully" };
   } catch (error: any) {
     return { message: "An error occurred while updating the staff details." };
@@ -92,6 +94,7 @@ export async function createNewStaff(data: any) {
     }, {} as any);
 
     const staffDetails = await prisma.staff.create({ data: trimmedData });
+    revalidatePath("/staff-management");
     return { message: "Staff created successfully", data: staffDetails };
   } catch (error: any) {
     return { message: "An error occurred while creating the staff." };

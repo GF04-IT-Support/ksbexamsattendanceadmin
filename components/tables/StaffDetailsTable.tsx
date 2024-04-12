@@ -24,6 +24,7 @@ import {
 import DeleteConfirmationModal from "../modals/DeleteConfirmationModal";
 import EditStaffDetailsModal from "../modals/EditStaffDetailsModal";
 import CreateNewStaffModal from "../modals/CreateNewStaffModal";
+import { getStaffRoles } from "@/lib/helpers/staff.helpers";
 
 type StaffProps = {
   id: string;
@@ -117,9 +118,7 @@ export default function StaffDetailsTable({ id, label }: StaffProps) {
     }
   };
 
-  const uniqueRoles = Array.from(
-    new Set(staffDetails.map((staff: any) => staff.staff_role))
-  );
+  const uniqueRoles = getStaffRoles(id);
 
   return (
     <div className="my-2 pb-6 w-full">

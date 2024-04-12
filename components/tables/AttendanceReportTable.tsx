@@ -87,6 +87,7 @@ const staffTypeOptions = [
   "nurses",
   "itSupport",
   "administrative",
+  "feeCollectors",
 ];
 
 export default function DateAndSessionSelector() {
