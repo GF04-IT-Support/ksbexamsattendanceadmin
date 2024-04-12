@@ -189,7 +189,7 @@ export default function DateAndSessionSelector() {
     }
   }
 
-  function calculateWeight(date: Date, start_time: string) {
+  function calculateWeight(date: Date, start_time: string, end_time: string) {
     const dateObj = new Date(date);
     const dayOfWeek = dateObj.getDay();
 
@@ -197,26 +197,36 @@ export default function DateAndSessionSelector() {
       return 2;
     }
 
-    let [hours, minutes] = start_time
+    let [startHours, startMinutes] = start_time
       .replace(/AM|PM/i, "")
       .split(":")
       .map(Number);
-    const period = start_time.toUpperCase().includes("PM") ? "PM" : "AM";
+    const startPeriod = start_time.toUpperCase().includes("PM") ? "PM" : "AM";
 
-    if (period === "PM" && hours !== 12) {
-      hours += 12;
-    } else if (period === "AM" && hours === 12) {
-      hours = 0;
+    if (startPeriod === "PM" && startHours !== 12) {
+      startHours += 12;
+    } else if (startPeriod === "AM" && startHours === 12) {
+      startHours = 0;
     }
 
-    const timeIn24HourFormat = hours + minutes / 60;
+    const startTimeIn24HourFormat = startHours + startMinutes / 60;
 
-    if (timeIn24HourFormat >= 17) {
-      return 2;
+    let [endHours, endMinutes] = end_time
+      .replace(/AM|PM/i, "")
+      .split(":")
+      .map(Number);
+    const endPeriod = end_time.toUpperCase().includes("PM") ? "PM" : "AM";
+
+    if (endPeriod === "PM" && endHours !== 12) {
+      endHours += 12;
+    } else if (endPeriod === "AM" && endHours === 12) {
+      endHours = 0;
     }
 
-    if (timeIn24HourFormat >= 16 && timeIn24HourFormat < 17) {
-      return 2;
+    const endTimeIn24HourFormat = endHours + endMinutes / 60;
+
+    if (startTimeIn24HourFormat <= 17 && endTimeIn24HourFormat > 17) {
+      return 1.5;
     }
 
     return 1;
@@ -234,7 +244,7 @@ export default function DateAndSessionSelector() {
           staff_role: assignment.staff.staff_role,
           attendance: getAttendanceStatus(assignment.staff.attendances),
           exam_session_id: session.exam_session_id,
-          weight: calculateWeight(item.date, item.start_time),
+          weight: calculateWeight(item.date, item.start_time, item.end_time),
         }))
       )
     );
@@ -281,7 +291,7 @@ export default function DateAndSessionSelector() {
           staff_role: assignment.staff.staff_role,
           attendance: getAttendanceStatus(assignment.staff.attendances),
           exam_session_id: session.exam_session_id,
-          weight: calculateWeight(item.date, item.start_time),
+          weight: calculateWeight(item.date, item.start_time, item.end_time),
         }))
       )
     );
