@@ -62,7 +62,9 @@ interface Exam {
 export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
   const rowsPerPage = 10;
   const [selectedId, setSelectedId] = useState(
-    examNames.length > 0 ? examNames[0].exam_name_id : ""
+    examNames.length > 0
+      ? examNames.map((examName) => examName.exam_name_id).join(",")
+      : ""
   );
   const [page, setPage] = useState(1);
   const startDate = useDateStore((state) => state.startDate);
@@ -100,7 +102,9 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
 
   useEffect(() => {
     if (examNames.length > 0) {
-      setSelectedId(examNames[0].exam_name_id);
+      setSelectedId(
+        examNames.map((examName) => examName.exam_name_id).join(",")
+      );
     } else {
       setSelectedId("");
     }
@@ -229,13 +233,6 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
         } else {
           toast.error(response?.message);
         }
-      } else {
-        const response: any = await deleteExamsSchedule(selectedId);
-        if (response?.message === "Exam deleted successfully") {
-          toast.success(response?.message);
-        } else {
-          toast.error(response?.message);
-        }
       }
     } catch (error) {
     } finally {
@@ -262,20 +259,6 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
   const isEmpty =
     (searchResults || filteredExamsData).length === 0 && !isLoading;
 
-  const createNewExamsSchedule = () => {
-    setModalOpen(true);
-    setSelectedExam({
-      date: new Date(),
-      end_time: "",
-      exam_code: "",
-      exam_id: "",
-      exam_name_id: selectedId,
-      start_time: "",
-      venue: "",
-      year: "",
-    });
-  };
-
   return (
     <>
       <ExamsUploadModal details={details} setDetails={setDetails} />
@@ -287,13 +270,19 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
               label={selectedId !== "" && "Exam Name"}
               items={examNames}
               onChange={onExamNameChange}
-              selectedKeys={(selectedId !== "" && [selectedId]) || []}
+              selectedKeys={
+                (selectedId !== "" &&
+                  selectedId.split(",").filter((id) => id !== "")) ||
+                []
+              }
               placeholder={
                 examNames.length === 0 ? "No Exams Available" : "Select Exam"
               }
               className="w-full"
               disabled={examNames.length === 0}
               disallowEmptySelection
+              selectionMode="multiple"
+              isMultiline
             >
               {(examName) => (
                 <SelectItem
@@ -306,7 +295,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
             </Select>
           </div>
 
-          <div className="w-[5%]">
+          {/* <div className="w-[5%]">
             <Dropdown aria-label="Actions">
               <DropdownTrigger>
                 <Button isIconOnly size="sm" variant="light">
@@ -338,7 +327,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>
-          </div>
+          </div> */}
         </div>
 
         <div className="flex my-4 justify-between max-md:flex-col gap-2">

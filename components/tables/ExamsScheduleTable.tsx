@@ -63,7 +63,9 @@ export default function ExamsScheduleTable({
   const rowsPerPage = 10;
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedId, setSelectedId] = useState(
-    examsNames.length > 0 ? examsNames[0].exam_name_id : ""
+    examsNames.length > 0
+      ? examsNames.map((examName) => examName.exam_name_id).join(",")
+      : ""
   );
   const [page, setPage] = useState(1);
   const startDate = useDateStore((state) => state.startDate);
@@ -92,7 +94,9 @@ export default function ExamsScheduleTable({
 
   useEffect(() => {
     if (examsNames.length > 0) {
-      setSelectedId(examsNames[0].exam_name_id);
+      setSelectedId(
+        examsNames.map((examName) => examName.exam_name_id).join(",")
+      );
     } else {
       setSelectedId("");
     }
@@ -340,19 +344,25 @@ export default function ExamsScheduleTable({
       )}
 
       <div className="my-4 w-full">
-        <div className="flex justify-center items-center">
+        <div className="flex w-full justify-center items-center">
           <Toaster position="top-center" />
           <Select
             label={selectedId !== "" && "Exam Name"}
             items={examsNames}
             onChange={onExamNameChange}
-            selectedKeys={(selectedId !== "" && [selectedId]) || []}
+            selectedKeys={
+              (selectedId !== "" &&
+                selectedId.split(",").filter((id) => id !== "")) ||
+              []
+            }
             placeholder={
               examsNames.length === 0 ? "No Exams Available" : "Select Exam"
             }
-            className="my-2 w-full"
+            className="my-2"
             disabled={examsNames.length === 0}
             disallowEmptySelection
+            selectionMode="multiple"
+            isMultiline
           >
             {(examName) => (
               <SelectItem

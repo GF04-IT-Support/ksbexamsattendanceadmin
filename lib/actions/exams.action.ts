@@ -135,10 +135,13 @@ export async function getAllExamsNames() {
 export async function getExamsSchedule(examsNameId: string, role?: string) {
   try {
     let exams;
+    const examNameIds = examsNameId.split(",").filter((id) => id.trim() !== "");
     if (role) {
       exams = await prisma.exam.findMany({
         where: {
-          exam_name_id: examsNameId,
+          exam_name_id: {
+            in: examNameIds,
+          },
         },
         include: {
           sessions: {
@@ -159,7 +162,9 @@ export async function getExamsSchedule(examsNameId: string, role?: string) {
     } else {
       exams = await prisma.exam.findMany({
         where: {
-          exam_name_id: examsNameId,
+          exam_name_id: {
+            in: examNameIds,
+          },
         },
       });
     }
