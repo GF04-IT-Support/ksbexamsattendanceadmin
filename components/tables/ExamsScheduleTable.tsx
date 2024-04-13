@@ -125,7 +125,6 @@ export default function ExamsScheduleTable({
 
       setSelectedVenues(initialSelectedVenues);
 
-      // Set initial assignments
       const initialAssignments = examsData.reduce((acc: any, exam: any) => {
         const firstVenue = exam.venue.split(",")[0];
         if (firstVenue) {
@@ -149,7 +148,6 @@ export default function ExamsScheduleTable({
       setInitialized(true);
       selectedVenuesSet.current = false;
     } else if (initialized) {
-      // Update assignments based on selected venues
       const newAssignments = examsData.reduce((acc: any, exam: any) => {
         const selectedVenue = selectedVenues[exam.exam_id];
         if (selectedVenue) {

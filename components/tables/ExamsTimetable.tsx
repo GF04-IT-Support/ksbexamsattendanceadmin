@@ -118,7 +118,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
 
   useEffect(() => {
     if (!isLoading && !startDate && !endDate) {
-      setFilteredExamsData(examsData);
+      setFilteredExamsData(sortDataByStartTime(examsData));
     }
   }, [isLoading, examsData, startDate, endDate]);
 
