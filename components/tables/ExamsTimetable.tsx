@@ -255,6 +255,20 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
     });
   };
 
+  const createNewExamsSchedule = () => {
+    setModalOpen(true);
+    setSelectedExam({
+      date: new Date(),
+      end_time: "",
+      exam_code: "",
+      exam_id: "",
+      exam_name_id: selectedId,
+      start_time: "",
+      venue: "",
+      year: "",
+    });
+  };
+
   const loadingState = isLoading ? "loading" : "idle";
   const isEmpty =
     (searchResults || filteredExamsData).length === 0 && !isLoading;
@@ -295,7 +309,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
             </Select>
           </div>
 
-          {/* <div className="w-[5%]">
+          <div className="w-[5%]">
             <Dropdown aria-label="Actions">
               <DropdownTrigger>
                 <Button isIconOnly size="sm" variant="light">
@@ -327,7 +341,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>
-          </div> */}
+          </div>
         </div>
 
         <div className="flex my-4 justify-between max-md:flex-col gap-2">

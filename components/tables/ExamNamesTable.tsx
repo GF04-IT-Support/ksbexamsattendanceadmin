@@ -11,6 +11,10 @@ import {
   Input,
   Checkbox,
   Spinner,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@nextui-org/react";
 import {
   Table,
@@ -24,16 +28,25 @@ import {
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { FiCheck, FiEdit3, FiPlus, FiTrash2 } from "react-icons/fi";
+import {
+  FiCheck,
+  FiEdit3,
+  FiPlus,
+  FiTrash2,
+  FiLock,
+  FiUnlock,
+} from "react-icons/fi";
 import { IoIosArrowUp, IoIosArrowDown } from "react-icons/io";
 import ExamsDeleteConfirmationModal from "../modals/ExamsDeleteConfirmationModal";
 import {
   deleteExamsSchedule,
   editExams,
   getAllExamsNames,
+  lockOrUnlockAllExamsSessions,
 } from "@/lib/actions/exams.action";
 import CreateNewExamsModal from "../modals/CreateNewExamsModal";
 import useSWR from "swr";
+import { FaEllipsisV } from "react-icons/fa";
 
 type ExamsNamesProps = {
   isOpen: boolean;
@@ -159,6 +172,25 @@ const ExamNamesTable = ({ isOpen, onClose }: ExamsNamesProps) => {
       toast.error("An error occurred while updating the exam details.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleLockOrUnlock = async (examId: string, locked: boolean) => {
+    try {
+      const response: any = await lockOrUnlockAllExamsSessions(examId, locked);
+      if (
+        response?.message ===
+        `All ${locked ? "locked" : "unlocked"} exam sessions have been ${
+          locked ? "locked" : "unlocked"
+        } successfully`
+      ) {
+        toast.success(response?.message);
+        mutate();
+      } else {
+        toast.error(response?.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -311,17 +343,7 @@ const ExamNamesTable = ({ isOpen, onClose }: ExamsNamesProps) => {
                             </TableCell>
 
                             <TableCell>
-                              <div className="flex gap-4 items-center">
-                                <FiTrash2
-                                  size={20}
-                                  color="red"
-                                  onClick={() => {
-                                    handleDelete();
-                                    setExamSessionId(item.exam_name_id);
-                                  }}
-                                  className="cursor-pointer hover:opacity-50"
-                                />
-
+                              <div className="flex gap-2 items-center">
                                 {isEditing[item.exam_name_id] ? (
                                   <FiCheck
                                     className="cursor-pointer hover:opacity-50"
@@ -342,6 +364,7 @@ const ExamNamesTable = ({ isOpen, onClose }: ExamsNamesProps) => {
                                 <div className="flex flex-col">
                                   {index !== 0 && (
                                     <IoIosArrowUp
+                                      size={20}
                                       className="cursor-pointer hover:opacity-50"
                                       onClick={() =>
                                         handleMoveItem(index, "up")
@@ -350,6 +373,7 @@ const ExamNamesTable = ({ isOpen, onClose }: ExamsNamesProps) => {
                                   )}
                                   {index !== items.length - 1 && (
                                     <IoIosArrowDown
+                                      size={20}
                                       className="cursor-pointer hover:opacity-50"
                                       onClick={() =>
                                         handleMoveItem(index, "down")
@@ -357,6 +381,52 @@ const ExamNamesTable = ({ isOpen, onClose }: ExamsNamesProps) => {
                                     />
                                   )}
                                 </div>
+                                <>
+                                  <Dropdown aria-label="Actions">
+                                    <DropdownTrigger>
+                                      <Button
+                                        isIconOnly
+                                        size="sm"
+                                        variant="light"
+                                      >
+                                        <FaEllipsisV size={16} />
+                                      </Button>
+                                    </DropdownTrigger>
+                                    <DropdownMenu>
+                                      <DropdownItem
+                                        startContent={<FiLock size={20} />}
+                                        onClick={() =>
+                                          handleLockOrUnlock(
+                                            item.exam_name_id,
+                                            true
+                                          )
+                                        }
+                                      >
+                                        Lock sessions
+                                      </DropdownItem>
+                                      <DropdownItem
+                                        startContent={<FiUnlock size={20} />}
+                                        onClick={() =>
+                                          handleLockOrUnlock(
+                                            item.exam_name_id,
+                                            false
+                                          )
+                                        }
+                                      >
+                                        UnLock sessions
+                                      </DropdownItem>
+                                    </DropdownMenu>
+                                  </Dropdown>
+                                </>
+                                <FiTrash2
+                                  size={20}
+                                  color="red"
+                                  onClick={() => {
+                                    handleDelete();
+                                    setExamSessionId(item.exam_name_id);
+                                  }}
+                                  className="cursor-pointer hover:opacity-50"
+                                />
                               </div>
                             </TableCell>
                           </TableRow>

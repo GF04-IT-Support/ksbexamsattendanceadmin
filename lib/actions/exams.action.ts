@@ -471,6 +471,34 @@ export async function lockOrUnlockExams(exam_id: string, locked: boolean) {
   }
 }
 
+export async function lockOrUnlockAllExamsSessions(
+  exam_name_id: string,
+  locked: boolean
+) {
+  try {
+    await prisma.exam.updateMany({
+      where: {
+        exam_name_id: exam_name_id,
+      },
+      data: {
+        locked: locked,
+      },
+    });
+    revalidatePath("/exams-schedule");
+    return {
+      message: `All ${locked ? "locked" : "unlocked"} exam sessions have been ${
+        locked ? "locked" : "unlocked"
+      } successfully`,
+    };
+  } catch (error) {
+    return {
+      message: `An error occurred while ${
+        locked ? "locking" : "unlocking"
+      } the exam`,
+    };
+  }
+}
+
 export async function createNewExamsSchedule(exam_name: string) {
   try {
     const allExams = await prisma.examName.findMany();

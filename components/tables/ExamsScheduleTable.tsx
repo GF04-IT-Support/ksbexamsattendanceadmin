@@ -6,11 +6,14 @@ import {
   Select,
   SelectItem,
   Spinner,
-  Chip,
-  Tooltip,
   Modal,
   ModalContent,
   useDisclosure,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Button,
 } from "@nextui-org/react";
 import {
   Table,
@@ -34,6 +37,7 @@ import {
   FiLock,
   FiUnlock,
   FiUserPlus,
+  FiUser,
 } from "react-icons/fi";
 import { useDateStore } from "@/zustand/store";
 import SearchInput from "../inputs/SearchInput";
@@ -43,6 +47,7 @@ import { fetchStaffDetails } from "@/lib/actions/staff.action";
 import UploadForm from "../forms/UploadForm";
 import CollapsibleStaffList from "../shared/CollapsibleStaffList";
 import { sortDataByStartTime } from "@/lib/helpers/date.helpers";
+import { FaEllipsisV } from "react-icons/fa";
 
 type ExamName = {
   exam_name_id: string;
@@ -509,30 +514,41 @@ export default function ExamsScheduleTable({
                         </TableCell>
 
                         <TableCell className="w-[40px]">
-                          <div className="relative flex items-center gap-2">
-                            <FiUserPlus
-                              size={20}
-                              className="cursor-pointer hover:opacity-60"
-                              onClick={() => handleAssign(item)}
-                            />
-                            {item.locked ? (
-                              <FiUnlock
-                                size={20}
-                                className="cursor-pointer hover:opacity-60"
-                                onClick={() =>
-                                  handleLockOrUnlock(item.exam_id, false)
-                                }
-                              />
-                            ) : (
-                              <FiLock
-                                size={20}
-                                className="cursor-pointer hover:opacity-60"
-                                onClick={() =>
-                                  handleLockOrUnlock(item.exam_id, true)
-                                }
-                              />
-                            )}
-                          </div>
+                          <>
+                            <Dropdown aria-label="Actions">
+                              <DropdownTrigger>
+                                <Button isIconOnly size="sm" variant="light">
+                                  <FaEllipsisV size={16} />
+                                </Button>
+                              </DropdownTrigger>
+                              <DropdownMenu>
+                                <DropdownItem
+                                  onClick={() => handleAssign(item)}
+                                  startContent={<FiUserPlus size={20} />}
+                                >
+                                  Assign {label}
+                                </DropdownItem>
+                                <DropdownItem
+                                  onClick={() =>
+                                    item.locked
+                                      ? handleLockOrUnlock(item.exam_id, false)
+                                      : handleLockOrUnlock(item.exam_id, true)
+                                  }
+                                  startContent={
+                                    item.locked ? (
+                                      <FiUnlock size={20} />
+                                    ) : (
+                                      <FiLock size={20} />
+                                    )
+                                  }
+                                >
+                                  {item.locked
+                                    ? "Unlock Session"
+                                    : "Lock Session"}
+                                </DropdownItem>
+                              </DropdownMenu>
+                            </Dropdown>
+                          </>
                         </TableCell>
                       </TableRow>
                     ))
