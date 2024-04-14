@@ -87,7 +87,6 @@ const UploadForm = ({
             base64String,
             selectedExams?.selectedId
           ).then((response: any) => {
-            setIsLoading(false);
             setAcceptedFiles([]);
             if (
               response?.message ===
@@ -114,14 +113,14 @@ const UploadForm = ({
             } else {
               toast.error(response?.message || "An error occurred");
             }
-
-            setIsLoading(false);
           } catch (error: any) {
-            throw new Error(error);
+            toast.error(error?.message || "An error occurred");
           }
         }
-      } catch (error) {
-        console.error(error);
+      } catch (error: any) {
+        toast.error(error?.message || "An error occurred");
+      } finally {
+        setIsLoading(false);
       }
 
       reader.readAsDataURL(file);
