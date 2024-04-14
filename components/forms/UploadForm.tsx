@@ -96,7 +96,7 @@ const UploadForm = ({
               toast.success(response?.message);
               return;
             } else {
-              toast.error(response?.message);
+              toast.error(response?.message || "An error occurred");
               return;
             }
           });
@@ -107,12 +107,12 @@ const UploadForm = ({
               base64String
             );
 
-            if (response.data) {
+            if (response.data && response.data !== (undefined || null)) {
               const { matchedData, unmatchedData } = response.data;
               setScheduleData({ matchedData, unmatchedData });
               setShowConfirmationModal(true);
             } else {
-              toast.error(response?.message);
+              toast.error(response?.message || "An error occurred");
             }
 
             setIsLoading(false);

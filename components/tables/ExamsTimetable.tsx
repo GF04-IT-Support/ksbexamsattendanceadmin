@@ -21,7 +21,6 @@ import {
 } from "@nextui-org/react";
 import useSWR from "swr";
 import {
-  deleteExamsSchedule,
   deleteExamsSession,
   getExamsSchedule,
 } from "@/lib/actions/exams.action";
