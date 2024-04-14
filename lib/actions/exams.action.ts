@@ -240,9 +240,12 @@ export async function extractInvigilatorsSchedule(base64PdfData: string) {
       base64_pdf_data: base64PdfData,
     });
 
+    console.log(response);
+
     if (response.error) {
       return {
-        message: "An error occurred while uploading the invigilators schedule.",
+        message:
+          "An error occurred while uploading the invigilator's schedule.",
       };
     }
 
