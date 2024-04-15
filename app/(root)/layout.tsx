@@ -24,7 +24,7 @@ export default function RootLayout({
         <body className={inter.className}>
           <Providers>
             <Header />
-            <main className="md:flex">
+            <main className="min-[845px]:flex">
               <Sidebar />
               <section className="main-container">{children}</section>
             </main>

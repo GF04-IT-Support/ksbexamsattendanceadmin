@@ -240,8 +240,6 @@ export async function extractInvigilatorsSchedule(base64PdfData: string) {
       base64_pdf_data: base64PdfData,
     });
 
-    console.log(response);
-
     if (response.error) {
       return {
         message:

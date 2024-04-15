@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 .main-container {
-  @apply flex min-h-screen flex-1 flex-col bg-light-2 sm:px-6 px-2  pt-12;
+  @apply flex min-h-screen overflow-hidden flex-1 flex-col bg-light-2 sm:px-6 px-2  pt-12;
 }
 
 .leftsidebar {
-  @apply sticky left-0 top-0 z-20 flex h-screen lg:min-w-[274px]  flex-col justify-between overflow-auto border-r border-r-[#0000FFB2] bg-[#0000FFB2] pt-12 max-[845px]:hidden;
+  @apply sticky left-0 top-0 z-20 flex h-screen lg:min-w-[274px] shrink-0 flex-col justify-between overflow-auto border-r border-r-[#0000FFB2] bg-[#0000FFB2] pt-12 max-[845px]:hidden;
 }
 
 @layer utilities {
