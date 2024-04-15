@@ -247,20 +247,66 @@ export async function extractInvigilatorsSchedule(response: any) {
 
 export async function addConfirmedInvigilatorsToExams(confirmedData: any) {
   try {
-    let unmatchedDetails;
+    let unmatchedDetails, matchedDetails;
     const result = await correlateInvigilatorsWithExams(confirmedData);
 
     if (result) {
       unmatchedDetails = result.unmatchedDetails;
+      matchedDetails = result.matchedData;
     }
 
     return {
-      message: "The invigilators schedule has been uploaded successfully",
+      matchedDetails,
       unmatchedDetails,
     };
   } catch (error) {
     return {
       message: "An error occurred while uploading the invigilator's schedule.",
+    };
+  }
+}
+
+export async function batchAssignStaffToExamSessions(staffGroups: {
+  [key: string]: string[];
+}) {
+  try {
+    const assignmentPromises = Object.entries(staffGroups).map(
+      async ([key, staff_ids]) => {
+        const [exam_id, venue] = key.split("|");
+        return assignStaffToExamSession(
+          exam_id,
+          venue,
+          staff_ids,
+          "invigilators",
+          true
+        );
+      }
+    );
+
+    const results = await Promise.allSettled(assignmentPromises);
+
+    const errors = results.filter(
+      (result) =>
+        result.status === "rejected" ||
+        (result.status === "fulfilled" &&
+          result.value?.message ===
+            "An error occurred while assigning invigilators to exam sessions")
+    );
+
+    if (errors.length > 0) {
+      return {
+        message:
+          "An error occurred while assigning invigilators to exam sessions",
+      };
+    }
+
+    return {
+      message: "The invigilators schedule has been uploaded successfully",
+    };
+  } catch (error: any) {
+    return {
+      message:
+        "An error occurred while assigning invigilators to exam sessions",
     };
   }
 }

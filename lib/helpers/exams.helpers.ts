@@ -167,13 +167,10 @@ export async function matchInvigilatorsWithAbbreviatedNames(
 }
 
 export async function correlateInvigilatorsWithExams(details: any) {
-  const { user }: any = await getServerSession(authOptions);
-
-  if (!user) return null;
-
   try {
-    const unmatchedDetails = [];
+    const unmatchedDetails: any = [];
     const staffGroups: { [key: string]: string[] } = {};
+    const queries = [];
 
     for (const staff of details) {
       for (const detail of staff.details) {
@@ -181,69 +178,44 @@ export async function correlateInvigilatorsWithExams(details: any) {
         const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
         const date = new Date(isoDate);
 
-        const exams = await prisma.exam.findMany({
-          where: {
-            AND: [
-              { date: date },
-              { start_time: detail["Start Time"] },
-              { end_time: detail["End Time"] },
-            ],
-          },
-        });
-
-        if (exams.length > 0) {
-          for (const exam of exams) {
-            const key = `${exam.exam_id}|${detail.Venue}`;
-            if (!staffGroups[key]) {
-              staffGroups[key] = [];
-            }
-            staffGroups[key].push(staff.staff_id);
-          }
-        } else {
-          unmatchedDetails.push({
-            ...detail,
-            staff_name: staff.full_name,
-          });
-        }
-      }
-    }
-
-    const examGroups: any = {};
-
-    for (const key in staffGroups) {
-      const [exam_id, venue] = key.split("|");
-      const staff_ids = staffGroups[key];
-
-      if (!examGroups[exam_id]) {
-        examGroups[exam_id] = [];
-      }
-
-      examGroups[exam_id].push({ venue, staff_ids });
-    }
-
-    for (const exam_id in examGroups) {
-      for (const group of examGroups[exam_id]) {
-        const result = await assignStaffToExamSession(
-          exam_id,
-          group.venue,
-          group.staff_ids,
-          "invigilators",
-          true
+        queries.push(
+          prisma.exam
+            .findMany({
+              where: {
+                AND: [
+                  { date: date },
+                  { start_time: detail["Start Time"] },
+                  { end_time: detail["End Time"] },
+                ],
+              },
+            })
+            .then((exams) => ({ exams, staff, detail }))
         );
-
-        if (
-          result &&
-          result?.message ===
-            "An error occurred while uploading the invigilator's schedule."
-        ) {
-          throw new Error(result?.message);
-        }
       }
     }
+
+    const results = await Promise.all(queries);
+
+    results.forEach(({ exams, staff, detail }) => {
+      if (exams.length > 0) {
+        for (const exam of exams) {
+          const key = `${exam.exam_id}|${detail.Venue}`;
+          if (!staffGroups[key]) {
+            staffGroups[key] = [];
+          }
+          staffGroups[key].push(staff.staff_id);
+        }
+      } else {
+        unmatchedDetails.push({
+          ...detail,
+          staff_name: staff.full_name,
+        });
+      }
+    });
 
     return {
+      matchedData: staffGroups,
       unmatchedDetails,
-      message: "success",
     };
   } catch (error: any) {
     throw new Error(error);

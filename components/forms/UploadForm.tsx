@@ -5,6 +5,7 @@ import { set, useForm } from "react-hook-form";
 import { FaFileUpload } from "react-icons/fa";
 import {
   addConfirmedInvigilatorsToExams,
+  batchAssignStaffToExamSessions,
   extractExamsSchedule,
   extractInvigilatorsSchedule,
 } from "@/lib/actions/exams.action";
@@ -148,19 +149,41 @@ const UploadForm = ({
     }
   };
 
+  const handleConfirm = async () => {
+    try {
+      setIsLoading(true);
+      const response: any = await addConfirmedInvigilatorsToExams(
+        confirmedData
+      );
+
+      const result: any = await batchAssignStaffToExamSessions(
+        response.matchedDetails
+      );
+
+      console.log(result);
+
+      if (
+        response.unmatchedDetails.length === 0 &&
+        result.message ===
+          "The invigilators schedule has been uploaded successfully"
+      ) {
+        toast.success(result.message);
+        onClose();
+        mutate?.();
+      } else if (response.unmatchedDetails.length > 0) {
+        setUnmatchedDetails(response.unmatchedDetails);
+        setShowUnmatchedModal(true);
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "An error occurred");
+    } finally {
+      setIsLoading(false);
+      setAcceptedFiles([]);
+    }
+  };
+
   const acceptedFileItems = acceptedFiles.map((file) => (
     <p key={file.name}>{file.name}</p>
-  ));
-
-  const fileRejectionItems = fileRejections.map(({ file, errors }) => (
-    <li key={file.name}>
-      {file.name} - {file.size} bytes
-      <ul>
-        {errors.map((e) => (
-          <li key={e.code}>{e.message}</li>
-        ))}
-      </ul>
-    </li>
   ));
 
   const isDisabled = acceptedFiles.length === 0;
@@ -174,33 +197,6 @@ const UploadForm = ({
       return () => clearTimeout(timer);
     }
   }, [fileRejections]);
-
-  const handleConfirm = async () => {
-    try {
-      setIsLoading(true);
-      const response: any = await addConfirmedInvigilatorsToExams(
-        confirmedData
-      );
-
-      if (
-        response.unmatchedDetails.length === 0 &&
-        response.message ===
-          "The invigilators schedule has been uploaded successfully"
-      ) {
-        toast.success(response.message);
-        onClose();
-        mutate?.();
-      } else if (response.unmatchedDetails.length > 0) {
-        setUnmatchedDetails(response.unmatchedDetails);
-        setShowUnmatchedModal(true);
-      }
-    } catch (error: any) {
-      throw new Error(error);
-    } finally {
-      setIsLoading(false);
-      setAcceptedFiles([]);
-    }
-  };
 
   return (
     <div className="flex flex-col items-center justify-center mb-12">
