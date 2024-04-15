@@ -88,8 +88,6 @@ const UploadForm = ({
             base64_pdf_data: base64String,
           });
 
-          console.log(response);
-
           if (response.error) {
             toast.error("An error occurred while uploading the exam schedule");
             return;
@@ -114,16 +112,27 @@ const UploadForm = ({
           onClose();
         } else {
           try {
-            const response: any = await extractInvigilatorsSchedule(
-              base64String
+            const response = await axios.post("/invigilators/extract", {
+              base64_pdf_data: base64String,
+            });
+
+            if (response.error) {
+              toast.error(
+                "An error occurred while uploading the invigilator's schedule"
+              );
+              return;
+            }
+
+            const result: any = await extractInvigilatorsSchedule(
+              response.data
             );
 
-            if (response.data && response.data !== (undefined || null)) {
-              const { matchedData, unmatchedData } = response.data;
+            if (result.data) {
+              const { matchedData, unmatchedData } = result.data;
               setScheduleData({ matchedData, unmatchedData });
               setShowConfirmationModal(true);
             } else {
-              toast.error(response?.message || "An error occurred");
+              toast.error(result?.message || "An error occurred");
             }
           } catch (error: any) {
             toast.error(error?.message || "An error occurred");

@@ -21,16 +21,6 @@ export async function extractExamsSchedule(
       await deleteExamsSchedule(exam_name_id);
     }
 
-    // const response = await axios.post("/exams-schedule/extract", {
-    //   base64_pdf_data: base64PdfData,
-    // });
-
-    // if (response.error) {
-    //   return {
-    //     message: "An error occurred while uploading the exam schedule.",
-    //   };
-    // }
-
     const exams = response.exams_schedule;
     const exam_name = response.exam_name;
 
@@ -234,20 +224,9 @@ export async function getUpcomingExamsSchedule() {
   }
 }
 
-export async function extractInvigilatorsSchedule(base64PdfData: string) {
+export async function extractInvigilatorsSchedule(response: any) {
   try {
-    const response = await axios.post("/invigilators/extract", {
-      base64_pdf_data: base64PdfData,
-    });
-
-    if (response.error) {
-      return {
-        message:
-          "An error occurred while uploading the invigilator's schedule.",
-      };
-    }
-
-    const { invigilators_schedule: result } = response.data;
+    const { invigilators_schedule: result } = response;
     const invigilators = await fetchInvigilators();
 
     const { matchedData, unmatchedData } =
