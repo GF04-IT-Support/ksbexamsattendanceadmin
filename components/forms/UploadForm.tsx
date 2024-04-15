@@ -16,6 +16,7 @@ import { IoIosDocument } from "react-icons/io";
 import UploadConfirmationModal from "../modals/UploadConfirmationModal";
 import ScheduleConfirmationModal from "../modals/ScheduleConfirmationModal";
 import UnMatchedDetailsTable from "../tables/UnMatchedDetailsTable";
+import axios from "@/utils/axios";
 
 type UploadFormProps = {
   uploadType: "exams" | "invigilators";
@@ -83,8 +84,19 @@ const UploadForm = ({
 
       try {
         if (uploadType === "exams") {
+          const response = await axios.post("/exams-schedule/extract", {
+            base64_pdf_data: base64String,
+          });
+
+          console.log(response);
+
+          if (response.error) {
+            toast.error("An error occurred while uploading the exam schedule");
+            return;
+          }
+
           await extractExamsSchedule(
-            base64String,
+            response.data,
             selectedExams?.selectedId
           ).then((response: any) => {
             setAcceptedFiles([]);

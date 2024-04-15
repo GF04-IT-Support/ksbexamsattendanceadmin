@@ -13,7 +13,7 @@ import axios from "@/utils/axios";
 import { sortDataByStartTime } from "../helpers/date.helpers";
 
 export async function extractExamsSchedule(
-  base64PdfData: string,
+  response: any,
   exam_name_id?: string
 ) {
   try {
@@ -21,18 +21,18 @@ export async function extractExamsSchedule(
       await deleteExamsSchedule(exam_name_id);
     }
 
-    const response = await axios.post("/exams-schedule/extract", {
-      base64_pdf_data: base64PdfData,
-    });
+    // const response = await axios.post("/exams-schedule/extract", {
+    //   base64_pdf_data: base64PdfData,
+    // });
 
-    if (response.error) {
-      return {
-        message: "An error occurred while uploading the exam schedule.",
-      };
-    }
+    // if (response.error) {
+    //   return {
+    //     message: "An error occurred while uploading the exam schedule.",
+    //   };
+    // }
 
-    const exams = response.data.exams_schedule;
-    const exam_name = response.data.exam_name;
+    const exams = response.exams_schedule;
+    const exam_name = response.exam_name;
 
     const existingExamName = await prisma.examName.findUnique({
       where: {
