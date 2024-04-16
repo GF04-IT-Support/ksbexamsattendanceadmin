@@ -92,7 +92,7 @@ function UpcomingExamsTable({ upcomingExams }: any) {
   const handleVenueChange = (examId: any, selectedVenue: any) => {
     setSelections((prev: any) => ({
       ...prev,
-      [examId]: { ...prev[examId], selectedVenue, selectedStaffType: null },
+      [examId]: { ...prev[examId], selectedVenue },
     }));
   };
 
@@ -115,7 +115,7 @@ function UpcomingExamsTable({ upcomingExams }: any) {
     selectedStaffType: any
   ) => {
     for (const session of sessions) {
-      if (session.venue.name === selectedVenue) {
+      if (session.venue.name === selectedVenue.trim()) {
         return session.assignments
           .filter((assignment: any) => assignment.role === selectedStaffType)
           .map((assignment: any) => assignment.staff.staff_name);
@@ -230,7 +230,7 @@ function UpcomingExamsTable({ upcomingExams }: any) {
                         selections[item.exam_id]?.selectedVenue,
                       ]}
                       onChange={(e) =>
-                        handleVenueChange(item.exam_id, e.target.value)
+                        handleVenueChange(item.exam_id, e.target.value.trim())
                       }
                     >
                       {item.venue.split(",").map((venue: string) => (
@@ -249,7 +249,10 @@ function UpcomingExamsTable({ upcomingExams }: any) {
                           selections[item.exam_id]?.selectedStaffType,
                         ]}
                         onChange={(e) =>
-                          handleStaffTypeChange(item.exam_id, e.target.value)
+                          handleStaffTypeChange(
+                            item.exam_id,
+                            e.target.value.trim()
+                          )
                         }
                       >
                         {STAFF_TYPES.map((type) => (
