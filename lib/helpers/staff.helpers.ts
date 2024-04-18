@@ -8,6 +8,7 @@ export function getStaffRoles(id: string) {
         "Part-Time Lecturer",
         "PhD Student",
         "Librarian",
+        "External",
       ];
       break;
     case "security":
