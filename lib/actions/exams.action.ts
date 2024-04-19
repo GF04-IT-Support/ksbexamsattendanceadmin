@@ -106,8 +106,6 @@ export async function getExamsNames() {
         order: "desc",
       },
     });
-    revalidatePath("/exams-schedule");
-    revalidatePath("/staff-management");
     return examNames;
   } catch (error: any) {
     throw new Error(error);
@@ -117,8 +115,6 @@ export async function getExamsNames() {
 export async function getAllExamsNames() {
   try {
     const examNames = await prisma.examName.findMany();
-    revalidatePath("/exams-schedule");
-    revalidatePath("/staff-management");
     return examNames;
   } catch (error: any) {
     throw new Error(error);
@@ -221,7 +217,6 @@ export async function getUpcomingExamsSchedule() {
     });
 
     upcomingExams = sortDataByStartTime(upcomingExams);
-    revalidatePath("/");
     return upcomingExams;
   } catch (error: any) {
     throw new Error(error.message);
