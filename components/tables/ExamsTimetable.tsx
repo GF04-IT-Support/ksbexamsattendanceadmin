@@ -272,6 +272,13 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
   const isEmpty =
     (searchResults || filteredExamsData).length === 0 && !isLoading;
 
+  const isDisabled = () => {
+    if (selectedId.includes(",")) {
+      return true;
+    }
+    return false;
+  };
+
   return (
     <>
       <ExamsUploadModal details={details} setDetails={setDetails} />
@@ -315,10 +322,13 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
                   <FaEllipsisV size={16} />
                 </Button>
               </DropdownTrigger>
-              <DropdownMenu>
+              <DropdownMenu
+                disabledKeys={isDisabled() ? ["add", "reupload"] : []}
+              >
                 <DropdownItem
                   onClick={createNewExamsSchedule}
                   color="primary"
+                  key="add"
                   className="text-primary"
                   startContent={<FaPlus size={20} />}
                 >
@@ -326,6 +336,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
                 </DropdownItem>
                 <DropdownItem
                   showDivider
+                  key="reupload"
                   className="text-default-800"
                   startContent={<FaUpload size={20} />}
                   onClick={() => setReUploadConfirmationModal(true)}
@@ -333,6 +344,7 @@ export default function ExamsTimetable({ examNames }: ExamsTimetableProps) {
                   Reupload Exams
                 </DropdownItem>
                 <DropdownItem
+                  key="manage"
                   onClick={() => setExamsModalOpen(true)}
                   startContent={<MdAssignment size={20} />}
                 >

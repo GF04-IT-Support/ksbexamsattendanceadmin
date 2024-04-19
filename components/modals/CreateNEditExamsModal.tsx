@@ -8,11 +8,10 @@ import {
   ModalFooter,
   Button,
   Spinner,
+  TimeInput,
 } from "@nextui-org/react";
 import { Card, CardContent, Typography, Grid } from "@material-ui/core";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { FiEdit2 } from "react-icons/fi";
-import { AiOutlineClose, AiOutlineCheck } from "react-icons/ai";
+import { useState } from "react";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -128,11 +127,51 @@ const CreateNEditExamsModal = ({
   const editableFields = [
     { label: "Exam Code(s):", field: "exam_code", isMultiple: true },
     { label: "Date:", field: "date", isDate: true },
-    { label: "Start Time:", field: "start_time" },
-    { label: "End Time:", field: "end_time" },
+    { label: "Start Time:", field: "start_time", isTime: true },
+    { label: "End Time:", field: "end_time", isTime: true },
     { label: "Venue(s):", field: "venue", isMultiple: true },
     { label: "Year:", field: "year" },
   ];
+
+  function transformTime(time: any) {
+    const { hour, minute } = time;
+
+    const period = hour >= 12 ? "PM" : "AM";
+
+    const hour12 = hour > 12 ? hour - 12 : hour;
+
+    const hourString = hour12.toString().padStart(2, "0");
+    const minuteString = minute.toString().padStart(2, "0");
+
+    return `${hourString}:${minuteString} ${period}`;
+  }
+
+  function reverseTransformTime(timeString: any) {
+    const regex = /(\d+:\d+)(am|pm)/i;
+    const match = regex.exec(timeString);
+
+    if (match) {
+      const [time, period] = [match[1], match[2]];
+      const [hour12, minute] = time.split(":");
+
+      let hour = parseInt(hour12, 10);
+      if (period === "pm" && hour < 12) {
+        hour += 12;
+      } else if (period === "am" && hour === 12) {
+        hour = 0;
+      }
+
+      return {
+        hour,
+        minute: parseInt(minute, 10),
+        second: 0,
+        millisecond: 0,
+      };
+    }
+
+    // Handle the case when the timeString doesn't match the expected format
+    return null;
+  }
 
   return (
     <>
@@ -180,7 +219,7 @@ const CreateNEditExamsModal = ({
               <CardContent>
                 <Grid container spacing={3}>
                   {editableFields.map(
-                    ({ label, field, isMultiple, isDate }: any) => (
+                    ({ label, field, isMultiple, isDate, isTime }: any) => (
                       <>
                         <Grid item xs={6}>
                           <Typography color="textSecondary">{label}</Typography>
@@ -263,8 +302,28 @@ const CreateNEditExamsModal = ({
                                   />
                                 </DemoContainer>
                               </LocalizationProvider>
+                            ) : isTime ? (
+                              <TimeInput
+                                // @ts-ignore
+                                value={
+                                  reverseTransformTime(
+                                    tempValues[field as keyof typeof tempValues]
+                                  ) || { hour: 0, minute: 0 }
+                                }
+                                variant="underlined"
+                                onChange={(e) =>
+                                  setTempValues({
+                                    ...tempValues,
+                                    [field]: transformTime(e)
+                                      .replace(" ", "")
+                                      .toLowerCase(),
+                                  })
+                                }
+                                aria-label="Time"
+                              />
                             ) : (
                               <TextField
+                                aria-label="Text"
                                 value={
                                   tempValues[field as keyof typeof tempValues]
                                 }
