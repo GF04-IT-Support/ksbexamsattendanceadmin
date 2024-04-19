@@ -9,7 +9,6 @@ import {
 } from "@/lib/helpers/exams.helpers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
-import axios from "@/utils/axios";
 import { sortDataByStartTime } from "../helpers/date.helpers";
 
 export async function extractExamsSchedule(
@@ -107,6 +106,8 @@ export async function getExamsNames() {
         order: "desc",
       },
     });
+    revalidatePath("/exams-schedule");
+    revalidatePath("/staff-management");
     return examNames;
   } catch (error: any) {
     throw new Error(error);
@@ -116,6 +117,8 @@ export async function getExamsNames() {
 export async function getAllExamsNames() {
   try {
     const examNames = await prisma.examName.findMany();
+    revalidatePath("/exams-schedule");
+    revalidatePath("/staff-management");
     return examNames;
   } catch (error: any) {
     throw new Error(error);
@@ -218,6 +221,7 @@ export async function getUpcomingExamsSchedule() {
     });
 
     upcomingExams = sortDataByStartTime(upcomingExams);
+    revalidatePath("/");
     return upcomingExams;
   } catch (error: any) {
     throw new Error(error.message);
@@ -232,7 +236,7 @@ export async function extractInvigilatorsSchedule(response: any) {
     const { matchedData, unmatchedData } =
       await matchInvigilatorsWithAbbreviatedNames(invigilators, result);
 
-    revalidatePath("/invigilators-schedule");
+    revalidatePath("/staff-management");
 
     return {
       data: { matchedData, unmatchedData },
