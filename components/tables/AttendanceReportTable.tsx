@@ -139,6 +139,8 @@ export default function DateAndSessionSelector() {
           setData(sortedData);
         } else {
           setData([]);
+          setSessions([]);
+          setStartTimeFilter([]);
         }
       } catch (error: any) {
         throw new Error(error);
@@ -898,7 +900,9 @@ export default function DateAndSessionSelector() {
           <Select
             label="Sessions"
             selectionMode="multiple"
-            placeholder="Select session"
+            placeholder={`${
+              sessions.length > 0 ? "Select session(s)" : "No sessions"
+            }`}
             selectedKeys={startTimeFilter}
             className="w-[180px]"
             onSelectionChange={(keys: any) =>
