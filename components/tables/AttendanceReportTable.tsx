@@ -898,7 +898,7 @@ export default function DateAndSessionSelector() {
           <Select
             label="Sessions"
             selectionMode="multiple"
-            placeholder="Select attendance status"
+            placeholder="Select session"
             selectedKeys={startTimeFilter}
             className="w-[180px]"
             onSelectionChange={(keys: any) =>
