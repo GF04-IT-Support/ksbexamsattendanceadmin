@@ -87,56 +87,18 @@ export async function checkIfUserIsBlocked(id: string) {
   }
 }
 
-export async function changeBlockedStatus() {
+export async function promoteOrDemote(id: string, subRole: Boolean) {
   try {
-    await prisma.user.updateMany({
+    await prisma.user.update({
+      where: { id },
       data: {
-        blocked: false,
+        role: subRole ? "checker" : "admin",
+        subRole: subRole ? null : "normal",
       },
     });
+    revalidatePath("/user-management");
+    return { message: `User has been ${subRole ? "demoted" : "promoted"}` };
   } catch (error: any) {
-    throw new Error(error);
+    return { message: "An error occurred while promoting or demoting" };
   }
 }
-
-// export async function changeArchivedStatus() {
-//   try {
-//     await prisma.exam.updateMany({
-//       data: {
-//         archived: false,
-//       },
-//     });
-//     await prisma.examName.updateMany({
-//       data: {
-//         archived: false,
-//       },
-//     });
-//     await prisma.staff.updateMany({
-//       data: {
-//         archived: false,
-//       },
-//     });
-//     await prisma.venue.updateMany({
-//       data: {
-//         archived: false,
-//       },
-//     });
-//     await prisma.examSession.updateMany({
-//       data: {
-//         archived: false,
-//       },
-//     });
-//     await prisma.staffAssignment.updateMany({
-//       data: {
-//         archived: false,
-//       },
-//     });
-//     await prisma.attendance.updateMany({
-//       data: {
-//         archived: false,
-//       },
-//     });
-//   } catch (error: any) {
-//     throw new Error(error);
-//   }
-// }

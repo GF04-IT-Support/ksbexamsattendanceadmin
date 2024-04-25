@@ -31,11 +31,12 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 import CreateNewUserModal from "../modals/CreateNewUserModal";
-import { FaEllipsisV } from "react-icons/fa";
+import { FaEllipsisV, FaUsersCog, FaUserShield } from "react-icons/fa";
 import {
   blockUnblockUser,
   changeRole,
   deleteUser,
+  promoteOrDemote,
 } from "@/lib/actions/users.action";
 import DeleteConfirmationModal from "../modals/DeleteConfirmationModal";
 import toast, { Toaster } from "react-hot-toast";
@@ -147,7 +148,10 @@ function UserManagementTable({ users, ID }: UserManagementTableProps) {
     <TableColumn key="email">Email</TableColumn>,
   ];
 
-  const hasSubRole = selectedUsers.some((user) => user.subRole !== null);
+  const hasSubRole: Boolean = selectedUsers.some(
+    (user) => user.subRole !== null
+  );
+
   if (hasSubRole) {
     columns.push(<TableColumn key="subRole">Role</TableColumn>);
   }
@@ -168,7 +172,23 @@ function UserManagementTable({ users, ID }: UserManagementTableProps) {
     try {
       await changeRole(id, role.toLowerCase());
     } catch (error: any) {
-      throw new Error(error);
+      toast.error(error.message);
+    }
+  };
+
+  const changeAccessLevel = async (id: string, subRole: Boolean) => {
+    if (id === ID) return;
+    try {
+      const response = await promoteOrDemote(id, subRole);
+      if (
+        response.message === `User has been ${subRole ? "demoted" : "promoted"}`
+      ) {
+        toast.success(response.message);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -328,30 +348,45 @@ function UserManagementTable({ users, ID }: UserManagementTableProps) {
                           >
                             {item.blocked ? "Unblock" : "Block"}
                           </DropdownItem>
-                          <DropdownItem key="Role">
-                            <Dropdown>
-                              <DropdownTrigger>
-                                <p className="ml-2">Change Role</p>
-                              </DropdownTrigger>
-                              <DropdownMenu>
-                                {roles
-                                  .filter(
-                                    (role) =>
-                                      role.toLowerCase() !== item.subRole
-                                  )
-                                  .map((role) => (
-                                    <DropdownItem
-                                      key={role}
-                                      onClick={() =>
-                                        handleRoleChange(item.id, role)
-                                      }
-                                    >
-                                      {role}
-                                    </DropdownItem>
-                                  ))}
-                              </DropdownMenu>
-                            </Dropdown>
+
+                          <DropdownItem
+                            key="Access"
+                            startContent={
+                              hasSubRole ? <FaUsersCog /> : <FaUserShield />
+                            }
+                            onClick={() =>
+                              changeAccessLevel(item.id, hasSubRole)
+                            }
+                          >
+                            {hasSubRole ? "Demote" : "Promote"}
                           </DropdownItem>
+
+                          {hasSubRole && (
+                            <DropdownItem key="Role">
+                              <Dropdown>
+                                <DropdownTrigger>
+                                  <p className="ml-2">Change Role</p>
+                                </DropdownTrigger>
+                                <DropdownMenu>
+                                  {roles
+                                    .filter(
+                                      (role) =>
+                                        role.toLowerCase() !== item.subRole
+                                    )
+                                    .map((role) => (
+                                      <DropdownItem
+                                        key={role}
+                                        onClick={() =>
+                                          handleRoleChange(item.id, role)
+                                        }
+                                      >
+                                        {role}
+                                      </DropdownItem>
+                                    ))}
+                                </DropdownMenu>
+                              </Dropdown>
+                            </DropdownItem>
+                          )}
                         </DropdownMenu>
                       ) : (
                         <DropdownMenu>
