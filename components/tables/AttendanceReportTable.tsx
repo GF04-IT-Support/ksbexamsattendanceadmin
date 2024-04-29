@@ -105,8 +105,10 @@ export default function DateAndSessionSelector() {
   const [searchResults, setSearchResults] = useState<any>(null);
   const [attendanceFilter, setAttendanceFilter] = useState(["Present"]);
   const [staffTypeFilter, setStaffTypeFilter] = useState(staffTypeOptions);
-  const [startTimeFilter, setStartTimeFilter] = useState<any>([]);
-  const [sessions, setSessions] = useState<any>([]);
+  const [startTimeFilter, setStartTimeFilter] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [weightFilter, setWeightFilter] = useState<any[]>([]);
+  const [weightOptions, setWeightOptions] = useState<any[]>([]);
   const [format, setFormat] = useState<any>("");
   const { isOpen, onOpen, onClose, onOpenChange } = useDisclosure();
   const [selectedColumns, setSelectedColumns] = useState(
@@ -134,6 +136,22 @@ export default function DateAndSessionSelector() {
           const uniqueStartTimes = Array.from(
             new Set(sortedData.map((d) => d.start_time))
           );
+          const uniqueWeights = Array.from(
+            new Set(
+              sortedData.map((d) => {
+                const weight = calculateWeight(
+                  d.date,
+                  d.start_time,
+                  d.end_time
+                );
+                return weight.toString();
+              })
+            )
+          );
+          setWeightFilter(uniqueWeights);
+          setWeightOptions(uniqueWeights);
+          setWeightFilter(uniqueWeights);
+          setWeightOptions(uniqueWeights);
           setSessions(uniqueStartTimes);
           setStartTimeFilter(uniqueStartTimes);
           setData(sortedData);
@@ -141,6 +159,8 @@ export default function DateAndSessionSelector() {
           setData([]);
           setSessions([]);
           setStartTimeFilter([]);
+          setWeightFilter([]);
+          setWeightOptions([]);
         }
       } catch (error: any) {
         throw new Error(error);
@@ -263,7 +283,8 @@ export default function DateAndSessionSelector() {
       (item) =>
         attendanceFilter.includes(item.attendance) &&
         combinedStaffRoles.includes(item.staff_role) &&
-        startTimeFilter.includes(item.start_time)
+        startTimeFilter.includes(item.start_time) &&
+        weightFilter.includes(item.weight.toString())
     );
     filteredItems.sort((a: any, b: any) => {
       const nameComparison = a.staff_name.localeCompare(b.staff_name);
@@ -279,7 +300,13 @@ export default function DateAndSessionSelector() {
     });
 
     return filteredItems;
-  }, [filteredData, attendanceFilter, staffTypeFilter, startTimeFilter]);
+  }, [
+    filteredData,
+    attendanceFilter,
+    staffTypeFilter,
+    startTimeFilter,
+    weightFilter,
+  ]);
 
   const summarizedData = useMemo(() => {
     const items = filteredData?.flatMap((item: any) =>
@@ -309,7 +336,8 @@ export default function DateAndSessionSelector() {
     const filteredItems = uniqueItems.filter(
       (item) =>
         combinedStaffRoles.includes(item.staff_role) &&
-        startTimeFilter.includes(item.start_time)
+        startTimeFilter.includes(item.start_time) &&
+        weightFilter.includes(item.weight.toString())
     );
 
     filteredItems.sort((a: any, b: any) => {
@@ -326,7 +354,12 @@ export default function DateAndSessionSelector() {
     });
 
     return filteredItems;
-  }, [filteredData, staffTypeFilter, startTimeFilter]);
+  }, [filteredData, staffTypeFilter, startTimeFilter, weightFilter]);
+
+  const totalUniqueSessions = useMemo(() => {
+    const sessionIds = new Set(summarizedData.map((item) => item.exam_id));
+    return sessionIds.size;
+  }, [summarizedData]);
 
   const pages = Math.ceil(
     (searchResults || flattenedItems)?.length / rowsPerPage
@@ -664,7 +697,7 @@ export default function DateAndSessionSelector() {
             text: [
               "\n",
               {
-                text: "Total number of sessions: " + data.length,
+                text: "Total number of sessions: " + totalUniqueSessions,
                 style: "footer",
               },
             ],
@@ -701,7 +734,7 @@ export default function DateAndSessionSelector() {
         }`,
       };
       worksheet[`D6`] = {
-        v: `Total number of sessions: ${data.length}`,
+        v: `Total number of sessions: ${totalUniqueSessions}`,
       };
 
       utils.sheet_add_aoa(worksheet, [tableColumn], { origin: "A8" });
@@ -885,7 +918,7 @@ export default function DateAndSessionSelector() {
         </div>
       </div>
 
-      <div className="flex max-[1400px]:flex-col md:justify-between max-md:flex-col  gap-2 pb-4">
+      <div className=" gap-2 pb-4">
         <SearchInput
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -896,7 +929,25 @@ export default function DateAndSessionSelector() {
           isStaffSearch
         />
 
-        <div className="flex gap-1 justify-center">
+        <div className="flex flex-wrap  gap-2 pt-4 justify-center">
+          <Select
+            label="Weight"
+            selectionMode="multiple"
+            placeholder={`${
+              weightOptions.length > 0 ? "Select weight(s)" : "No weights"
+            }`}
+            selectedKeys={weightFilter}
+            onSelectionChange={(keys: any) => setWeightFilter(Array.from(keys))}
+            className="w-[180px]"
+            disallowEmptySelection
+          >
+            {weightOptions.map((weight) => (
+              <SelectItem key={weight} value={weight}>
+                {weight}
+              </SelectItem>
+            ))}
+          </Select>
+
           <Select
             label="Sessions"
             selectionMode="multiple"
@@ -956,7 +1007,6 @@ export default function DateAndSessionSelector() {
       </div>
 
       <Table
-        // isStriped
         aria-label="Exams timetable"
         bottomContent={
           pages > 1 && (
