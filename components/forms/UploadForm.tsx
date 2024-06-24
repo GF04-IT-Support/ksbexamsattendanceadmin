@@ -99,6 +99,7 @@ const UploadForm = ({
             selectedExams?.selectedId
           ).then((response: any) => {
             setAcceptedFiles([]);
+            console.log(response);
             if (
               response?.message ===
               "The exam schedule has been uploaded successfully"
