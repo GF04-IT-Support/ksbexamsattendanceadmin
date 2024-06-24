@@ -4,6 +4,8 @@ import React from "react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function UserManagement() {
   const users: any = await fetchUsers();
   const { user }: any = await getServerSession(authOptions);
