@@ -44,45 +44,51 @@ export async function extractExamsSchedule(
       },
     });
 
+    const venueNamesSet = new Set<string>();
+    const examData = [];
+
     for (const exam of exams) {
       const venueNames = exam.Venue.split(",").map((v: any) => v.trim());
-
-      for (const venueName of venueNames) {
-        let venue = await prisma.venue.findUnique({
-          where: {
-            name: venueName,
-          },
-        });
-
-        if (!venue) {
-          venue = await prisma.venue.create({
-            data: {
-              name: venueName,
-            },
-          });
-        }
-      }
+      venueNames.forEach((name: string) => venueNamesSet.add(name));
 
       const dateParts = exam.Date.split("/");
       const isoDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
       const date = new Date(isoDate);
 
-      await prisma.exam.create({
-        data: {
-          date: date,
-          start_time: exam["Start Time"],
-          end_time: exam["End Time"],
-          exam_code: exam["Course Code"],
-          venue: exam.Venue,
-          year: exam.Year,
-          exam_name: {
-            connect: {
-              exam_name_id: examName.exam_name_id,
-            },
-          },
-        },
+      examData.push({
+        date: date,
+        start_time: exam["Start Time"],
+        end_time: exam["End Time"],
+        exam_code: exam["Course Code"],
+        venue: exam.Venue,
+        year: exam.Year,
+        exam_name_id: examName.exam_name_id,
       });
     }
+
+    const venueNamesArray = Array.from(venueNamesSet);
+    const existingVenues = await prisma.venue.findMany({
+      where: {
+        name: {
+          in: venueNamesArray,
+        },
+      },
+    });
+
+    const existingVenueNames = new Set(existingVenues.map((v) => v.name));
+    const newVenues = venueNamesArray.filter(
+      (name) => !existingVenueNames.has(name)
+    );
+
+    if (newVenues.length > 0) {
+      await prisma.venue.createMany({
+        data: newVenues.map((name) => ({ name })),
+      });
+    }
+
+    await prisma.exam.createMany({
+      data: examData,
+    });
 
     revalidatePath("/exam-schedule");
 
