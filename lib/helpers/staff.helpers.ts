@@ -26,6 +26,9 @@ export function getStaffRoles(id: string) {
     case "feeCollectors":
       staffRoles = ["Fee Collector"];
       break;
+    case "ta":
+      staffRoles = ["TA"];
+      break;
     default:
       throw new Error(`Invalid id: ${id}`);
   }

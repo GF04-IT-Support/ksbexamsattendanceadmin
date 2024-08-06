@@ -4,12 +4,14 @@ import Invigilators from "@/components/Staffs/Invigilators";
 import Nurses from "@/components/Staffs/Nurses";
 import Security from "@/components/Staffs/Security";
 import FeeCollector from "@/components/Staffs/FeeCollector";
+import TA from "@/components/Staffs/TA";
 import {
   FaHome,
   FaCalendarAlt,
   FaUsers,
   FaClipboardList,
   FaUserCog,
+  FaChalkboardTeacher,
 } from "react-icons/fa";
 import InvigilatorsIcon from "@mui/icons-material/People";
 import SecurityIcon from "@mui/icons-material/Security";
@@ -93,6 +95,14 @@ export const StaffTabsLinks = [
     icon: <AttachMoney />,
     content: (id: string, label: string, examsNames: any) => (
       <FeeCollector id={id} label={label} examsNames={examsNames} />
+    ),
+  },
+  {
+    id: "ta",
+    label: "TA",
+    icon: <FaChalkboardTeacher />,
+    content: (id: string, label: string, examsNames: any) => (
+      <TA id={id} label={label} examsNames={examsNames} />
     ),
   },
 ];

@@ -33,7 +33,7 @@ type StaffProps = {
 
 export default function StaffDetailsTable({ id, label }: StaffProps) {
   const rowsPerPage = 10;
-  const [selectedDetails, setselectedDetails] = useState<any>([] || "");
+  const [selectedDetails, setselectedDetails] = useState<any>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
